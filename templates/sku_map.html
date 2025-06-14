@@ -1,79 +1,90 @@
-
 {% extends "layout.html" %}
 {% block content %}
 <div class="container mt-4">
   <h2>SKU Alias Mapping</h2>
-  <form method="POST">
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Merge</th>
-          <th>Canonical SKU</th>
-          <th>Aliases (comma-separated)</th>
-          <th>Type</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for entry in grouped %}
-        <tr>
-          <td class="text-center"><input type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
-          <td><input class="form-control" type="text" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
-          <td><input class="form-control" type="text" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}"></td>
-          <td>
-            <select class="form-control" name="type_{{ loop.index0 }}">
-              <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
-              <option value="detergent" {% if entry.type == 'detergent' %}selected{% endif %}>Detergent</option>
-              <option value="filters" {% if entry.type == 'filters' %}selected{% endif %}>Filters</option>
-              <option value="maintenance" {% if entry.type == 'maintenance' %}selected{% endif %}>Maintenance</option>
-            </select>
-          </td>
-        </tr>
-        {% endfor %}
-        <tr>
-          <td></td>
-          <td><input class="form-control" type="text" name="canonical_new"></td>
-          <td><input class="form-control" type="text" name="aliases_new"></td>
-          <td>
-            <select class="form-control" name="type_new">
-              <option value="machine">Machine</option>
-              <option value="detergent">Detergent</option>
-              <option value="filters">Filters</option>
-              <option value="maintenance">Maintenance</option>
-            </select>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="mb-3">
-      <label class="form-label">Merge selected into:</label>
-      <input class="form-control" type="text" name="merge_target">
+  <ul class="nav nav-tabs" id="mapTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="map-tab" data-bs-toggle="tab" data-bs-target="#map" type="button" role="tab">Mapping</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="sug-tab" data-bs-toggle="tab" data-bs-target="#sug" type="button" role="tab">Suggestions</button>
+    </li>
+  </ul>
+  <div class="tab-content mt-3" id="mapTabsContent">
+    <div class="tab-pane fade show active" id="map" role="tabpanel">
+      <form method="POST">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Merge</th>
+              <th>Canonical SKU</th>
+              <th>Aliases (comma-separated)</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in grouped %}
+            <tr>
+              <td class="text-center"><input type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
+              <td><input class="form-control" type="text" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
+              <td><input class="form-control" type="text" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}"></td>
+              <td>
+                <select class="form-control" name="type_{{ loop.index0 }}">
+                  <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
+                  <option value="detergent" {% if entry.type == 'detergent' %}selected{% endif %}>Detergent</option>
+                  <option value="filters" {% if entry.type == 'filters' %}selected{% endif %}>Filters</option>
+                  <option value="maintenance" {% if entry.type == 'maintenance' %}selected{% endif %}>Maintenance</option>
+                </select>
+              </td>
+            </tr>
+            {% endfor %}
+            <tr>
+              <td></td>
+              <td><input class="form-control" type="text" name="canonical_new"></td>
+              <td><input class="form-control" type="text" name="aliases_new"></td>
+              <td>
+                <select class="form-control" name="type_new">
+                  <option value="machine">Machine</option>
+                  <option value="detergent">Detergent</option>
+                  <option value="filters">Filters</option>
+                  <option value="maintenance">Maintenance</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="mb-3">
+          <label class="form-label">Merge selected into:</label>
+          <input class="form-control" type="text" name="merge_target">
+        </div>
+        <button class="btn btn-secondary me-2" type="submit" name="merge" value="1">Merge Selected</button>
+        <button class="btn btn-primary" type="submit" name="save" value="1">Save Changes</button>
+      </form>
     </div>
-    <button class="btn btn-secondary me-2" type="submit" name="merge" value="1">Merge Selected</button>
-    <button class="btn btn-primary" type="submit" name="save" value="1">Save Changes</button>
-  </form>
-  {% if suggestions %}
-  <h4 class="mt-4">Potential Merges</h4>
-  <table class="table table-sm">
-    <thead>
-      <tr><th>Keep</th><th>Merge</th><th>Score</th><th></th></tr>
-    </thead>
-    <tbody>
-    {% for s in suggestions %}
-    <tr>
-      <td>{{ s[0] }}</td>
-      <td>{{ s[1] }}</td>
-      <td>{{ (s[2]*100)|round(1) }}%</td>
-      <td>
-        <form method="POST" class="d-inline">
-          <input type="hidden" name="merge_target" value="{{ s[0] }}">
-          <input type="hidden" name="select_0" value="{{ s[1] }}">
-          <button class="btn btn-link p-0" type="submit" name="merge" value="1">Merge</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
+    <div class="tab-pane fade" id="sug" role="tabpanel">
+      {% if suggestions %}
+      <form method="POST">
+        <table class="table table-sm">
+          <thead>
+            <tr><th></th><th>Keep</th><th>Merge</th><th>Score</th></tr>
+          </thead>
+          <tbody>
+          {% for s in suggestions %}
+          <tr>
+            <td><input type="checkbox" name="suggest_{{ loop.index0 }}"></td>
+            <td>{{ s[0] }}<input type="hidden" name="sug_target_{{ loop.index0 }}" value="{{ s[0] }}"></td>
+            <td>{{ s[1] }}<input type="hidden" name="sug_merge_{{ loop.index0 }}" value="{{ s[1] }}"></td>
+            <td>{{ (s[2]*100)|round(1) }}%</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        <button class="btn btn-secondary" type="submit" name="merge_suggestions" value="1">Merge Selected</button>
+      </form>
+      {% else %}
+      <p>No suggestions available.</p>
+      {% endif %}
+    </div>
+  </div>
 </div>
 {% endblock %}
