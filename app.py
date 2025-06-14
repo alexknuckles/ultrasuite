@@ -34,18 +34,26 @@ def format_dt(value):
 
 app.jinja_env.filters['format_dt'] = format_dt
 
-def trend(value):
-    """Return HTML with colored arrow indicating trend."""
+def trend(value, compare=None):
+    """Return HTML with colored arrow indicating trend.
+
+    If ``compare`` is provided, its numeric sign is used to determine the
+    arrow direction while ``value`` is displayed unchanged. This allows
+    showing the previous period's value with an arrow based on the change
+    from the current period.
+    """
     try:
         if value in ("-", None):
             return value
-        val_str = str(value).strip()
-        if val_str == "∞":
+
+        sign_source = compare if compare is not None else value
+        sign_str = str(sign_source).strip()
+        if sign_str == "∞":
             arrow = "▲"
             color = "has-text-success"
         else:
             cleaned = (
-                val_str.replace("$", "")
+                sign_str.replace("$", "")
                 .replace(",", "")
                 .replace("%", "")
                 .strip()
@@ -512,7 +520,9 @@ def monthly_report():
         cat_prev = cat_df[(cat_df['year'] == last_month_year - 1) & (cat_df['month_num'] == last_month_num)]
         skus = cat_df['canonical'].unique()
         for sku in sorted(skus):
-            if cat_df[(cat_df['canonical'] == sku) & (cat_df['year'].isin([year, year - 1]))]['total'].sum() == 0:
+            cur_total_chk = cat_df[(cat_df['canonical'] == sku) & (cat_df['year'] == year)]['total'].sum()
+            prev_total_chk = cat_df[(cat_df['canonical'] == sku) & (cat_df['year'] == year - 1)]['total'].sum()
+            if cur_total_chk == 0 or prev_total_chk == 0:
                 continue
             ydf = cat_year[cat_year['canonical'] == sku]
             ldf = cat_last[cat_last['canonical'] == sku]
@@ -522,6 +532,7 @@ def monthly_report():
             month_total = ldf['total'].sum()
             month_qty = ldf['quantity'].sum()
             last_year_total = pdf['total'].sum()
+            last_year_sign = month_total - last_year_total
             avg_month = year_total / cutoff_month if cutoff_month else 0
             avg_qty = year_qty / cutoff_month if cutoff_month else 0
             best_month = ydf['total'].max() if len(ydf) else 0
@@ -535,6 +546,7 @@ def monthly_report():
                 'avg_month': avg_month,
                 'avg_qty': avg_qty,
                 'last_year': last_year_total,
+                'last_year_sign': last_year_sign,
                 'best_month': best_month,
                 'best_qty': best_qty,
             })
