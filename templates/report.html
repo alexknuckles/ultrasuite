@@ -46,8 +46,6 @@
             <th>vs Last Year</th>
             <th>Avg Month $</th>
             <th>Best Month $</th>
-            <th>Avg Qty</th>
-            <th>Best Qty</th>
           </tr>
         </thead>
         <tbody>
@@ -58,8 +56,6 @@
             <td>{{ r.vs_last | trend }}</td>
             <td>{{ ("$%.2f"|format(r.avg_month)) | trend(r.avg_month_sign) }}</td>
             <td>{{ ("$%.2f"|format(r.best_month)) | trend(r.best_month_sign) }}</td>
-            <td>{{ ("%.2f"|format(r.avg_qty)) | trend(r.avg_qty_sign) }}</td>
-            <td>{{ ("%.2f"|format(r.best_qty)) | trend(r.best_qty_sign) }}</td>
           </tr>
           {% endfor %}
         </tbody>
