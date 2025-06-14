@@ -56,10 +56,10 @@
             <td>{{ r.type }}</td>
             <td>${{ "%.2f"|format(r.total) }}</td>
             <td>{{ r.vs_last | trend }}</td>
-            <td>${{ "%.2f"|format(r.avg_month) }}</td>
-            <td>${{ "%.2f"|format(r.best_month) }}</td>
-            <td>{{ "%.2f"|format(r.avg_qty) }}</td>
-            <td>{{ "%.2f"|format(r.best_qty) }}</td>
+            <td>{{ ("$%.2f"|format(r.avg_month)) | trend }}</td>
+            <td>{{ ("$%.2f"|format(r.best_month)) | trend }}</td>
+            <td>{{ ("%.2f"|format(r.avg_qty)) | trend }}</td>
+            <td>{{ ("%.2f"|format(r.best_qty)) | trend }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -91,11 +91,11 @@
             <td>{{ "%.2f"|format(r.year_qty) }}</td>
             <td>${{ "%.2f"|format(r.month_total) }}</td>
             <td>{{ "%.2f"|format(r.month_qty) }}</td>
-            <td>${{ "%.2f"|format(r.avg_month) }}</td>
-            <td>{{ "%.2f"|format(r.avg_qty) }}</td>
-            <td>${{ "%.2f"|format(r.last_year) }}</td>
-            <td>${{ "%.2f"|format(r.best_month) }}</td>
-            <td>{{ "%.2f"|format(r.best_qty) }}</td>
+            <td>{{ ("$%.2f"|format(r.avg_month)) | trend }}</td>
+            <td>{{ ("%.2f"|format(r.avg_qty)) | trend }}</td>
+            <td>{{ ("$%.2f"|format(r.last_year)) | trend }}</td>
+            <td>{{ ("$%.2f"|format(r.best_month)) | trend }}</td>
+            <td>{{ ("%.2f"|format(r.best_qty)) | trend }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -123,10 +123,10 @@
             <td>{{ r.type }}</td>
             <td>${{ "%.2f"|format(r.total) }}</td>
             <td>{{ r.vs_last | trend }}</td>
-            <td>${{ "%.2f"|format(r.avg_month) }}</td>
-            <td>${{ "%.2f"|format(r.best_month) }}</td>
-            <td>{{ "%.2f"|format(r.avg_qty) }}</td>
-            <td>{{ "%.2f"|format(r.best_qty) }}</td>
+            <td>{{ ("$%.2f"|format(r.avg_month)) | trend }}</td>
+            <td>{{ ("$%.2f"|format(r.best_month)) | trend }}</td>
+            <td>{{ ("%.2f"|format(r.avg_qty)) | trend }}</td>
+            <td>{{ ("%.2f"|format(r.best_qty)) | trend }}</td>
           </tr>
           {% endfor %}
         </tbody>
