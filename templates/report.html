@@ -36,6 +36,16 @@
     {% endfor %}
   </tbody>
 </table>
+<h4 class="mt-3">Machine Quantity by Month</h4>
+<table class="table table-sm table-striped">
+  <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
+  <tbody>
+    {% for sku, row in machine_qty.items() %}
+    <tr><td>{{ sku }}</td>{% for m in months %}<td>{{ row.get(m, 0)|int }}</td>{% endfor %}<td>{{ row['total']|int }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 
 <h4 class="mt-5">Detergent & Filter Sales by Month</h4>
 <table class="table table-sm table-striped">
@@ -46,6 +56,16 @@
     {% endfor %}
   </tbody>
 </table>
+<h4 class="mt-3">Detergent & Filter Quantity by Month</h4>
+<table class="table table-sm table-striped">
+  <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
+  <tbody>
+    {% for sku, row in chem_qty.items() %}
+    <tr><td>{{ sku }}</td>{% for m in months %}<td>{{ row.get(m, 0)|int }}</td>{% endfor %}<td>{{ row['total']|int }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 
 <button onclick="window.print()" class="btn btn-secondary mt-3">🖨️ Print Report</button>
 {% endblock %}
