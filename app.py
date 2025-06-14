@@ -191,7 +191,8 @@ def sku_map_page():
                 conn.execute('UPDATE sku_map SET type=? WHERE canonical_sku=?', (target_type, target))
                 conn.commit()
                 flash('Entries merged.')
-            return redirect(url_for('sku_map_page'))
+        conn.close()
+        return redirect(url_for('sku_map_page'))
 
         if 'merge_suggestions' in request.form:
             _save_types(conn, request.form)
@@ -213,7 +214,8 @@ def sku_map_page():
                         conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (merge_from,))
             conn.commit()
             flash('Suggestions merged.')
-            return redirect(url_for('sku_map_page'))
+        conn.close()
+        return redirect(url_for('sku_map_page'))
 
         entries = [k.split('_')[1] for k in request.form.keys() if k.startswith('canonical_')]
         for idx in entries:
