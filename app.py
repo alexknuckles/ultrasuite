@@ -281,12 +281,13 @@ def sku_map_page():
     for g in grouped.values():
         g['aliases'] = ', '.join(sorted(g['aliases']))
         grouped_list.append(g)
+    merged_groups = [g for g in grouped_list if g['aliases']]
 
     # generate merge suggestions
     canonicals = sorted(grouped.keys())
     suggestions = _suggest_merges(canonicals, threshold=0.95)
 
-    return render_template('sku_map.html', grouped=grouped_list, suggestions=suggestions, merged=merged_rows)
+    return render_template('sku_map.html', grouped=grouped_list, suggestions=suggestions, merged=merged_groups)
 
 
 @app.route('/monthly-report')

@@ -87,13 +87,30 @@
       {% endif %}
     </div>
     <div id="merged" class="tab-pane is-hidden">
-      {% for r in merged %}
+      {% for entry in merged %}
       <div class="card sku-card">
         <div class="card-content">
-          <div class="columns is-variable is-1 sku-row">
-            <div class="column"><strong>{{ r.alias }}</strong></div>
-            <div class="column">→ {{ r.canonical_sku }}</div>
-            <div class="column is-narrow">{{ r.type }}</div>
+          <div class="columns is-variable is-1 is-vcentered sku-row">
+            <div class="column">
+              <div class="field is-flex is-align-items-center">
+                <label class="label mb-0 mr-1">SKU</label>
+                <span>{{ entry.canonical }}</span>
+              </div>
+              <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
+                <label class="label">Aliases</label>
+                <div class="alias-badges mb-1">
+                  {% for a in entry.aliases.split(',') if a.strip() %}
+                  <span class="tag is-info is-light">{{ a.strip() }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            <div class="column is-narrow">
+              <div class="field is-flex is-align-items-center">
+                <label class="label mb-0 mr-1">Type</label>
+                <span>{{ entry.type }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -207,8 +224,10 @@
         return;
       }
       var cb = card.querySelector('.merge-check');
-      cb.checked = !cb.checked;
-      cb.dispatchEvent(new Event('change'));
+      if (cb) {
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event('change'));
+      }
     });
   });
 </script>
