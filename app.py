@@ -37,20 +37,26 @@ app.jinja_env.filters['format_dt'] = format_dt
 def trend(value):
     """Return HTML with colored arrow indicating trend."""
     try:
-        if value in ('-', None):
+        if value in ("-", None):
             return value
         val_str = str(value).strip()
-        if val_str == '∞':
-            arrow = '▲'
-            color = 'has-text-success'
+        if val_str == "∞":
+            arrow = "▲"
+            color = "has-text-success"
         else:
-            num = float(val_str.strip('%'))
+            cleaned = (
+                val_str.replace("$", "")
+                .replace(",", "")
+                .replace("%", "")
+                .strip()
+            )
+            num = float(cleaned)
             if num > 0:
-                arrow = '▲'
-                color = 'has-text-success'
+                arrow = "▲"
+                color = "has-text-success"
             elif num < 0:
-                arrow = '▼'
-                color = 'has-text-danger'
+                arrow = "▼"
+                color = "has-text-danger"
             else:
                 return value
         return Markup(f"<span class='{color}'>{arrow} {value}</span>")
@@ -506,6 +512,8 @@ def monthly_report():
         cat_prev = cat_df[(cat_df['year'] == last_month_year - 1) & (cat_df['month_num'] == last_month_num)]
         skus = cat_df['canonical'].unique()
         for sku in sorted(skus):
+            if cat_df[(cat_df['canonical'] == sku) & (cat_df['year'].isin([year, year - 1]))]['total'].sum() == 0:
+                continue
             ydf = cat_year[cat_year['canonical'] == sku]
             ldf = cat_last[cat_last['canonical'] == sku]
             pdf = cat_prev[cat_prev['canonical'] == sku]
