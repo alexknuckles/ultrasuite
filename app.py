@@ -229,14 +229,12 @@ def monthly_report():
     for i, month in enumerate(months_order[:cutoff_month], start=1):
         current = this_year["total"].get(month, 0)
         previous = last_year["total"].get(month, 0)
-        current_qty = int(this_year["quantity"].get(month, 0))
-        previous_qty = int(last_year["quantity"].get(month, 0))
         pct = '-'
         if previous > 0:
             pct = f"{((current-previous)/previous)*100:.1f}%"
         elif current > 0:
             pct = '∞'
-        rows.append((month, current, current_qty, previous, previous_qty, pct))
+        rows.append((month, current, previous, pct))
 
     machine = all_data[all_data['type']=='machine']
     chem = all_data[all_data['type']!='machine']
