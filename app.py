@@ -438,10 +438,10 @@ def monthly_report():
             vs_last = f"{((total_cur - total_prev) / total_prev) * 100:.1f}%"
         elif total_cur > 0:
             vs_last = '∞'
-        avg_month = total_cur / cutoff_month
         overall_cat = summary_type[summary_type['type'] == cat]
+        avg_month = overall_cat['total'].mean() if len(overall_cat) else 0
         best_month = overall_cat['total'].max() if len(overall_cat) else 0
-        avg_qty = qtys.sum() / cutoff_month
+        avg_qty = overall_cat['quantity'].mean() if len(overall_cat) else 0
         best_qty = overall_cat['quantity'].max() if len(overall_cat) else 0
         type_rows.append({
             'type': labels.get(cat, cat),
@@ -488,14 +488,8 @@ def monthly_report():
             vs_last = f"{((cur_total - prev_total) / prev_total) * 100:.1f}%"
         elif cur_total > 0:
             vs_last = '∞'
-        year_to_date = summary_type[
-            (summary_type['year'] == last_month_year)
-            & (summary_type['type'] == cat)
-            & (summary_type['month_num'] <= last_month_num)
-        ]
         overall_cat = summary_type[summary_type['type'] == cat]
-        month_count = last_month_num if last_month_year == year else 12
-        avg_month = year_to_date['total'].sum() / month_count if month_count else 0
+        avg_month = overall_cat['total'].mean() if len(overall_cat) else 0
         best_month = overall_cat['total'].max() if len(overall_cat) else 0
         avg_month_sign = cur_total - avg_month
         best_month_sign = cur_total - best_month
@@ -524,12 +518,7 @@ def monthly_report():
         vs_last = f"{((total_val - prev_total_cur) / prev_total_cur) * 100:.1f}%"
     elif total_val > 0:
         vs_last = '∞'
-    ytd = summary_type[
-        (summary_type['year'] == last_month_year)
-        & (summary_type['month_num'] <= last_month_num)
-    ].agg({'total': 'sum', 'quantity': 'sum'})
-    month_count = last_month_num if last_month_year == year else 12
-    avg_month = ytd['total'] / month_count if month_count else 0
+    avg_month = summary_type['total'].mean() if len(summary_type) else 0
     best_month = summary_type['total'].max() if len(summary_type) else 0
     last_rows.append({
         'type': 'Total',
@@ -569,8 +558,8 @@ def monthly_report():
             month_qty = ldf['quantity'].sum()
             last_year_total = pdf['total'].sum()
             last_year_sign = month_total - last_year_total
-            avg_month = year_total / cutoff_month if cutoff_month else 0
-            avg_qty = year_qty / cutoff_month if cutoff_month else 0
+            avg_month = overall_sku['total'].mean() if len(overall_sku) else 0
+            avg_qty = overall_sku['quantity'].mean() if len(overall_sku) else 0
             best_month = overall_sku['total'].max() if len(overall_sku) else 0
             best_qty = overall_sku['quantity'].max() if len(overall_sku) else 0
             avg_month_sign = month_total - avg_month
