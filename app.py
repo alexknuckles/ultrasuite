@@ -188,6 +188,15 @@ def monthly_report():
 
     all_data = pd.concat([shopify, qbo], ignore_index=True)
 
+    all_data['created_at'] = (
+        pd.to_datetime(
+            all_data['created_at'].astype(str),
+            errors='coerce',
+            format='mixed',
+            utc=True,
+        )
+        .dt.tz_localize(None)
+    )
     all_data = all_data.dropna(subset=['created_at'])
 
     m = mapping.set_index('alias')
