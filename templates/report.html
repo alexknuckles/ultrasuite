@@ -1,15 +1,17 @@
 
 {% extends "layout.html" %}
 {% block content %}
-<h2>Monthly Report</h2>
-<form method="get" class="mb-3">
-  <label>Select Year:</label>
-  <select name="year" onchange="this.form.submit()" class="form-select w-auto d-inline-block">
-    {% for y in years %}
-    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
-    {% endfor %}
-  </select>
-</form>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h2 class="card-title">Monthly Report</h2>
+    <form method="get" class="mb-3">
+      <label>Select Year:</label>
+      <select name="year" onchange="this.form.submit()" class="form-select w-auto d-inline-block">
+        {% for y in years %}
+        <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </form>
 
 <h4>Overall Sales by Month ({{ selected_year }})</h4>
 <img src="{{ url_for('report_chart', year=selected_year) }}" class="img-fluid my-3" alt="Monthly Chart">
@@ -61,5 +63,9 @@
 </table>
 
 
-<button onclick="window.print()" class="btn btn-secondary mt-3">🖨️ Print Report</button>
+<div class="text-end mt-3">
+  <button onclick="window.print()" class="btn btn-secondary">🖨️ Print Report</button>
+</div>
+  </div>
+</div>
 {% endblock %}

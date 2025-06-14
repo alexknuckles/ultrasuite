@@ -1,25 +1,39 @@
 
 {% extends "layout.html" %}
 {% block content %}
-<h2>Status</h2>
-<table class="table">
-  <thead><tr><th>Source</th><th>Last Uploaded</th></tr></thead>
-  <tbody>
-  {% for row in meta %}
-    <tr><td>{{ row.source }}</td><td>{{ row.last_updated or 'Never' }}</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<h2>SKU Summary</h2>
-<table class="table table-sm">
-  <thead><tr><th>Canonical SKU</th><th># of Aliases</th></tr></thead>
-  <tbody>
-  {% for row in sku_stats %}
-    <tr><td>{{ row.canonical_sku }}</td><td>{{ row.alias_count }}</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<a href="/monthly-report" class="btn btn-primary mt-4">📊 View Monthly Report</a>
+<div class="row">
+  <div class="col-lg-6 mb-4">
+    <div class="card shadow-sm">
+      <div class="card-header">Status</div>
+      <div class="card-body p-0">
+        <table class="table mb-0">
+          <thead><tr><th>Source</th><th>Last Uploaded</th></tr></thead>
+          <tbody>
+          {% for row in meta %}
+            <tr><td>{{ row.source }}</td><td>{{ row.last_updated or 'Never' }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6 mb-4">
+    <div class="card shadow-sm">
+      <div class="card-header">SKU Summary</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Canonical SKU</th><th># of Aliases</th></tr></thead>
+          <tbody>
+          {% for row in sku_stats %}
+            <tr><td>{{ row.canonical_sku }}</td><td>{{ row.alias_count }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="text-end">
+  <a href="/monthly-report" class="btn btn-primary">📊 View Monthly Report</a>
+</div>
 {% endblock %}

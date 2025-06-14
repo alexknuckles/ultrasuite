@@ -10,3 +10,11 @@
   display: flex;
   align-items: center;
 }
+
+body {
+  background-color: #f8f9fa;
+}
+
+.card {
+  margin-bottom: 1rem;
+}

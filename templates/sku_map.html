@@ -1,6 +1,8 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2>SKU Alias Mapping</h2>
+<div class="card shadow-sm">
+  <div class="card-body">
+  <h2 class="card-title mb-4">SKU Alias Mapping</h2>
   <ul class="nav nav-tabs" id="mapTabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="map-tab" data-bs-toggle="tab" data-bs-target="#map" type="button" role="tab">Mapping</button>
@@ -92,6 +94,8 @@
       <p>No suggestions available.</p>
       {% endif %}
   </div>
+</div>
+</div>
 </div>
 <script>
   document.getElementById('searchBox').addEventListener('input', function() {

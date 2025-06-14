@@ -1,9 +1,10 @@
 
 {% extends "layout.html" %}
 {% block content %}
-<div class="container mt-4">
-  <h2>Debug Summary: Transactions by Month</h2>
-  <table class="table table-bordered">
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h2 class="card-title">Debug Summary: Transactions by Month</h2>
+    <table class="table table-bordered">
     <thead>
       <tr><th>Month</th><th>Transaction Count</th><th>Total Amount</th></tr>
     </thead>
@@ -16,6 +17,7 @@
       </tr>
     {% endfor %}
     </tbody>
-  </table>
+    </table>
+  </div>
 </div>
 {% endblock %}
