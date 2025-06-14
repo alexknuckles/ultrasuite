@@ -23,9 +23,10 @@ body {
 .sku-card .merge-col {
   text-align: left;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5rem;
 }
 .sku-card {
   margin-bottom: 0.5rem;
@@ -39,4 +40,8 @@ body {
 .sku-card.selected {
   border-color: #485fc7;
   background-color: #f5f7ff;
+}
+
+.target-wrap {
+  min-width: 5rem;
 }
