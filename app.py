@@ -188,6 +188,9 @@ def monthly_report():
 
     all_data = pd.concat([shopify, qbo], ignore_index=True)
 
+    # ensure numeric totals for reliable aggregation
+    all_data['total'] = pd.to_numeric(all_data['total'], errors='coerce').fillna(0)
+
     all_data['created_at'] = (
         pd.to_datetime(
             all_data['created_at'].astype(str),
