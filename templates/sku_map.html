@@ -53,17 +53,27 @@
   </form>
   {% if suggestions %}
   <h4 class="mt-4">Potential Merges</h4>
-  <ul>
-    {% for pair in suggestions %}
-    <li>
-      <form method="POST" class="d-inline">
-        <input type="hidden" name="merge_target" value="{{ pair[0] }}">
-        <input type="hidden" name="select_0" value="{{ pair[1] }}">
-        <button class="btn btn-link p-0" type="submit" name="merge" value="1">Merge {{ pair[1] }} into {{ pair[0] }}</button>
-      </form>
-    </li>
+  <table class="table table-sm">
+    <thead>
+      <tr><th>Keep</th><th>Merge</th><th>Score</th><th></th></tr>
+    </thead>
+    <tbody>
+    {% for s in suggestions %}
+    <tr>
+      <td>{{ s[0] }}</td>
+      <td>{{ s[1] }}</td>
+      <td>{{ (s[2]*100)|round(1) }}%</td>
+      <td>
+        <form method="POST" class="d-inline">
+          <input type="hidden" name="merge_target" value="{{ s[0] }}">
+          <input type="hidden" name="select_0" value="{{ s[1] }}">
+          <button class="btn btn-link p-0" type="submit" name="merge" value="1">Merge</button>
+        </form>
+      </td>
+    </tr>
     {% endfor %}
-  </ul>
+    </tbody>
+  </table>
   {% endif %}
 </div>
 {% endblock %}
