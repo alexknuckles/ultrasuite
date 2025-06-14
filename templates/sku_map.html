@@ -13,15 +13,15 @@
       <input type="text" id="searchBox" class="input mb-4" placeholder="Search SKUs">
       <form method="POST">
         {% for entry in grouped %}
-        <div class="card sku-card mb-3">
+        <div class="card sku-card">
           <div class="card-content">
             <div class="columns is-variable is-1">
               <div class="column is-narrow merge-col">
-                <label class="checkbox mb-2">
-                  <input class="merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
-                  Merge
-                </label>
-                <label class="radio">
+                <div class="field">
+                  <input id="merge_{{ loop.index0 }}" class="switch is-rounded is-info merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
+                  <label for="merge_{{ loop.index0 }}">Merge</label>
+                </div>
+                <label class="radio mt-2">
                   <input class="target-radio" type="radio" name="merge_target" value="{{ entry.canonical }}">
                   Target
                 </label>
@@ -29,13 +29,13 @@
               <div class="column">
                 <div class="field">
                   <label class="label">Canonical SKU</label>
-                  <input class="input" type="text" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}">
+                  <p>{{ entry.canonical }}</p>
+                  <input type="hidden" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}">
                 </div>
                 <div class="field">
                   <label class="label">Aliases</label>
                   <input type="hidden" class="alias-input" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
                   <div class="alias-badges mb-1"></div>
-                  <button type="button" class="button is-small is-light add-alias">Add</button>
                 </div>
               </div>
               <div class="column is-narrow">
@@ -55,7 +55,7 @@
           </div>
         </div>
         {% endfor %}
-        <div class="card sku-card mb-3">
+        <div class="card sku-card">
           <div class="card-content">
             <div class="columns is-variable is-1">
               <div class="column is-narrow merge-col"></div>
@@ -68,7 +68,6 @@
                   <label class="label">Aliases</label>
                   <input type="hidden" class="alias-input" name="aliases_new">
                   <div class="alias-badges mb-1"></div>
-                  <button type="button" class="button is-small is-light add-alias">Add</button>
                 </div>
               </div>
               <div class="column is-narrow">
@@ -174,7 +173,6 @@
 
   document.querySelectorAll('.alias-input').forEach(function(input) {
     var container = input.nextElementSibling;
-    var addBtn = container.nextElementSibling;
     function render() {
       container.innerHTML = '';
       var aliases = input.value.split(',').map(function(a){ return a.trim(); }).filter(Boolean);
@@ -196,18 +194,6 @@
       });
     }
     render();
-    if (addBtn) {
-      addBtn.addEventListener('click', function(e){
-        e.stopPropagation();
-        var val = prompt('Add alias');
-        if (val) {
-          var list = input.value ? input.value.split(',') : [];
-          list.push(val.trim());
-          input.value = list.join(', ');
-          render();
-        }
-      });
-    }
   });
 
   document.querySelectorAll('.sku-card').forEach(function(card) {
