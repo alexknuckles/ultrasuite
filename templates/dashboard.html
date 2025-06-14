@@ -1,12 +1,14 @@
 
 {% extends "layout.html" %}
 {% block content %}
-<div class="row">
-  <div class="col-lg-6 mb-4">
-    <div class="card shadow-sm">
-      <div class="card-header">Status</div>
-      <div class="card-body p-0">
-        <table class="table mb-0">
+<div class="columns">
+  <div class="column is-half mb-5">
+    <div class="card">
+      <header class="card-header">
+        <p class="card-header-title">Status</p>
+      </header>
+      <div class="card-content p-0">
+        <table class="table is-fullwidth">
           <thead><tr><th>Source</th><th>Last Uploaded</th></tr></thead>
           <tbody>
           {% for row in meta %}
@@ -17,11 +19,13 @@
       </div>
     </div>
   </div>
-  <div class="col-lg-6 mb-4">
-    <div class="card shadow-sm">
-      <div class="card-header">SKU Summary</div>
-      <div class="card-body p-0">
-        <table class="table table-sm mb-0">
+  <div class="column is-half mb-5">
+    <div class="card">
+      <header class="card-header">
+        <p class="card-header-title">SKU Summary</p>
+      </header>
+      <div class="card-content p-0">
+        <table class="table is-fullwidth is-narrow">
           <thead><tr><th>Canonical SKU</th><th># of Aliases</th></tr></thead>
           <tbody>
           {% for row in sku_stats %}
@@ -33,7 +37,7 @@
     </div>
   </div>
 </div>
-<div class="text-end">
-  <a href="/monthly-report" class="btn btn-primary">📊 View Monthly Report</a>
+<div class="has-text-right">
+  <a href="/monthly-report" class="button is-primary">📊 View Monthly Report</a>
 </div>
 {% endblock %}

@@ -6,7 +6,7 @@
   overflow-y: auto;
 }
 
-.alias-badges .badge {
+.alias-badges .tag {
   display: flex;
   align-items: center;
 }
