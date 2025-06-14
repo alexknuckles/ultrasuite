@@ -33,7 +33,9 @@
                 </div>
                 <div class="field">
                   <label class="label">Aliases</label>
-                  <input class="input" type="text" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
+                  <input type="hidden" class="alias-input" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
+                  <div class="alias-badges mb-1"></div>
+                  <button type="button" class="button is-small is-light add-alias">Add</button>
                 </div>
               </div>
               <div class="column is-narrow">
@@ -64,7 +66,9 @@
                 </div>
                 <div class="field">
                   <label class="label">Aliases</label>
-                  <input class="input" type="text" name="aliases_new">
+                  <input type="hidden" class="alias-input" name="aliases_new">
+                  <div class="alias-badges mb-1"></div>
+                  <button type="button" class="button is-small is-light add-alias">Add</button>
                 </div>
               </div>
               <div class="column is-narrow">
@@ -157,6 +161,63 @@
           card.querySelector('.target-radio').checked = true;
         }
       }
+      var card = cb.closest('.sku-card');
+      if (card) {
+        card.classList.toggle('selected', cb.checked);
+      }
+    });
+    var card = cb.closest('.sku-card');
+    if (card) {
+      card.classList.toggle('selected', cb.checked);
+    }
+  });
+
+  document.querySelectorAll('.alias-input').forEach(function(input) {
+    var container = input.nextElementSibling;
+    var addBtn = container.nextElementSibling;
+    function render() {
+      container.innerHTML = '';
+      var aliases = input.value.split(',').map(function(a){ return a.trim(); }).filter(Boolean);
+      aliases.forEach(function(a) {
+        var tag = document.createElement('span');
+        tag.className = 'tag is-info is-light';
+        tag.textContent = a;
+        var del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'delete is-small ml-1';
+        del.addEventListener('click', function(e){
+          e.stopPropagation();
+          aliases = aliases.filter(function(x){ return x !== a; });
+          input.value = aliases.join(', ');
+          render();
+        });
+        tag.appendChild(del);
+        container.appendChild(tag);
+      });
+    }
+    render();
+    if (addBtn) {
+      addBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var val = prompt('Add alias');
+        if (val) {
+          var list = input.value ? input.value.split(',') : [];
+          list.push(val.trim());
+          input.value = list.join(', ');
+          render();
+        }
+      });
+    }
+  });
+
+  document.querySelectorAll('.sku-card').forEach(function(card) {
+    card.addEventListener('click', function(e){
+      if (e.target.closest('input') || e.target.closest('button') || e.target.closest('select')) {
+        return;
+      }
+      var cb = card.querySelector('.merge-check');
+      cb.checked = !cb.checked;
+      cb.dispatchEvent(new Event('change'));
     });
   });
 </script>
