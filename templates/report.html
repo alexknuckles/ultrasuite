@@ -21,21 +21,8 @@
     </div>
 
     <div id="by-month" class="tab-pane">
-      <h4 class="title is-5">Overall Sales by Month ({{ selected_year }})</h4>
-      <img src="{{ url_for('report_chart', year=selected_year) }}" class="my-3" alt="Monthly Chart">
-      <table class="table is-fullwidth is-bordered">
-        <thead><tr><th>Month</th><th>{{ selected_year }} $</th><th>{{ selected_year - 1 }} $</th><th>% Change</th></tr></thead>
-        <tbody>
-          {% for month, current, previous, pct in rows %}
-          <tr>
-            <td>{{ month }}</td>
-            <td>${{ "%.2f"|format(current or 0) }}</td>
-            <td>${{ "%.2f"|format(previous or 0) }}</td>
-            <td>{{ pct | trend }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-</table>
+      <h4 class="title is-5">Last Month Sales by Type ({{ last_month_label }})</h4>
+      <img src="{{ url_for('last_month_chart', year=selected_year) }}" class="my-3" alt="Last Month Chart">
 
       <h4 class="title is-5 mt-5">Last Full Month by Type ({{ last_month_label }})</h4>
       <table class="table is-fullwidth is-striped is-narrow">
@@ -100,6 +87,24 @@
     </div> <!-- by-month -->
 
     <div id="by-year" class="tab-pane is-hidden">
+      <h4 class="title is-5">Overall Sales by Month ({{ selected_year }})</h4>
+      <img src="{{ url_for('report_chart', year=selected_year) }}" class="my-3" alt="Monthly Chart">
+      <table class="table is-fullwidth is-bordered mb-5">
+        <thead>
+          <tr><th>Month</th><th>{{ selected_year }} $</th><th>{{ selected_year - 1 }} $</th><th>% Change</th></tr>
+        </thead>
+        <tbody>
+          {% for month, current, previous, pct in rows %}
+          <tr>
+            <td>{{ month }}</td>
+            <td>${{ "%.2f"|format(current or 0) }}</td>
+            <td>${{ "%.2f"|format(previous or 0) }}</td>
+            <td>{{ pct | trend }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
       <h4 class="title is-5">Yearly Summary by Type</h4>
       <table class="table is-fullwidth is-striped is-narrow">
         <thead>
