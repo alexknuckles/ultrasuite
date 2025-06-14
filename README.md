@@ -30,7 +30,6 @@ Data uploads and database files are kept locally; no external services are requi
 
 - `app.py` – main Flask application.
 - `templates/` – Jinja2 templates for all pages.
-- `finance_dashboard_v29/` – previous version of the app (kept for reference).
 
 ## License
 
