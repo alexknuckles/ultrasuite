@@ -187,9 +187,8 @@ def monthly_report():
     conn.close()
 
     all_data = pd.concat([shopify, qbo], ignore_index=True)
-    # ensure datetime conversion even if the column was already parsed
-    if not pd.api.types.is_datetime64_any_dtype(all_data['created_at']):
-        all_data['created_at'] = pd.to_datetime(all_data['created_at'], errors='coerce')
+    # always coerce to datetime to avoid mixed dtypes from SQLite
+    all_data['created_at'] = pd.to_datetime(all_data['created_at'], errors='coerce')
     all_data = all_data.dropna(subset=['created_at'])
 
     m = mapping.set_index('alias')
