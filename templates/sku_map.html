@@ -16,7 +16,7 @@
       <input type="text" id="searchBox" class="form-control mb-3" placeholder="Search SKUs">
       <form method="POST">
         <div class="table-responsive">
-        <table id="skuTable" class="table table-bordered align-middle">
+        <table id="skuTable" class="table table-bordered align-middle sku-table">
           <thead>
             <tr>
               <th>Merge</th>
@@ -29,10 +29,18 @@
           <tbody>
             {% for entry in grouped %}
             <tr>
-              <td class="text-center"><input type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}" class="merge-check"></td>
-              <td class="text-center"><input type="radio" name="merge_target" value="{{ entry.canonical }}" class="target-radio"></td>
+              <td class="text-center">
+                <div class="form-check form-switch d-inline-block">
+                  <input class="form-check-input merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
+                </div>
+              </td>
+              <td class="text-center">
+                <div class="form-check d-inline-block">
+                  <input class="form-check-input target-radio" type="radio" name="merge_target" value="{{ entry.canonical }}">
+                </div>
+              </td>
               <td><input class="form-control" type="text" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
-              <td>
+              <td class="alias-cell">
                 <input class="form-control alias-input" type="text" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
                 <div class="alias-badges mt-1"></div>
               </td>
@@ -50,7 +58,7 @@
               <td></td>
               <td></td>
               <td><input class="form-control" type="text" name="canonical_new"></td>
-              <td>
+              <td class="alias-cell">
                 <input class="form-control alias-input" type="text" name="aliases_new">
                 <div class="alias-badges mt-1"></div>
               </td>
@@ -80,7 +88,11 @@
           <tbody>
           {% for s in suggestions %}
           <tr>
-            <td><input type="checkbox" name="suggest_{{ loop.index0 }}"></td>
+            <td class="text-center">
+              <div class="form-check form-switch d-inline-block">
+                <input class="form-check-input" type="checkbox" name="suggest_{{ loop.index0 }}">
+              </div>
+            </td>
             <td>{{ s[0] }}<input type="hidden" name="sug_target_{{ loop.index0 }}" value="{{ s[0] }}"></td>
             <td>{{ s[1] }}<input type="hidden" name="sug_merge_{{ loop.index0 }}" value="{{ s[1] }}"></td>
             <td>{{ (s[2]*100)|round(1) }}%</td>
