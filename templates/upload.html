@@ -1,16 +1,20 @@
 
 {% extends "layout.html" %}
 {% block content %}
-<h2>Upload Shopify & QBO Files</h2>
-<form method="post" enctype="multipart/form-data">
-  <div class="mb-3">
-    <label class="form-label">Shopify CSV</label>
-    <input type="file" class="form-control" name="shopify">
+<div class="card shadow-sm">
+  <div class="card-header">Upload Shopify & QBO Files</div>
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label class="form-label">Shopify CSV</label>
+        <input type="file" class="form-control" name="shopify">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">QBO Excel</label>
+        <input type="file" class="form-control" name="qbo">
+      </div>
+      <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
   </div>
-  <div class="mb-3">
-    <label class="form-label">QBO Excel</label>
-    <input type="file" class="form-control" name="qbo">
-  </div>
-  <button type="submit" class="btn btn-primary">Upload</button>
-</form>
+</div>
 {% endblock %}
