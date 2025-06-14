@@ -2,6 +2,7 @@ import os
 import sqlite3
 from datetime import datetime
 from io import BytesIO
+from difflib import SequenceMatcher
 
 import pandas as pd
 import matplotlib
@@ -128,6 +129,30 @@ def _update_sku_map(conn, sku_series):
 def sku_map_page():
     conn = get_db()
     if request.method == 'POST':
+        if 'merge' in request.form:
+            target = request.form.get('merge_target', '').lower().strip()
+            selected = [
+                request.form[k].lower().strip()
+                for k in request.form
+                if k.startswith('select_')
+            ]
+            if target and selected:
+                for canonical in selected:
+                    rows = conn.execute(
+                        'SELECT alias, type FROM sku_map WHERE canonical_sku=?',
+                        (canonical,),
+                    ).fetchall()
+                    for r in rows:
+                        conn.execute(
+                            'REPLACE INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
+                            (r['alias'], target, r['type']),
+                        )
+                    if canonical != target:
+                        conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (canonical,))
+                conn.commit()
+                flash('Entries merged.')
+            return redirect(url_for('sku_map_page'))
+
         entries = [k.split('_')[1] for k in request.form.keys() if k.startswith('canonical_')]
         for idx in entries:
             canonical = request.form.get(f'canonical_{idx}', '').lower().strip()
@@ -174,7 +199,19 @@ def sku_map_page():
         g['aliases'] = ', '.join(sorted(g['aliases']))
         grouped_list.append(g)
 
-    return render_template('sku_map.html', grouped=grouped_list)
+    # simple similarity suggestions
+    canonicals = sorted(grouped.keys())
+    suggestions = []
+    for i in range(len(canonicals)):
+        for j in range(i + 1, len(canonicals)):
+            a, b = canonicals[i], canonicals[j]
+            if a[0] != b[0]:
+                continue
+            ratio = SequenceMatcher(None, a, b).ratio()
+            if ratio >= 0.8:
+                suggestions.append((a, b))
+
+    return render_template('sku_map.html', grouped=grouped_list, suggestions=suggestions)
 
 
 @app.route('/monthly-report')

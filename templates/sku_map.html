@@ -7,6 +7,7 @@
     <table class="table table-bordered">
       <thead>
         <tr>
+          <th>Merge</th>
           <th>Canonical SKU</th>
           <th>Aliases (comma-separated)</th>
           <th>Type</th>
@@ -15,6 +16,7 @@
       <tbody>
         {% for entry in grouped %}
         <tr>
+          <td class="text-center"><input type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
           <td><input class="form-control" type="text" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
           <td><input class="form-control" type="text" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}"></td>
           <td>
@@ -28,6 +30,7 @@
         </tr>
         {% endfor %}
         <tr>
+          <td></td>
           <td><input class="form-control" type="text" name="canonical_new"></td>
           <td><input class="form-control" type="text" name="aliases_new"></td>
           <td>
@@ -41,7 +44,26 @@
         </tr>
       </tbody>
     </table>
-    <button class="btn btn-primary" type="submit">Save Changes</button>
+    <div class="mb-3">
+      <label class="form-label">Merge selected into:</label>
+      <input class="form-control" type="text" name="merge_target">
+    </div>
+    <button class="btn btn-secondary me-2" type="submit" name="merge" value="1">Merge Selected</button>
+    <button class="btn btn-primary" type="submit" name="save" value="1">Save Changes</button>
   </form>
+  {% if suggestions %}
+  <h4 class="mt-4">Potential Merges</h4>
+  <ul>
+    {% for pair in suggestions %}
+    <li>
+      <form method="POST" class="d-inline">
+        <input type="hidden" name="merge_target" value="{{ pair[0] }}">
+        <input type="hidden" name="select_0" value="{{ pair[1] }}">
+        <button class="btn btn-link p-0" type="submit" name="merge" value="1">Merge {{ pair[1] }} into {{ pair[0] }}</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
 </div>
 {% endblock %}
