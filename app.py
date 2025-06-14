@@ -11,6 +11,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
+from markupsafe import Markup
 
 app = Flask(__name__)
 app.secret_key = 'secret'
@@ -32,6 +33,31 @@ def format_dt(value):
         return value
 
 app.jinja_env.filters['format_dt'] = format_dt
+
+def trend(value):
+    """Return HTML with colored arrow indicating trend."""
+    try:
+        if value in ('-', None):
+            return value
+        val_str = str(value).strip()
+        if val_str == '∞':
+            arrow = '▲'
+            color = 'has-text-success'
+        else:
+            num = float(val_str.strip('%'))
+            if num > 0:
+                arrow = '▲'
+                color = 'has-text-success'
+            elif num < 0:
+                arrow = '▼'
+                color = 'has-text-danger'
+            else:
+                return value
+        return Markup(f"<span class='{color}'>{arrow} {value}</span>")
+    except Exception:
+        return value
+
+app.jinja_env.filters['trend'] = trend
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
