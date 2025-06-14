@@ -374,25 +374,7 @@ def monthly_report():
         'shipping': 'Shipping',
     }
 
-    monthly_data = {cat: {} for cat in categories}
-    monthly_qty = {cat: {} for cat in categories}
-    for row in year_data.itertuples():
-        data = monthly_data.setdefault(row.type, {})
-        qty = monthly_qty.setdefault(row.type, {})
-        d = data.setdefault(row.canonical, {})
-        d[row.month] = d.get(row.month, 0) + row.total
-        d['total'] = d.get('total', 0) + row.total
-        q = qty.setdefault(row.canonical, {})
-        q[row.month] = q.get(row.month, 0) + row.quantity
-        q['total'] = q.get('total', 0) + row.quantity
 
-    machine_data = monthly_data['machine']
-    machine_qty = monthly_qty['machine']
-    dfk_data = monthly_data['detergent_filter_kits']
-    dfk_qty = monthly_qty['detergent_filter_kits']
-    other_types = [c for c in categories if c not in ('machine', 'detergent_filter_kits')]
-    other_data = {c: monthly_data[c] for c in other_types}
-    other_qty = {c: monthly_qty[c] for c in other_types}
 
 
     # yearly summary by type
@@ -484,6 +466,46 @@ def monthly_report():
             'best_qty': best_qty,
         })
 
+    # detailed breakdown by SKU for the last full month
+    summary_sku = all_data.groupby(
+        ['year', 'month_num', 'canonical', 'type']
+    ).agg({'total': 'sum', 'quantity': 'sum'}).reset_index()
+
+    sku_details = {}
+    for cat in categories:
+        cat_rows = []
+        cat_df = summary_sku[summary_sku['type'] == cat]
+        cat_year = cat_df[(cat_df['year'] == year) & (cat_df['month_num'] <= cutoff_month)]
+        cat_last = cat_df[(cat_df['year'] == last_month_year) & (cat_df['month_num'] == last_month_num)]
+        cat_prev = cat_df[(cat_df['year'] == last_month_year - 1) & (cat_df['month_num'] == last_month_num)]
+        skus = cat_df['canonical'].unique()
+        for sku in sorted(skus):
+            ydf = cat_year[cat_year['canonical'] == sku]
+            ldf = cat_last[cat_last['canonical'] == sku]
+            pdf = cat_prev[cat_prev['canonical'] == sku]
+            year_total = ydf['total'].sum()
+            year_qty = ydf['quantity'].sum()
+            month_total = ldf['total'].sum()
+            month_qty = ldf['quantity'].sum()
+            last_year_total = pdf['total'].sum()
+            avg_month = year_total / cutoff_month if cutoff_month else 0
+            avg_qty = year_qty / cutoff_month if cutoff_month else 0
+            best_month = ydf['total'].max() if len(ydf) else 0
+            best_qty = ydf['quantity'].max() if len(ydf) else 0
+            cat_rows.append({
+                'sku': sku,
+                'year_total': year_total,
+                'year_qty': year_qty,
+                'month_total': month_total,
+                'month_qty': month_qty,
+                'avg_month': avg_month,
+                'avg_qty': avg_qty,
+                'last_year': last_year_total,
+                'best_month': best_month,
+                'best_qty': best_qty,
+            })
+        sku_details[cat] = cat_rows
+
     years = sorted(summary["year"].unique(), reverse=True)
     return render_template(
         "report.html",
@@ -491,16 +513,11 @@ def monthly_report():
         selected_year=year,
         years=years,
         months=months_order[:cutoff_month],
-        machine_data=machine_data,
-        machine_qty=machine_qty,
-        dfk_data=dfk_data,
-        dfk_qty=dfk_qty,
-        other_data=other_data,
-        other_qty=other_qty,
         labels=labels,
         type_rows=type_rows,
         last_month_label=last_month_label,
         last_rows=last_rows,
+        sku_details=sku_details,
     )
 
 

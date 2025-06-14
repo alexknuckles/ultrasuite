@@ -35,52 +35,67 @@
           </tr>
           {% endfor %}
         </tbody>
-      </table>
+</table>
 
-      <h4 class="title is-5 mt-5">Machine Sales by Month</h4>
+      <h4 class="title is-5 mt-5">Last Full Month by Type ({{ last_month_label }})</h4>
       <table class="table is-fullwidth is-striped is-narrow">
-        <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
-        <tbody>
-          {% for sku, row in machine_data.items() %}
+        <thead>
           <tr>
-            <td>{{ sku }}</td>
-            {% for m in months %}
-            <td>${{ "%.2f"|format(row.get(m, 0)) }} ({{ machine_qty[sku].get(m, 0)|int }})</td>
-            {% endfor %}
-            <td>${{ "%.2f"|format(row['total']) }} ({{ machine_qty[sku]['total']|int }})</td>
+            <th>Type</th>
+            <th>{{ last_month_label }} $</th>
+            <th>vs Last Year</th>
+            <th>Avg Month $</th>
+            <th>Best Month $</th>
+            <th>Avg Qty</th>
+            <th>Best Qty</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in last_rows %}
+          <tr>
+            <td>{{ r.type }}</td>
+            <td>${{ "%.2f"|format(r.total) }}</td>
+            <td>{{ r.vs_last }}</td>
+            <td>${{ "%.2f"|format(r.avg_month) }}</td>
+            <td>${{ "%.2f"|format(r.best_month) }}</td>
+            <td>{{ "%.2f"|format(r.avg_qty) }}</td>
+            <td>{{ "%.2f"|format(r.best_qty) }}</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
 
-      <h4 class="title is-5 mt-5">Detergent & Filter Kits Sales by Month</h4>
-      <table class="table is-fullwidth is-striped is-narrow">
-        <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
-        <tbody>
-          {% for sku, row in dfk_data.items() %}
-          <tr>
-            <td>{{ sku }}</td>
-            {% for m in months %}
-            <td>${{ "%.2f"|format(row.get(m, 0)) }} ({{ dfk_qty[sku].get(m, 0)|int }})</td>
-            {% endfor %}
-            <td>${{ "%.2f"|format(row['total']) }} ({{ dfk_qty[sku]['total']|int }})</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
 
-      {% for cat, data in other_data.items() %}
-      <h4 class="title is-5 mt-5">{{ labels[cat] }} Sales by Month</h4>
+      {% for cat, rows in sku_details.items() %}
+      <h4 class="title is-5 mt-5">{{ labels[cat] }} Details ({{ last_month_label }})</h4>
       <table class="table is-fullwidth is-striped is-narrow">
-        <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
-        <tbody>
-          {% for sku, row in data.items() %}
+        <thead>
           <tr>
-            <td>{{ sku }}</td>
-            {% for m in months %}
-            <td>${{ "%.2f"|format(row.get(m, 0)) }} ({{ other_qty[cat][sku].get(m, 0)|int }})</td>
-            {% endfor %}
-            <td>${{ "%.2f"|format(row['total']) }} ({{ other_qty[cat][sku]['total']|int }})</td>
+            <th>SKU</th>
+            <th>Yearly $</th>
+            <th>Yearly Qty</th>
+            <th>{{ last_month_label }} $</th>
+            <th>{{ last_month_label }} Qty</th>
+            <th>Avg Month $</th>
+            <th>Avg Qty</th>
+            <th>Last Year $</th>
+            <th>Best Month $</th>
+            <th>Best Qty</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>{{ r.sku }}</td>
+            <td>${{ "%.2f"|format(r.year_total) }}</td>
+            <td>{{ "%.2f"|format(r.year_qty) }}</td>
+            <td>${{ "%.2f"|format(r.month_total) }}</td>
+            <td>{{ "%.2f"|format(r.month_qty) }}</td>
+            <td>${{ "%.2f"|format(r.avg_month) }}</td>
+            <td>{{ "%.2f"|format(r.avg_qty) }}</td>
+            <td>${{ "%.2f"|format(r.last_year) }}</td>
+            <td>${{ "%.2f"|format(r.best_month) }}</td>
+            <td>{{ "%.2f"|format(r.best_qty) }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -117,33 +132,6 @@
         </tbody>
       </table>
 
-      <h4 class="title is-5 mt-5">Last Full Month by Type ({{ last_month_label }})</h4>
-      <table class="table is-fullwidth is-striped is-narrow">
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>{{ last_month_label }} $</th>
-            <th>vs Last Year</th>
-            <th>Avg Month $</th>
-            <th>Best Month $</th>
-            <th>Avg Qty</th>
-            <th>Best Qty</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in last_rows %}
-          <tr>
-            <td>{{ r.type }}</td>
-            <td>${{ "%.2f"|format(r.total) }}</td>
-            <td>{{ r.vs_last }}</td>
-            <td>${{ "%.2f"|format(r.avg_month) }}</td>
-            <td>${{ "%.2f"|format(r.best_month) }}</td>
-            <td>{{ "%.2f"|format(r.avg_qty) }}</td>
-            <td>{{ "%.2f"|format(r.best_qty) }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
     </div> <!-- by-year -->
 
     <div class="has-text-right mt-4">
