@@ -400,7 +400,11 @@ def monthly_report():
     type_rows = []
     for cat in categories:
         cur = summary_type[(summary_type['year'] == year) & (summary_type['type'] == cat)]
-        prev = summary_type[(summary_type['year'] == year - 1) & (summary_type['type'] == cat)]
+        prev = summary_type[
+            (summary_type['year'] == year - 1)
+            & (summary_type['type'] == cat)
+            & (summary_type['month_num'] <= cutoff_month)
+        ]
         totals = cur.set_index('month_num').reindex(range(1, cutoff_month + 1), fill_value=0)
         qtys = totals['quantity']
         totals = totals['total']

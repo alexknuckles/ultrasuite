@@ -1,9 +1,8 @@
-
 {% extends "layout.html" %}
 {% block content %}
 <div class="card">
   <div class="card-content report-content">
-    <h2 class="title is-4">Monthly Report</h2>
+    <h2 class="title is-4">Reports</h2>
     <form method="get" class="mb-4">
       <label class="label">Select Year:</label>
       <div class="select is-inline-block">
@@ -14,134 +13,153 @@
         </select>
       </div>
     </form>
+    <div class="tabs is-boxed" id="reportTabs">
+      <ul>
+        <li class="is-active" data-target="by-month"><a>By Month</a></li>
+        <li data-target="by-year"><a>By Year</a></li>
+      </ul>
+    </div>
 
-<h4 class="title is-5">Overall Sales by Month ({{ selected_year }})</h4>
-<img src="{{ url_for('report_chart', year=selected_year) }}" class="my-3" alt="Monthly Chart">
-<table class="table is-fullwidth is-bordered">
-    <thead><tr><th>Month</th><th>{{ selected_year }} $</th><th>{{ selected_year - 1 }} $</th><th>% Change</th></tr></thead>
-  <tbody>
-    {% for month, current, previous, pct in rows %}
-    <tr>
-      <td>{{ month }}</td>
-      <td>${{ "%.2f"|format(current or 0) }}</td>
-      <td>${{ "%.2f"|format(previous or 0) }}</td>
-      <td>{{ pct }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    <div id="by-month" class="tab-pane">
+      <h4 class="title is-5">Overall Sales by Month ({{ selected_year }})</h4>
+      <img src="{{ url_for('report_chart', year=selected_year) }}" class="my-3" alt="Monthly Chart">
+      <table class="table is-fullwidth is-bordered">
+        <thead><tr><th>Month</th><th>{{ selected_year }} $</th><th>{{ selected_year - 1 }} $</th><th>% Change</th></tr></thead>
+        <tbody>
+          {% for month, current, previous, pct in rows %}
+          <tr>
+            <td>{{ month }}</td>
+            <td>${{ "%.2f"|format(current or 0) }}</td>
+            <td>${{ "%.2f"|format(previous or 0) }}</td>
+            <td>{{ pct }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
 
-<h4 class="title is-5 mt-5">Yearly Summary by Type</h4>
-<table class="table is-fullwidth is-striped is-narrow">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Total $</th>
-      <th>vs Last Year</th>
-      <th>Avg Month $</th>
-      <th>Best Month $</th>
-      <th>Avg Qty</th>
-      <th>Best Qty</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for r in type_rows %}
-    <tr>
-      <td>{{ r.type }}</td>
-      <td>${{ "%.2f"|format(r.total) }}</td>
-      <td>{{ r.vs_last }}</td>
-      <td>${{ "%.2f"|format(r.avg_month) }}</td>
-      <td>${{ "%.2f"|format(r.best_month) }}</td>
-      <td>{{ "%.2f"|format(r.avg_qty) }}</td>
-      <td>{{ "%.2f"|format(r.best_qty) }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+      <h4 class="title is-5 mt-5">Machine Sales by Month</h4>
+      <table class="table is-fullwidth is-striped is-narrow">
+        <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
+        <tbody>
+          {% for sku, row in machine_data.items() %}
+          <tr>
+            <td>{{ sku }}</td>
+            {% for m in months %}
+            <td>${{ "%.2f"|format(row.get(m, 0)) }} ({{ machine_qty[sku].get(m, 0)|int }})</td>
+            {% endfor %}
+            <td>${{ "%.2f"|format(row['total']) }} ({{ machine_qty[sku]['total']|int }})</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
 
-<h4 class="title is-5 mt-5">Last Full Month by Type ({{ last_month_label }})</h4>
-<table class="table is-fullwidth is-striped is-narrow">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>{{ last_month_label }} $</th>
-      <th>vs Last Year</th>
-      <th>Avg Month $</th>
-      <th>Best Month $</th>
-      <th>Avg Qty</th>
-      <th>Best Qty</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for r in last_rows %}
-    <tr>
-      <td>{{ r.type }}</td>
-      <td>${{ "%.2f"|format(r.total) }}</td>
-      <td>{{ r.vs_last }}</td>
-      <td>${{ "%.2f"|format(r.avg_month) }}</td>
-      <td>${{ "%.2f"|format(r.best_month) }}</td>
-      <td>{{ "%.2f"|format(r.avg_qty) }}</td>
-      <td>{{ "%.2f"|format(r.best_qty) }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+      <h4 class="title is-5 mt-5">Detergent & Filter Kits Sales by Month</h4>
+      <table class="table is-fullwidth is-striped is-narrow">
+        <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
+        <tbody>
+          {% for sku, row in dfk_data.items() %}
+          <tr>
+            <td>{{ sku }}</td>
+            {% for m in months %}
+            <td>${{ "%.2f"|format(row.get(m, 0)) }} ({{ dfk_qty[sku].get(m, 0)|int }})</td>
+            {% endfor %}
+            <td>${{ "%.2f"|format(row['total']) }} ({{ dfk_qty[sku]['total']|int }})</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
 
-<h4 class="title is-5 mt-5">Machine Sales by Month</h4>
-<table class="table is-fullwidth is-striped is-narrow">
-  <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
-  <tbody>
-    {% for sku, row in machine_data.items() %}
-    <tr>
-      <td>{{ sku }}</td>
-      {% for m in months %}
-      <td>${{ "%.2f"|format(row.get(m, 0)) }} ({{ machine_qty[sku].get(m, 0)|int }})</td>
+      {% for cat, data in other_data.items() %}
+      <h4 class="title is-5 mt-5">{{ labels[cat] }} Sales by Month</h4>
+      <table class="table is-fullwidth is-striped is-narrow">
+        <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
+        <tbody>
+          {% for sku, row in data.items() %}
+          <tr>
+            <td>{{ sku }}</td>
+            {% for m in months %}
+            <td>${{ "%.2f"|format(row.get(m, 0)) }} ({{ other_qty[cat][sku].get(m, 0)|int }})</td>
+            {% endfor %}
+            <td>${{ "%.2f"|format(row['total']) }} ({{ other_qty[cat][sku]['total']|int }})</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
       {% endfor %}
-      <td>${{ "%.2f"|format(row['total']) }} ({{ machine_qty[sku]['total']|int }})</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    </div> <!-- by-month -->
 
+    <div id="by-year" class="tab-pane is-hidden">
+      <h4 class="title is-5">Yearly Summary by Type</h4>
+      <table class="table is-fullwidth is-striped is-narrow">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Total $</th>
+            <th>vs Last Year</th>
+            <th>Avg Month $</th>
+            <th>Best Month $</th>
+            <th>Avg Qty</th>
+            <th>Best Qty</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in type_rows %}
+          <tr>
+            <td>{{ r.type }}</td>
+            <td>${{ "%.2f"|format(r.total) }}</td>
+            <td>{{ r.vs_last }}</td>
+            <td>${{ "%.2f"|format(r.avg_month) }}</td>
+            <td>${{ "%.2f"|format(r.best_month) }}</td>
+            <td>{{ "%.2f"|format(r.avg_qty) }}</td>
+            <td>{{ "%.2f"|format(r.best_qty) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
 
-<h4 class="title is-5 mt-5">Detergent & Filter Kits Sales by Month</h4>
-<table class="table is-fullwidth is-striped is-narrow">
-  <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
-  <tbody>
-    {% for sku, row in dfk_data.items() %}
-    <tr>
-      <td>{{ sku }}</td>
-      {% for m in months %}
-      <td>${{ "%.2f"|format(row.get(m, 0)) }} ({{ dfk_qty[sku].get(m, 0)|int }})</td>
-      {% endfor %}
-      <td>${{ "%.2f"|format(row['total']) }} ({{ dfk_qty[sku]['total']|int }})</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+      <h4 class="title is-5 mt-5">Last Full Month by Type ({{ last_month_label }})</h4>
+      <table class="table is-fullwidth is-striped is-narrow">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>{{ last_month_label }} $</th>
+            <th>vs Last Year</th>
+            <th>Avg Month $</th>
+            <th>Best Month $</th>
+            <th>Avg Qty</th>
+            <th>Best Qty</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in last_rows %}
+          <tr>
+            <td>{{ r.type }}</td>
+            <td>${{ "%.2f"|format(r.total) }}</td>
+            <td>{{ r.vs_last }}</td>
+            <td>${{ "%.2f"|format(r.avg_month) }}</td>
+            <td>${{ "%.2f"|format(r.best_month) }}</td>
+            <td>{{ "%.2f"|format(r.avg_qty) }}</td>
+            <td>{{ "%.2f"|format(r.best_qty) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div> <!-- by-year -->
 
-{% for cat, data in other_data.items() %}
-<h4 class="title is-5 mt-5">{{ labels[cat] }} Sales by Month</h4>
-<table class="table is-fullwidth is-striped is-narrow">
-  <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
-  <tbody>
-    {% for sku, row in data.items() %}
-    <tr>
-      <td>{{ sku }}</td>
-      {% for m in months %}
-      <td>${{ "%.2f"|format(row.get(m, 0)) }} ({{ other_qty[cat][sku].get(m, 0)|int }})</td>
-      {% endfor %}
-      <td>${{ "%.2f"|format(row['total']) }} ({{ other_qty[cat][sku]['total']|int }})</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% endfor %}
-
-
-<div class="has-text-right mt-4">
-  <button onclick="window.print()" class="button is-light">🖨️ Print Report</button>
-  </div>
+    <div class="has-text-right mt-4">
+      <button onclick="window.print()" class="button is-light">🖨️ Print Report</button>
+    </div>
   </div>
 </div>
+<script>
+  document.querySelectorAll('#reportTabs li').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('#reportTabs li').forEach(function(t){ t.classList.remove('is-active'); });
+      tab.classList.add('is-active');
+      document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.add('is-hidden'); });
+      var target = tab.getAttribute('data-target');
+      document.getElementById(target).classList.remove('is-hidden');
+    });
+  });
+</script>
 {% endblock %}
