@@ -193,7 +193,7 @@ def _update_sku_map(conn, sku_series):
         if not row:
             conn.execute(
                 'INSERT INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
-                (alias, alias, 'machine')
+                (alias, alias, 'unmapped')
             )
 
 
@@ -201,7 +201,7 @@ def _save_types(conn, form):
     entries = [k.split('_')[1] for k in form.keys() if k.startswith('canonical_')]
     for idx in entries:
         canonical = form.get(f'canonical_{idx}', '').lower().strip()
-        type_val = form.get(f'type_{idx}', 'machine')
+        type_val = form.get(f'type_{idx}', 'unmapped')
         if canonical:
             conn.execute(
                 'UPDATE sku_map SET type=? WHERE canonical_sku=?',
@@ -246,7 +246,7 @@ def sku_map_page():
                     'SELECT type FROM sku_map WHERE canonical_sku=? LIMIT 1',
                     (target,),
                 ).fetchone()
-                target_type = type_row['type'] if type_row else 'machine'
+                target_type = type_row['type'] if type_row else 'unmapped'
                 for canonical in selected:
                     rows = conn.execute(
                         'SELECT alias FROM sku_map WHERE canonical_sku=?',
@@ -287,7 +287,7 @@ def sku_map_page():
             for idx in entries:
                 canonical = request.form.get(f'canonical_{idx}', '').lower().strip()
                 aliases = request.form.get(f'aliases_{idx}', '')
-                type_val = request.form.get(f'type_{idx}', 'machine')
+                type_val = request.form.get(f'type_{idx}', 'unmapped')
                 if not canonical:
                     continue
                 alias_list = [a.lower().strip() for a in aliases.split(',') if a.strip()]
@@ -296,11 +296,11 @@ def sku_map_page():
                 for alias in alias_set:
                     conn.execute(
                         'REPLACE INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
-                        (alias, canonical, type_val)
-                    )
+                (alias, canonical, type_val)
+            )
             canonical_new = request.form.get('canonical_new', '').lower().strip()
             aliases_new = request.form.get('aliases_new', '')
-            type_new = request.form.get('type_new', 'machine')
+            type_new = request.form.get('type_new', 'unmapped')
             if canonical_new:
                 alias_list = [a.lower().strip() for a in aliases_new.split(',') if a.strip()]
                 alias_set = set(alias_list + [canonical_new])
@@ -331,12 +331,13 @@ def sku_map_page():
         g['aliases'] = ', '.join(sorted(g['aliases']))
         grouped_list.append(g)
     merged_groups = [g for g in grouped_list if g['aliases']]
+    unmapped_groups = [g for g in grouped_list if g['type'] == 'unmapped']
 
     # generate merge suggestions
     canonicals = sorted(grouped.keys())
     suggestions = _suggest_merges(canonicals, threshold=0.95)
 
-    return render_template('sku_map.html', grouped=grouped_list, suggestions=suggestions, merged=merged_groups)
+    return render_template('sku_map.html', grouped=grouped_list, suggestions=suggestions, merged=merged_groups, unmapped=unmapped_groups)
 
 
 @app.route('/monthly-report')
@@ -371,8 +372,8 @@ def monthly_report():
             key = alias.lower().strip()
             if key in m.index:
                 return m.loc[key, field]
-            return key if field == 'canonical_sku' else 'machine'
-        return alias if field == 'canonical_sku' else 'machine'
+            return key if field == 'canonical_sku' else 'unmapped'
+        return alias if field == 'canonical_sku' else 'unmapped'
 
     all_data['canonical'] = all_data['sku'].apply(lambda x: map_row(x, 'canonical_sku'))
     all_data['type'] = all_data['sku'].apply(lambda x: map_row(x, 'type'))
