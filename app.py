@@ -171,18 +171,24 @@ def sku_map_page():
                 if k.startswith('select_')
             ]
             if target and selected:
+                type_row = conn.execute(
+                    'SELECT type FROM sku_map WHERE canonical_sku=? LIMIT 1',
+                    (target,)
+                ).fetchone()
+                target_type = type_row['type'] if type_row else 'machine'
                 for canonical in selected:
                     rows = conn.execute(
-                        'SELECT alias, type FROM sku_map WHERE canonical_sku=?',
-                        (canonical,),
+                        'SELECT alias FROM sku_map WHERE canonical_sku=?',
+                        (canonical,)
                     ).fetchall()
                     for r in rows:
                         conn.execute(
                             'REPLACE INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
-                            (r['alias'], target, r['type']),
+                            (r['alias'], target, target_type),
                         )
                     if canonical != target:
                         conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (canonical,))
+                conn.execute('UPDATE sku_map SET type=? WHERE canonical_sku=?', (target_type, target))
                 conn.commit()
                 flash('Entries merged.')
             return redirect(url_for('sku_map_page'))
