@@ -642,6 +642,103 @@ def report_chart():
     return send_file(output, mimetype='image/png')
 
 
+@app.route('/last-month-chart')
+def last_month_chart():
+    year = request.args.get('year', default=datetime.now().year, type=int)
+    conn = get_db()
+    shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)
+    qbo = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM qbo', conn)
+    mapping = pd.read_sql_query('SELECT alias, canonical_sku, type FROM sku_map', conn)
+    conn.close()
+
+    all_data = pd.concat([shopify, qbo], ignore_index=True)
+    all_data['total'] = pd.to_numeric(all_data['total'], errors='coerce').fillna(0)
+    all_data['created_at'] = (
+        pd.to_datetime(all_data['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
+        .dt.tz_localize(None)
+    )
+    all_data = all_data.dropna(subset=['created_at'])
+
+    m = mapping.set_index('alias')
+
+    def map_row(alias, field):
+        if isinstance(alias, str):
+            key = alias.lower().strip()
+            if key in m.index:
+                return m.loc[key, field]
+            return key if field == 'canonical_sku' else 'unmapped'
+        return alias if field == 'canonical_sku' else 'unmapped'
+
+    all_data['type'] = all_data['sku'].apply(lambda x: map_row(x, 'type'))
+    all_data['year'] = all_data['created_at'].dt.year
+    all_data['month_num'] = all_data['created_at'].dt.month
+
+    now = datetime.now()
+    if year == now.year:
+        if now.month == 1:
+            last_year = year - 1
+            last_month = 12
+        else:
+            last_year = year
+            last_month = now.month - 1
+    else:
+        last_year = year
+        last_month = 12
+
+    summary = (
+        all_data.groupby(['year', 'month_num', 'type'])['total']
+        .sum()
+        .reset_index()
+    )
+
+    categories = [
+        'machine',
+        'detergent_filter_kits',
+        'detergent',
+        'filters',
+        'parts',
+        'service',
+        'shopify',
+        'shipping',
+    ]
+    labels = {
+        'machine': 'Machines',
+        'detergent_filter_kits': 'Detergent & Filter Kits',
+        'detergent': 'Detergents',
+        'filters': 'Filters',
+        'parts': 'Parts',
+        'service': 'Service',
+        'shopify': 'Shopify',
+        'shipping': 'Shipping',
+    }
+
+    cur = summary[(summary['year'] == last_year) & (summary['month_num'] == last_month)].set_index('type')
+    prev = summary[(summary['year'] == last_year - 1) & (summary['month_num'] == last_month)].set_index('type')
+
+    y1 = [cur['total'].get(cat, 0) for cat in categories]
+    y2 = [prev['total'].get(cat, 0) for cat in categories]
+    xlabels = [labels.get(cat, cat) for cat in categories]
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+    idx = range(len(categories))
+    width = 0.35
+    ax.bar([i - width / 2 for i in idx], y1, width=width, label=f'{last_year}-{last_month:02d}')
+    ax.bar([i + width / 2 for i in idx], y2, width=width, label=f'{last_year - 1}-{last_month:02d}')
+    ax.set_xticks(list(idx))
+    ax.set_xticklabels(xlabels, rotation=30, ha='right')
+    ax.set_ylabel('Total Sales ($)')
+    ax.set_title('Last Month Sales by Type')
+    ax.legend()
+    ax.grid(axis='y')
+
+    output = BytesIO()
+    fig.tight_layout()
+    plt.savefig(output, format='png')
+    plt.close(fig)
+    output.seek(0)
+    return send_file(output, mimetype='image/png')
+
+
 
 @app.route('/debug')
 def debug_summary():
