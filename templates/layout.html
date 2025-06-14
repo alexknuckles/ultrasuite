@@ -5,16 +5,26 @@
   <meta charset="utf-8">
   <title>Finance Dashboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-<div class="container mt-4">
-  <h1 class="mb-4">Finance Dashboard</h1>
-  <ul class="nav nav-tabs mb-4">
-    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
-    <li class="nav-item"><a class="nav-link" href="/upload">Upload Data</a></li>
-    <li class="nav-item"><a class="nav-link" href="/sku-map">SKU Map</a></li>
-    <li class="nav-item"><a class="nav-link" href="/monthly-report">Monthly Report</a></li>
-  </ul>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">Finance Dashboard</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="/upload">Upload Data</a></li>
+        <li class="nav-item"><a class="nav-link" href="/sku-map">SKU Map</a></li>
+        <li class="nav-item"><a class="nav-link" href="/monthly-report">Monthly Report</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="container">
   {% with messages = get_flashed_messages() %}
     {% if messages %}
       <div class="alert alert-info">{{ messages[0] }}</div>

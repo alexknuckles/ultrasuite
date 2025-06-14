@@ -1,0 +1,12 @@
+.alias-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  max-height: 6rem;
+  overflow-y: auto;
+}
+
+.alias-badges .badge {
+  display: flex;
+  align-items: center;
+}
