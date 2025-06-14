@@ -181,8 +181,8 @@ def sku_map_page():
 def monthly_report():
     year = request.args.get('year', default=datetime.now().year, type=int)
     conn = get_db()
-    shopify = pd.read_sql_query('SELECT created_at, sku, total FROM shopify', conn)
-    qbo = pd.read_sql_query('SELECT created_at, sku, total FROM qbo', conn)
+    shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)
+    qbo = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM qbo', conn)
     mapping = pd.read_sql_query('SELECT alias, canonical_sku, type FROM sku_map', conn)
     conn.close()
 
@@ -190,6 +190,7 @@ def monthly_report():
 
     # ensure numeric totals for reliable aggregation
     all_data['total'] = pd.to_numeric(all_data['total'], errors='coerce').fillna(0)
+    all_data['quantity'] = pd.to_numeric(all_data['quantity'], errors='coerce').fillna(0)
 
     all_data['created_at'] = (
         pd.to_datetime(
@@ -217,7 +218,7 @@ def monthly_report():
     all_data['month'] = all_data['created_at'].dt.strftime('%b')
     all_data['month_num'] = all_data['created_at'].dt.month
 
-    summary = all_data.groupby(['year', 'month', 'month_num'])['total'].sum().reset_index()
+    summary = all_data.groupby(['year', 'month', 'month_num']).agg({'total': 'sum', 'quantity': 'sum'}).reset_index()
     cutoff_month = datetime.now().month if year == datetime.now().year else 12
 
     this_year = summary[summary['year'] == year].set_index('month')
@@ -227,26 +228,36 @@ def monthly_report():
     rows = []
     for i, month in enumerate(months_order[:cutoff_month], start=1):
         current = this_year['total'].get(month, 0)
+        current_qty = int(this_year['quantity'].get(month, 0))
         previous = last_year['total'].get(month, 0)
+        previous_qty = int(last_year['quantity'].get(month, 0))
         pct = '-'
         if previous > 0:
             pct = f"{((current-previous)/previous)*100:.1f}%"
         elif current > 0:
             pct = '∞'
-        rows.append((month, current, previous, pct))
+        rows.append((month, current, current_qty, previous, previous_qty, pct))
 
     machine = all_data[all_data['type']=='machine']
     chem = all_data[all_data['type']!='machine']
     machine_data = {}
+    machine_qty = {}
     for row in machine.itertuples():
         machine_data.setdefault(row.canonical, {}).setdefault(row.month, 0)
         machine_data[row.canonical][row.month] += row.total
         machine_data[row.canonical]['total'] = machine_data[row.canonical].get('total',0)+row.total
+        machine_qty.setdefault(row.canonical, {}).setdefault(row.month, 0)
+        machine_qty[row.canonical][row.month] += row.quantity
+        machine_qty[row.canonical]['total'] = machine_qty[row.canonical].get('total',0)+row.quantity
     chem_data = {}
+    chem_qty = {}
     for row in chem.itertuples():
         chem_data.setdefault(row.canonical, {}).setdefault(row.month, 0)
         chem_data[row.canonical][row.month] += row.total
         chem_data[row.canonical]['total'] = chem_data[row.canonical].get('total',0)+row.total
+        chem_qty.setdefault(row.canonical, {}).setdefault(row.month, 0)
+        chem_qty[row.canonical][row.month] += row.quantity
+        chem_qty[row.canonical]['total'] = chem_qty[row.canonical].get('total',0)+row.quantity
 
     years = sorted(summary['year'].unique(), reverse=True)
     return render_template(
@@ -256,7 +267,9 @@ def monthly_report():
         years=years,
         months=months_order[:cutoff_month],
         machine_data=machine_data,
+        machine_qty=machine_qty,
         chem_data=chem_data,
+        chem_qty=chem_qty,
     )
 
 
@@ -264,11 +277,12 @@ def monthly_report():
 def report_chart():
     year = request.args.get('year', default=datetime.now().year, type=int)
     conn = get_db()
-    shopify = pd.read_sql_query('SELECT created_at, sku, total FROM shopify', conn)
-    qbo = pd.read_sql_query('SELECT created_at, sku, total FROM qbo', conn)
+    shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)
+    qbo = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM qbo', conn)
     conn.close()
 
     all_data = pd.concat([shopify, qbo])
+    all_data['quantity'] = pd.to_numeric(all_data['quantity'], errors='coerce').fillna(0)
     all_data['created_at'] = (
         pd.to_datetime(all_data['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
         .dt.tz_localize(None)
