@@ -12,8 +12,9 @@
   </ul>
   <div class="tab-content mt-3" id="mapTabsContent">
     <div class="tab-pane fade show active" id="map" role="tabpanel">
+      <input type="text" id="searchBox" class="form-control mb-3" placeholder="Search SKUs">
       <form method="POST">
-        <table class="table table-bordered">
+        <table id="skuTable" class="table table-bordered">
           <thead>
             <tr>
               <th>Merge</th>
@@ -84,7 +85,23 @@
       {% else %}
       <p>No suggestions available.</p>
       {% endif %}
-    </div>
   </div>
 </div>
+</div>
+<script>
+  document.getElementById('searchBox').addEventListener('input', function() {
+    var term = this.value.toLowerCase();
+    document.querySelectorAll('#skuTable tbody tr').forEach(function(row) {
+      var canonicalInput = row.querySelector('input[name^="canonical_"]');
+      var aliasInput = row.querySelector('input[name^="aliases_"]');
+      if (canonicalInput && !canonicalInput.name.endsWith('_new')) {
+        var text = canonicalInput.value.toLowerCase();
+        if (aliasInput) {
+          text += ' ' + aliasInput.value.toLowerCase();
+        }
+        row.style.display = text.indexOf(term) !== -1 ? '' : 'none';
+      }
+    });
+  });
+</script>
 {% endblock %}
