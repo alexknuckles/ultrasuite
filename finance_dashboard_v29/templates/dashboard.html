@@ -1,0 +1,25 @@
+
+{% extends "layout.html" %}
+{% block content %}
+<h2>Status</h2>
+<table class="table">
+  <thead><tr><th>Source</th><th>Last Uploaded</th></tr></thead>
+  <tbody>
+    {% for row in meta.itertuples() %}
+    <tr><td>{{ row.source }}</td><td>{{ row.last_updated or 'Never' }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>SKU Summary</h2>
+<table class="table table-sm">
+  <thead><tr><th>Canonical SKU</th><th># of Aliases</th></tr></thead>
+  <tbody>
+    {% for row in sku_stats.itertuples() %}
+    <tr><td>{{ row.canonical_sku }}</td><td>{{ row.alias_count }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a href="/monthly-report" class="btn btn-primary mt-4">📊 View Monthly Report</a>
+{% endblock %}
