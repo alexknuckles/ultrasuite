@@ -3,6 +3,8 @@ import sqlite3
 from datetime import datetime
 from io import BytesIO
 from difflib import SequenceMatcher
+import itertools
+import re
 
 import pandas as pd
 import matplotlib
@@ -125,6 +127,20 @@ def _update_sku_map(conn, sku_series):
             )
 
 
+def _suggest_merges(canonicals, threshold=0.8):
+    cleaned = {c: re.sub(r'[^a-z0-9]', '', c.lower()) for c in canonicals}
+    suggestions = []
+    for a, b in itertools.combinations(canonicals, 2):
+        ca, cb = cleaned[a], cleaned[b]
+        if not ca or not cb or ca[0] != cb[0]:
+            continue
+        ratio = SequenceMatcher(None, ca, cb).ratio()
+        if ratio >= threshold or ca in cb or cb in ca:
+            suggestions.append((a, b, ratio))
+    suggestions.sort(key=lambda x: -x[2])
+    return suggestions
+
+
 @app.route('/sku-map', methods=['GET', 'POST'])
 def sku_map_page():
     conn = get_db()
@@ -199,17 +215,9 @@ def sku_map_page():
         g['aliases'] = ', '.join(sorted(g['aliases']))
         grouped_list.append(g)
 
-    # simple similarity suggestions
+    # generate merge suggestions
     canonicals = sorted(grouped.keys())
-    suggestions = []
-    for i in range(len(canonicals)):
-        for j in range(i + 1, len(canonicals)):
-            a, b = canonicals[i], canonicals[j]
-            if a[0] != b[0]:
-                continue
-            ratio = SequenceMatcher(None, a, b).ratio()
-            if ratio >= 0.8:
-                suggestions.append((a, b))
+    suggestions = _suggest_merges(canonicals)
 
     return render_template('sku_map.html', grouped=grouped_list, suggestions=suggestions)
 
