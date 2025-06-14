@@ -108,17 +108,35 @@
 <table class="table is-fullwidth is-striped is-narrow">
   <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
   <tbody>
-    {% for sku, row in chem_data.items() %}
+    {% for sku, row in dfk_data.items() %}
     <tr>
       <td>{{ sku }}</td>
       {% for m in months %}
-      <td>${{ "%.2f"|format(row.get(m, 0)) }} ({{ chem_qty[sku].get(m, 0)|int }})</td>
+      <td>${{ "%.2f"|format(row.get(m, 0)) }} ({{ dfk_qty[sku].get(m, 0)|int }})</td>
       {% endfor %}
-      <td>${{ "%.2f"|format(row['total']) }} ({{ chem_qty[sku]['total']|int }})</td>
+      <td>${{ "%.2f"|format(row['total']) }} ({{ dfk_qty[sku]['total']|int }})</td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
+
+{% for cat, data in other_data.items() %}
+<h4 class="title is-5 mt-5">{{ labels[cat] }} Sales by Month</h4>
+<table class="table is-fullwidth is-striped is-narrow">
+  <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
+  <tbody>
+    {% for sku, row in data.items() %}
+    <tr>
+      <td>{{ sku }}</td>
+      {% for m in months %}
+      <td>${{ "%.2f"|format(row.get(m, 0)) }} ({{ other_qty[cat][sku].get(m, 0)|int }})</td>
+      {% endfor %}
+      <td>${{ "%.2f"|format(row['total']) }} ({{ other_qty[cat][sku]['total']|int }})</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endfor %}
 
 
 <div class="has-text-right mt-4">
