@@ -31,7 +31,7 @@
             <td>{{ month }}</td>
             <td>${{ "%.2f"|format(current or 0) }}</td>
             <td>${{ "%.2f"|format(previous or 0) }}</td>
-            <td>{{ pct }}</td>
+            <td>{{ pct | trend }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -55,7 +55,7 @@
           <tr>
             <td>{{ r.type }}</td>
             <td>${{ "%.2f"|format(r.total) }}</td>
-            <td>{{ r.vs_last }}</td>
+            <td>{{ r.vs_last | trend }}</td>
             <td>${{ "%.2f"|format(r.avg_month) }}</td>
             <td>${{ "%.2f"|format(r.best_month) }}</td>
             <td>{{ "%.2f"|format(r.avg_qty) }}</td>
@@ -122,7 +122,7 @@
           <tr>
             <td>{{ r.type }}</td>
             <td>${{ "%.2f"|format(r.total) }}</td>
-            <td>{{ r.vs_last }}</td>
+            <td>{{ r.vs_last | trend }}</td>
             <td>${{ "%.2f"|format(r.avg_month) }}</td>
             <td>${{ "%.2f"|format(r.best_month) }}</td>
             <td>{{ "%.2f"|format(r.avg_qty) }}</td>
