@@ -1,0 +1,47 @@
+
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>SKU Alias Mapping</h2>
+  <form method="POST">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Canonical SKU</th>
+          <th>Aliases (comma-separated)</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in grouped %}
+        <tr>
+          <td><input class="form-control" type="text" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
+          <td><input class="form-control" type="text" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}"></td>
+          <td>
+            <select class="form-control" name="type_{{ loop.index0 }}">
+              <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
+              <option value="detergent" {% if entry.type == 'detergent' %}selected{% endif %}>Detergent</option>
+              <option value="filters" {% if entry.type == 'filters' %}selected{% endif %}>Filters</option>
+              <option value="maintenance" {% if entry.type == 'maintenance' %}selected{% endif %}>Maintenance</option>
+            </select>
+          </td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <td><input class="form-control" type="text" name="canonical_new"></td>
+          <td><input class="form-control" type="text" name="aliases_new"></td>
+          <td>
+            <select class="form-control" name="type_new">
+              <option value="machine">Machine</option>
+              <option value="detergent">Detergent</option>
+              <option value="filters">Filters</option>
+              <option value="maintenance">Maintenance</option>
+            </select>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="btn btn-primary" type="submit">Save Changes</button>
+  </form>
+</div>
+{% endblock %}
