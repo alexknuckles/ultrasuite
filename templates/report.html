@@ -59,6 +59,34 @@
   </tbody>
 </table>
 
+<h4 class="title is-5 mt-5">Last Full Month by Type ({{ last_month_label }})</h4>
+<table class="table is-fullwidth is-striped is-narrow">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>{{ last_month_label }} $</th>
+      <th>vs Last Year</th>
+      <th>Avg Month $</th>
+      <th>Best Month $</th>
+      <th>Avg Qty</th>
+      <th>Best Qty</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in last_rows %}
+    <tr>
+      <td>{{ r.type }}</td>
+      <td>${{ "%.2f"|format(r.total) }}</td>
+      <td>{{ r.vs_last }}</td>
+      <td>${{ "%.2f"|format(r.avg_month) }}</td>
+      <td>${{ "%.2f"|format(r.best_month) }}</td>
+      <td>{{ "%.2f"|format(r.avg_qty) }}</td>
+      <td>{{ "%.2f"|format(r.best_qty) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 <h4 class="title is-5 mt-5">Machine Sales by Month</h4>
 <table class="table is-fullwidth is-striped is-narrow">
   <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>

@@ -424,6 +424,61 @@ def monthly_report():
             'best_qty': best_qty,
         })
 
+    # last full month summary by type
+    now = datetime.now()
+    if year == now.year:
+        if now.month == 1:
+            last_month_year = year - 1
+            last_month_num = 12
+        else:
+            last_month_year = year
+            last_month_num = now.month - 1
+    else:
+        last_month_year = year
+        last_month_num = 12
+
+    last_month_label = datetime(last_month_year, last_month_num, 1).strftime('%b')
+
+    last_rows = []
+    for cat in categories:
+        cur_month = summary_type[
+            (summary_type['year'] == last_month_year)
+            & (summary_type['month_num'] == last_month_num)
+            & (summary_type['type'] == cat)
+        ]
+        prev_month = summary_type[
+            (summary_type['year'] == last_month_year - 1)
+            & (summary_type['month_num'] == last_month_num)
+            & (summary_type['type'] == cat)
+        ]
+        cur_total = cur_month['total'].sum()
+        cur_qty = cur_month['quantity'].sum()
+        prev_total = prev_month['total'].sum()
+        vs_last = '-'
+        if prev_total > 0:
+            vs_last = f"{((cur_total - prev_total) / prev_total) * 100:.1f}%"
+        elif cur_total > 0:
+            vs_last = '∞'
+        year_to_date = summary_type[
+            (summary_type['year'] == last_month_year)
+            & (summary_type['type'] == cat)
+            & (summary_type['month_num'] <= last_month_num)
+        ]
+        month_count = last_month_num if last_month_year == year else 12
+        avg_month = year_to_date['total'].sum() / month_count if month_count else 0
+        best_month = year_to_date['total'].max() if len(year_to_date) else 0
+        avg_qty = year_to_date['quantity'].sum() / month_count if month_count else 0
+        best_qty = year_to_date['quantity'].max() if len(year_to_date) else 0
+        last_rows.append({
+            'type': labels.get(cat, cat),
+            'total': cur_total,
+            'vs_last': vs_last,
+            'avg_month': avg_month,
+            'best_month': best_month,
+            'avg_qty': avg_qty,
+            'best_qty': best_qty,
+        })
+
     years = sorted(summary["year"].unique(), reverse=True)
     return render_template(
         "report.html",
@@ -436,6 +491,8 @@ def monthly_report():
         chem_data=chem_data,
         chem_qty=chem_qty,
         type_rows=type_rows,
+        last_month_label=last_month_label,
+        last_rows=last_rows,
     )
 
 
