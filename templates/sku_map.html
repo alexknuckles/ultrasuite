@@ -2,79 +2,91 @@
 {% block content %}
 <div class="card">
   <div class="card-content">
-  <h2 class="title is-4 mb-4">SKU Alias Mapping</h2>
-  <div class="tabs is-boxed" id="mapTabs">
-    <ul>
-      <li class="is-active" data-target="map"><a>Mapping</a></li>
-      <li data-target="sug"><a>Suggestions</a></li>
-    </ul>
-  </div>
-  <div id="map" class="tab-pane">
+    <h2 class="title is-4 mb-4">SKU Alias Mapping</h2>
+    <div class="tabs is-boxed" id="mapTabs">
+      <ul>
+        <li class="is-active" data-target="map"><a>Mapping</a></li>
+        <li data-target="sug"><a>Suggestions</a></li>
+      </ul>
+    </div>
+    <div id="map" class="tab-pane">
       <input type="text" id="searchBox" class="input mb-4" placeholder="Search SKUs">
       <form method="POST">
-        <div class="table-container">
-        <table id="skuTable" class="table is-bordered is-fullwidth sku-table">
-          <thead>
-            <tr>
-              <th>Merge</th>
-              <th>Target</th>
-              <th>Canonical SKU</th>
-              <th>Aliases</th>
-              <th>Type</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for entry in grouped %}
-            <tr>
-              <td class="has-text-centered">
+        {% for entry in grouped %}
+        <div class="card sku-card mb-3">
+          <div class="card-content">
+            <div class="columns is-variable is-1">
+              <div class="column is-narrow merge-col">
+                <label class="checkbox mb-2">
                   <input class="merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
-              </td>
-              <td class="has-text-centered">
+                  Merge
+                </label>
+                <label class="radio">
                   <input class="target-radio" type="radio" name="merge_target" value="{{ entry.canonical }}">
-              </td>
-              <td><input class="input" type="text" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
-              <td class="alias-cell">
-                <input type="hidden" class="alias-input" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
-                <div class="alias-badges mb-1"></div>
-                <button type="button" class="button is-small is-light add-alias">Add</button>
-              </td>
-              <td>
-                <div class="select">
-                <select name="type_{{ loop.index0 }}">
-                  <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
-                  <option value="detergent" {% if entry.type == 'detergent' %}selected{% endif %}>Detergent</option>
-                  <option value="filters" {% if entry.type == 'filters' %}selected{% endif %}>Filters</option>
-                  <option value="maintenance" {% if entry.type == 'maintenance' %}selected{% endif %}>Maintenance</option>
-                </select>
+                  Target
+                </label>
+              </div>
+              <div class="column">
+                <div class="field">
+                  <label class="label">Canonical SKU</label>
+                  <input class="input" type="text" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}">
                 </div>
-              </td>
-            </tr>
-            {% endfor %}
-            <tr>
-              <td></td>
-              <td></td>
-              <td><input class="input" type="text" name="canonical_new"></td>
-              <td class="alias-cell">
-                <input type="hidden" class="alias-input" name="aliases_new">
-                <div class="alias-badges mb-1"></div>
-                <button type="button" class="button is-small is-light add-alias">Add</button>
-              </td>
-              <td>
-                <div class="select">
-                <select name="type_new">
-                  <option value="machine">Machine</option>
-                  <option value="detergent">Detergent</option>
-                  <option value="filters">Filters</option>
-                  <option value="maintenance">Maintenance</option>
-                </select>
+                <div class="field">
+                  <label class="label">Aliases</label>
+                  <input class="input" type="text" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+              <div class="column is-narrow">
+                <div class="field">
+                  <label class="label">Type</label>
+                  <div class="select">
+                    <select name="type_{{ loop.index0 }}">
+                      <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
+                      <option value="detergent" {% if entry.type == 'detergent' %}selected{% endif %}>Detergent</option>
+                      <option value="filters" {% if entry.type == 'filters' %}selected{% endif %}>Filters</option>
+                      <option value="maintenance" {% if entry.type == 'maintenance' %}selected{% endif %}>Maintenance</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <button class="button is-light mr-2" type="submit" name="merge" value="1">Merge Selected</button>
-        <button class="button is-primary" type="submit" name="save" value="1">Save Changes</button>
+        {% endfor %}
+        <div class="card sku-card mb-3">
+          <div class="card-content">
+            <div class="columns is-variable is-1">
+              <div class="column is-narrow merge-col"></div>
+              <div class="column">
+                <div class="field">
+                  <label class="label">Canonical SKU</label>
+                  <input class="input" type="text" name="canonical_new">
+                </div>
+                <div class="field">
+                  <label class="label">Aliases</label>
+                  <input class="input" type="text" name="aliases_new">
+                </div>
+              </div>
+              <div class="column is-narrow">
+                <div class="field">
+                  <label class="label">Type</label>
+                  <div class="select">
+                    <select name="type_new">
+                      <option value="machine">Machine</option>
+                      <option value="detergent">Detergent</option>
+                      <option value="filters">Filters</option>
+                      <option value="maintenance">Maintenance</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="buttons mb-5">
+          <button class="button is-light" type="submit" name="merge" value="1">Merge Selected</button>
+          <button class="button is-primary" type="submit" name="save" value="1">Save Changes</button>
+        </div>
       </form>
     </div>
     <div id="sug" class="tab-pane is-hidden">
@@ -102,64 +114,25 @@
       {% else %}
       <p>No suggestions available.</p>
       {% endif %}
+    </div>
   </div>
-</div>
-</div>
 </div>
 <script>
   document.getElementById('searchBox').addEventListener('input', function() {
     var term = this.value.toLowerCase();
-    document.querySelectorAll('#skuTable tbody tr').forEach(function(row) {
-      var canonicalInput = row.querySelector('input[name^="canonical_"]');
-      var aliasInput = row.querySelector('input[name^="aliases_"]');
+    document.querySelectorAll('.sku-card').forEach(function(card) {
+      var canonicalInput = card.querySelector('input[name^="canonical_"]');
+      var aliasInput = card.querySelector('input[name^="aliases_"]');
       if (canonicalInput && !canonicalInput.name.endsWith('_new')) {
         var text = canonicalInput.value.toLowerCase();
         if (aliasInput) {
           text += ' ' + aliasInput.value.toLowerCase();
         }
-        row.style.display = text.indexOf(term) !== -1 ? '' : 'none';
+        card.style.display = text.indexOf(term) !== -1 ? '' : 'none';
       }
     });
   });
 
-  // show aliases as removable badges
-  document.querySelectorAll('.alias-input').forEach(function(input) {
-    var container = input.nextElementSibling;
-    var addBtn = container.nextElementSibling;
-    function render() {
-      container.innerHTML = '';
-      var aliases = input.value.split(',').map(function(a){ return a.trim(); }).filter(Boolean);
-      aliases.forEach(function(a) {
-        var tag = document.createElement('span');
-        tag.className = 'tag is-info is-light mr-1';
-        tag.textContent = a;
-        var del = document.createElement('button');
-        del.type = 'button';
-        del.className = 'delete is-small ml-1';
-        del.addEventListener('click', function(){
-          aliases = aliases.filter(function(x){ return x !== a; });
-          input.value = aliases.join(', ');
-          render();
-        });
-        tag.appendChild(del);
-        container.appendChild(tag);
-      });
-    }
-    render();
-    if (addBtn) {
-      addBtn.addEventListener('click', function() {
-        var val = prompt('Add alias');
-        if (val) {
-          var aliases = input.value ? input.value.split(',') : [];
-          aliases.push(val.trim());
-          input.value = aliases.join(', ');
-          render();
-        }
-      });
-    }
-  });
-
-  // simple tabs
   document.querySelectorAll('#mapTabs li').forEach(function(tab){
     tab.addEventListener('click', function(){
       document.querySelectorAll('#mapTabs li').forEach(function(t){
@@ -174,42 +147,17 @@
     });
   });
 
-  // default merge target to first selected
   document.querySelectorAll('.merge-check').forEach(function(cb) {
     cb.addEventListener('change', function() {
       var checked = document.querySelector('.merge-check:checked');
       var currentTarget = document.querySelector('.target-radio:checked');
       if (checked && !currentTarget) {
-        var row = checked.closest('tr');
-        if (row) {
-          row.querySelector('.target-radio').checked = true;
+        var card = checked.closest('.sku-card');
+        if (card) {
+          card.querySelector('.target-radio').checked = true;
         }
       }
     });
-  });
-
-  // allow clicking the entire cell to toggle checkbox/radio
-  document.querySelectorAll('#skuTable tbody tr').forEach(function(row) {
-    var cbCell = row.cells[0];
-    var radioCell = row.cells[1];
-    if (cbCell && cbCell.querySelector('input')) {
-      cbCell.style.cursor = 'pointer';
-      cbCell.addEventListener('click', function(e) {
-        if (e.target.tagName !== 'INPUT') {
-          var input = cbCell.querySelector('input');
-          input.checked = !input.checked;
-          input.dispatchEvent(new Event('change'));
-        }
-      });
-    }
-    if (radioCell && radioCell.querySelector('input')) {
-      radioCell.style.cursor = 'pointer';
-      radioCell.addEventListener('click', function(e) {
-        if (e.target.tagName !== 'INPUT') {
-          radioCell.querySelector('input').checked = true;
-        }
-      });
-    }
   });
 </script>
 {% endblock %}

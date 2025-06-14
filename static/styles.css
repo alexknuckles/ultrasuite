@@ -19,24 +19,13 @@ body {
   margin-bottom: 1rem;
 }
 
-/* sku mapping table layout */
-#skuTable {
-  table-layout: fixed;
+/* sku mapping cards */
+.sku-card .merge-col {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-#skuTable th:nth-child(3),
-#skuTable td:nth-child(3) {
-  width: 20%;
-  min-width: 12rem;
-}
-#skuTable th:nth-child(4),
-#skuTable td:nth-child(4) {
-  width: 45%;
-}
-#skuTable .alias-cell {
-  overflow-x: auto;
-}
-#skuTable th:nth-child(5),
-#skuTable td:nth-child(5) {
-  width: 15%;
-  white-space: nowrap;
+.sku-card .field {
+  margin-bottom: 0.5rem;
 }
