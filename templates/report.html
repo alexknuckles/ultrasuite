@@ -1,21 +1,23 @@
 
 {% extends "layout.html" %}
 {% block content %}
-<div class="card shadow-sm">
-  <div class="card-body">
-    <h2 class="card-title">Monthly Report</h2>
-    <form method="get" class="mb-3">
-      <label>Select Year:</label>
-      <select name="year" onchange="this.form.submit()" class="form-select w-auto d-inline-block">
+<div class="card">
+  <div class="card-content">
+    <h2 class="title is-4">Monthly Report</h2>
+    <form method="get" class="mb-4">
+      <label class="label">Select Year:</label>
+      <div class="select is-inline-block">
+        <select name="year" onchange="this.form.submit()">
         {% for y in years %}
         <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
         {% endfor %}
-      </select>
+        </select>
+      </div>
     </form>
 
-<h4>Overall Sales by Month ({{ selected_year }})</h4>
-<img src="{{ url_for('report_chart', year=selected_year) }}" class="img-fluid my-3" alt="Monthly Chart">
-<table class="table table-bordered">
+<h4 class="title is-5">Overall Sales by Month ({{ selected_year }})</h4>
+<img src="{{ url_for('report_chart', year=selected_year) }}" class="my-3" alt="Monthly Chart">
+<table class="table is-fullwidth is-bordered">
     <thead><tr><th>Month</th><th>{{ selected_year }} $</th><th>{{ selected_year - 1 }} $</th><th>% Change</th></tr></thead>
   <tbody>
     {% for month, current, previous, pct in rows %}
@@ -29,8 +31,8 @@
   </tbody>
 </table>
 
-<h4 class="mt-5">Machine Sales by Month</h4>
-<table class="table table-sm table-striped">
+<h4 class="title is-5 mt-5">Machine Sales by Month</h4>
+<table class="table is-fullwidth is-striped is-narrow">
   <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
   <tbody>
     {% for sku, row in machine_data.items() %}
@@ -46,8 +48,8 @@
 </table>
 
 
-<h4 class="mt-5">Detergent & Filter Sales by Month</h4>
-<table class="table table-sm table-striped">
+<h4 class="title is-5 mt-5">Detergent & Filter Sales by Month</h4>
+<table class="table is-fullwidth is-striped is-narrow">
   <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
   <tbody>
     {% for sku, row in chem_data.items() %}
@@ -63,9 +65,9 @@
 </table>
 
 
-<div class="text-end mt-3">
-  <button onclick="window.print()" class="btn btn-secondary">🖨️ Print Report</button>
-</div>
+<div class="has-text-right mt-4">
+  <button onclick="window.print()" class="button is-light">🖨️ Print Report</button>
+  </div>
   </div>
 </div>
 {% endblock %}

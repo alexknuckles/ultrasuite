@@ -1,22 +1,19 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="card shadow-sm">
-  <div class="card-body">
-  <h2 class="card-title mb-4">SKU Alias Mapping</h2>
-  <ul class="nav nav-tabs" id="mapTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="map-tab" data-bs-toggle="tab" data-bs-target="#map" type="button" role="tab">Mapping</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="sug-tab" data-bs-toggle="tab" data-bs-target="#sug" type="button" role="tab">Suggestions</button>
-    </li>
-  </ul>
-  <div class="tab-content mt-3" id="mapTabsContent">
-    <div class="tab-pane fade show active" id="map" role="tabpanel">
-      <input type="text" id="searchBox" class="form-control mb-3" placeholder="Search SKUs">
+<div class="card">
+  <div class="card-content">
+  <h2 class="title is-4 mb-4">SKU Alias Mapping</h2>
+  <div class="tabs is-boxed" id="mapTabs">
+    <ul>
+      <li class="is-active" data-target="map"><a>Mapping</a></li>
+      <li data-target="sug"><a>Suggestions</a></li>
+    </ul>
+  </div>
+  <div id="map" class="tab-pane">
+      <input type="text" id="searchBox" class="input mb-4" placeholder="Search SKUs">
       <form method="POST">
-        <div class="table-responsive">
-        <table id="skuTable" class="table table-bordered align-middle sku-table">
+        <div class="table-container">
+        <table id="skuTable" class="table is-bordered is-fullwidth sku-table">
           <thead>
             <tr>
               <th>Merge</th>
@@ -29,69 +26,69 @@
           <tbody>
             {% for entry in grouped %}
             <tr>
-              <td class="text-center">
-                <div class="form-check form-switch d-inline-block">
-                  <input class="form-check-input merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
-                </div>
+              <td class="has-text-centered">
+                  <input class="merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
               </td>
-              <td class="text-center">
-                <div class="form-check d-inline-block">
-                  <input class="form-check-input target-radio" type="radio" name="merge_target" value="{{ entry.canonical }}">
-                </div>
+              <td class="has-text-centered">
+                  <input class="target-radio" type="radio" name="merge_target" value="{{ entry.canonical }}">
               </td>
-              <td><input class="form-control" type="text" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
+              <td><input class="input" type="text" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
               <td class="alias-cell">
-                <input class="form-control alias-input" type="text" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
-                <div class="alias-badges mt-1"></div>
+                <input type="hidden" class="alias-input" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
+                <div class="alias-badges mb-1"></div>
+                <button type="button" class="button is-small is-light add-alias">Add</button>
               </td>
               <td>
-                <select class="form-control" name="type_{{ loop.index0 }}">
+                <div class="select">
+                <select name="type_{{ loop.index0 }}">
                   <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
                   <option value="detergent" {% if entry.type == 'detergent' %}selected{% endif %}>Detergent</option>
                   <option value="filters" {% if entry.type == 'filters' %}selected{% endif %}>Filters</option>
                   <option value="maintenance" {% if entry.type == 'maintenance' %}selected{% endif %}>Maintenance</option>
                 </select>
+                </div>
               </td>
             </tr>
             {% endfor %}
             <tr>
               <td></td>
               <td></td>
-              <td><input class="form-control" type="text" name="canonical_new"></td>
+              <td><input class="input" type="text" name="canonical_new"></td>
               <td class="alias-cell">
-                <input class="form-control alias-input" type="text" name="aliases_new">
-                <div class="alias-badges mt-1"></div>
+                <input type="hidden" class="alias-input" name="aliases_new">
+                <div class="alias-badges mb-1"></div>
+                <button type="button" class="button is-small is-light add-alias">Add</button>
               </td>
               <td>
-                <select class="form-control" name="type_new">
+                <div class="select">
+                <select name="type_new">
                   <option value="machine">Machine</option>
                   <option value="detergent">Detergent</option>
                   <option value="filters">Filters</option>
                   <option value="maintenance">Maintenance</option>
                 </select>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
         </div>
-        <button class="btn btn-secondary me-2" type="submit" name="merge" value="1">Merge Selected</button>
-        <button class="btn btn-primary" type="submit" name="save" value="1">Save Changes</button>
+        <button class="button is-light mr-2" type="submit" name="merge" value="1">Merge Selected</button>
+        <button class="button is-primary" type="submit" name="save" value="1">Save Changes</button>
       </form>
     </div>
-    <div class="tab-pane fade" id="sug" role="tabpanel">
+    <div id="sug" class="tab-pane is-hidden">
       {% if suggestions %}
       <form method="POST">
-        <table class="table table-sm">
+        <table class="table is-fullwidth is-narrow">
           <thead>
             <tr><th></th><th>Keep</th><th>Merge</th><th>Score</th></tr>
           </thead>
           <tbody>
           {% for s in suggestions %}
           <tr>
-            <td class="text-center">
-              <div class="form-check form-switch d-inline-block">
-                <input class="form-check-input" type="checkbox" name="suggest_{{ loop.index0 }}">
-              </div>
+            <td class="has-text-centered">
+                <input type="checkbox" name="suggest_{{ loop.index0 }}">
             </td>
             <td>{{ s[0] }}<input type="hidden" name="sug_target_{{ loop.index0 }}" value="{{ s[0] }}"></td>
             <td>{{ s[1] }}<input type="hidden" name="sug_merge_{{ loop.index0 }}" value="{{ s[1] }}"></td>
@@ -100,7 +97,7 @@
           {% endfor %}
           </tbody>
         </table>
-        <button class="btn btn-secondary" type="submit" name="merge_suggestions" value="1">Merge Selected</button>
+        <button class="button is-light" type="submit" name="merge_suggestions" value="1">Merge Selected</button>
       </form>
       {% else %}
       <p>No suggestions available.</p>
@@ -128,26 +125,53 @@
   // show aliases as removable badges
   document.querySelectorAll('.alias-input').forEach(function(input) {
     var container = input.nextElementSibling;
+    var addBtn = container.nextElementSibling;
     function render() {
       container.innerHTML = '';
       var aliases = input.value.split(',').map(function(a){ return a.trim(); }).filter(Boolean);
       aliases.forEach(function(a) {
-        var badge = document.createElement('span');
-        badge.className = 'badge bg-secondary me-1';
-        badge.textContent = a + ' ';
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn-close btn-close-white btn-sm';
-        btn.addEventListener('click', function(){
+        var tag = document.createElement('span');
+        tag.className = 'tag is-info is-light mr-1';
+        tag.textContent = a;
+        var del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'delete is-small ml-1';
+        del.addEventListener('click', function(){
           aliases = aliases.filter(function(x){ return x !== a; });
           input.value = aliases.join(', ');
           render();
         });
-        badge.appendChild(btn);
-        container.appendChild(badge);
+        tag.appendChild(del);
+        container.appendChild(tag);
       });
     }
     render();
+    if (addBtn) {
+      addBtn.addEventListener('click', function() {
+        var val = prompt('Add alias');
+        if (val) {
+          var aliases = input.value ? input.value.split(',') : [];
+          aliases.push(val.trim());
+          input.value = aliases.join(', ');
+          render();
+        }
+      });
+    }
+  });
+
+  // simple tabs
+  document.querySelectorAll('#mapTabs li').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('#mapTabs li').forEach(function(t){
+        t.classList.remove('is-active');
+      });
+      tab.classList.add('is-active');
+      document.querySelectorAll('.tab-pane').forEach(function(p){
+        p.classList.add('is-hidden');
+      });
+      var target = tab.getAttribute('data-target');
+      document.getElementById(target).classList.remove('is-hidden');
+    });
   });
 
   // default merge target to first selected
@@ -156,7 +180,10 @@
       var checked = document.querySelector('.merge-check:checked');
       var currentTarget = document.querySelector('.target-radio:checked');
       if (checked && !currentTarget) {
-        checked.parentElement.parentElement.querySelector('.target-radio').checked = true;
+        var row = checked.closest('tr');
+        if (row) {
+          row.querySelector('.target-radio').checked = true;
+        }
       }
     });
   });
