@@ -13,6 +13,7 @@
     <div id="map" class="tab-pane">
       <input type="text" id="searchBox" class="input mb-4" placeholder="Search SKUs">
       <form method="POST">
+        <input type="hidden" id="merge_target" name="merge_target" value="">
         {% for entry in grouped %}
         <div class="card sku-card">
           <div class="card-content">
@@ -20,10 +21,10 @@
               <div class="column is-narrow merge-col">
                 <input id="merge_{{ loop.index0 }}" class="switch is-rounded is-info merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
                 <label for="merge_{{ loop.index0 }}" class="mr-2">Merge</label>
-                <label class="radio target-wrap is-invisible">
-                  <input class="target-radio" type="radio" name="merge_target" value="{{ entry.canonical }}">
-                  Target
-                </label>
+                <span class="target-wrap is-invisible">
+                  <input id="target_{{ loop.index0 }}" class="switch is-rounded is-success target-check" type="checkbox" data-value="{{ entry.canonical }}">
+                  <label for="target_{{ loop.index0 }}">Target</label>
+                </span>
               </div>
               <div class="column">
                 <div class="field is-flex is-align-items-center">
@@ -43,9 +44,13 @@
                   <div class="select">
                     <select name="type_{{ loop.index0 }}">
                       <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
-                      <option value="detergent" {% if entry.type == 'detergent' %}selected{% endif %}>Detergent</option>
+                      <option value="detergent_filter_kits" {% if entry.type == 'detergent_filter_kits' %}selected{% endif %}>Detergent & Filter Kits</option>
+                      <option value="detergent" {% if entry.type == 'detergent' %}selected{% endif %}>Detergents</option>
                       <option value="filters" {% if entry.type == 'filters' %}selected{% endif %}>Filters</option>
-                      <option value="maintenance" {% if entry.type == 'maintenance' %}selected{% endif %}>Maintenance</option>
+                      <option value="parts" {% if entry.type == 'parts' %}selected{% endif %}>Parts</option>
+                      <option value="service" {% if entry.type == 'service' %}selected{% endif %}>Service</option>
+                      <option value="shopify" {% if entry.type == 'shopify' %}selected{% endif %}>Shopify</option>
+                      <option value="shipping" {% if entry.type == 'shipping' %}selected{% endif %}>Shipping</option>
                     </select>
                   </div>
                 </div>
@@ -150,12 +155,17 @@
 
   function updateTargets() {
     document.querySelectorAll('.sku-card').forEach(function(card){
-      var radio = card.querySelector('.target-radio');
+      var check = card.querySelector('.target-check');
       var wrap = card.querySelector('.target-wrap');
-      if (radio && wrap) {
-        wrap.classList.toggle('is-invisible', !radio.checked);
+      if (check && wrap) {
+        wrap.classList.toggle('is-invisible', !check.checked);
       }
     });
+    var hidden = document.getElementById('merge_target');
+    var current = document.querySelector('.target-check:checked');
+    if (hidden) {
+      hidden.value = current ? current.getAttribute('data-value') : '';
+    }
   }
 
   document.querySelectorAll('.merge-check').forEach(function(cb) {
@@ -164,19 +174,19 @@
       if (card) {
         card.classList.toggle('selected', cb.checked);
         if (!cb.checked) {
-          var radio = card.querySelector('.target-radio');
-          if (radio && radio.checked) {
-            radio.checked = false;
+          var t = card.querySelector('.target-check');
+          if (t && t.checked) {
+            t.checked = false;
           }
         }
       }
-      var currentTarget = document.querySelector('.target-radio:checked');
+      var currentTarget = document.querySelector('.target-check:checked');
       if (!currentTarget) {
         var first = document.querySelector('.merge-check:checked');
         if (first) {
-          var radio = first.closest('.sku-card').querySelector('.target-radio');
-          if (radio) {
-            radio.checked = true;
+          var check = first.closest('.sku-card').querySelector('.target-check');
+          if (check) {
+            check.checked = true;
           }
         }
       }
@@ -188,6 +198,17 @@
     }
   });
   updateTargets();
+
+  document.querySelectorAll('.target-check').forEach(function(tc){
+    tc.addEventListener('change', function(){
+      if (tc.checked) {
+        document.querySelectorAll('.target-check').forEach(function(other){
+          if (other !== tc) other.checked = false;
+        });
+      }
+      updateTargets();
+    });
+  });
 
   document.querySelectorAll('.alias-input').forEach(function(input) {
     var container = input.nextElementSibling;
