@@ -21,16 +21,17 @@ body {
 
 /* sku mapping cards */
 .sku-card .merge-col {
-  text-align: center;
+  text-align: left;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 .sku-card {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 .sku-card .card-content {
-  padding: 0.75rem;
+  padding: 0.5rem;
 }
 .sku-card .field {
   margin-bottom: 0.25rem;
