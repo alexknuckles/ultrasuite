@@ -26,7 +26,7 @@ def format_dt(value):
             return {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
 
         month = dt.strftime("%B")
-        time_str = dt.strftime("%-I:%M%p").lower()
+        time_str = dt.strftime("%I:%M%p").lstrip('0').lower()
         return f"{month} {dt.day}{_suffix(dt.day)}, {dt.year} - {time_str}"
     except Exception:
         return value
@@ -94,8 +94,10 @@ def upload():
             df = pd.read_csv(shopify)
             cleaned = df[[
                 'Created at', 'Lineitem sku', 'Lineitem name', 'Lineitem quantity',
-                'Lineitem price', 'Total'
+                'Lineitem price'
             ]].copy()
+            cleaned['Total'] = pd.to_numeric(df['Lineitem price'], errors='coerce').fillna(0) * \
+                pd.to_numeric(df['Lineitem quantity'], errors='coerce').fillna(0)
             cleaned.columns = [
                 'created_at', 'sku', 'description', 'quantity', 'price', 'total'
             ]
