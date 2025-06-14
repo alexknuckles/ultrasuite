@@ -127,6 +127,18 @@ def _update_sku_map(conn, sku_series):
             )
 
 
+def _save_types(conn, form):
+    entries = [k.split('_')[1] for k in form.keys() if k.startswith('canonical_')]
+    for idx in entries:
+        canonical = form.get(f'canonical_{idx}', '').lower().strip()
+        type_val = form.get(f'type_{idx}', 'machine')
+        if canonical:
+            conn.execute(
+                'UPDATE sku_map SET type=? WHERE canonical_sku=?',
+                (type_val, canonical)
+            )
+
+
 def _clean_sku(text):
     text = text.lower().replace('gal', '')
     return re.sub(r'[^a-z0-9]', '', text)
@@ -151,6 +163,7 @@ def sku_map_page():
     conn = get_db()
     if request.method == 'POST':
         if 'merge' in request.form:
+            _save_types(conn, request.form)
             target = request.form.get('merge_target', '').lower().strip()
             selected = [
                 request.form[k].lower().strip()
@@ -175,6 +188,7 @@ def sku_map_page():
             return redirect(url_for('sku_map_page'))
 
         if 'merge_suggestions' in request.form:
+            _save_types(conn, request.form)
             pairs = [k.split('_')[1] for k in request.form if k.startswith('suggest_')]
             for idx in pairs:
                 merge_from = request.form.get(f'sug_merge_{idx}', '').lower().strip()
