@@ -265,6 +265,7 @@ def sku_map_page():
 
     rows = conn.execute('SELECT alias, canonical_sku, type FROM sku_map').fetchall()
     conn.close()
+    merged_rows = [r for r in rows if r['alias'] != r['canonical_sku']]
     grouped = {}
     for r in rows:
         entry = grouped.setdefault(r['canonical_sku'], {
@@ -283,7 +284,7 @@ def sku_map_page():
     canonicals = sorted(grouped.keys())
     suggestions = _suggest_merges(canonicals, threshold=0.95)
 
-    return render_template('sku_map.html', grouped=grouped_list, suggestions=suggestions)
+    return render_template('sku_map.html', grouped=grouped_list, suggestions=suggestions, merged=merged_rows)
 
 
 @app.route('/monthly-report')

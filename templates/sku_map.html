@@ -7,6 +7,7 @@
       <ul>
         <li class="is-active" data-target="map"><a>Mapping</a></li>
         <li data-target="sug"><a>Suggestions</a></li>
+        <li data-target="merged"><a>Merged</a></li>
       </ul>
     </div>
     <div id="map" class="tab-pane">
@@ -84,6 +85,22 @@
       {% else %}
       <p>No suggestions available.</p>
       {% endif %}
+    </div>
+    <div id="merged" class="tab-pane is-hidden">
+      <table class="table is-fullwidth is-narrow">
+        <thead>
+          <tr><th>Alias</th><th>Canonical</th><th>Type</th></tr>
+        </thead>
+        <tbody>
+        {% for r in merged %}
+        <tr>
+          <td>{{ r.alias }}</td>
+          <td>{{ r.canonical_sku }}</td>
+          <td>{{ r.type }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
