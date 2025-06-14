@@ -169,6 +169,8 @@ def sku_map_page():
                 for k in request.form
                 if k.startswith('select_')
             ]
+            if not target and selected:
+                target = selected[0]
             if target and selected:
                 type_row = conn.execute(
                     'SELECT type FROM sku_map WHERE canonical_sku=? LIMIT 1',

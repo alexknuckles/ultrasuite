@@ -18,17 +18,22 @@
           <thead>
             <tr>
               <th>Merge</th>
+              <th>Target</th>
               <th>Canonical SKU</th>
-              <th>Aliases (comma-separated)</th>
+              <th>Aliases</th>
               <th>Type</th>
             </tr>
           </thead>
           <tbody>
             {% for entry in grouped %}
             <tr>
-              <td class="text-center"><input type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
+              <td class="text-center"><input type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}" class="merge-check"></td>
+              <td class="text-center"><input type="radio" name="merge_target" value="{{ entry.canonical }}" class="target-radio"></td>
               <td><input class="form-control" type="text" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}"></td>
-              <td><input class="form-control" type="text" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}"></td>
+              <td>
+                <input class="form-control alias-input" type="text" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
+                <div class="alias-badges mt-1"></div>
+              </td>
               <td>
                 <select class="form-control" name="type_{{ loop.index0 }}">
                   <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
@@ -41,8 +46,12 @@
             {% endfor %}
             <tr>
               <td></td>
+              <td></td>
               <td><input class="form-control" type="text" name="canonical_new"></td>
-              <td><input class="form-control" type="text" name="aliases_new"></td>
+              <td>
+                <input class="form-control alias-input" type="text" name="aliases_new">
+                <div class="alias-badges mt-1"></div>
+              </td>
               <td>
                 <select class="form-control" name="type_new">
                   <option value="machine">Machine</option>
@@ -54,10 +63,6 @@
             </tr>
           </tbody>
         </table>
-        <div class="mb-3">
-          <label class="form-label">Merge selected into:</label>
-          <input class="form-control" type="text" name="merge_target">
-        </div>
         <button class="btn btn-secondary me-2" type="submit" name="merge" value="1">Merge Selected</button>
         <button class="btn btn-primary" type="submit" name="save" value="1">Save Changes</button>
       </form>
@@ -100,6 +105,42 @@
           text += ' ' + aliasInput.value.toLowerCase();
         }
         row.style.display = text.indexOf(term) !== -1 ? '' : 'none';
+      }
+    });
+  });
+
+  // show aliases as removable badges
+  document.querySelectorAll('.alias-input').forEach(function(input) {
+    var container = input.nextElementSibling;
+    function render() {
+      container.innerHTML = '';
+      var aliases = input.value.split(',').map(function(a){ return a.trim(); }).filter(Boolean);
+      aliases.forEach(function(a) {
+        var badge = document.createElement('span');
+        badge.className = 'badge bg-secondary me-1';
+        badge.textContent = a + ' ';
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-close btn-close-white btn-sm';
+        btn.addEventListener('click', function(){
+          aliases = aliases.filter(function(x){ return x !== a; });
+          input.value = aliases.join(', ');
+          render();
+        });
+        badge.appendChild(btn);
+        container.appendChild(badge);
+      });
+    }
+    render();
+  });
+
+  // default merge target to first selected
+  document.querySelectorAll('.merge-check').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      var checked = document.querySelector('.merge-check:checked');
+      var currentTarget = document.querySelector('.target-radio:checked');
+      if (checked && !currentTarget) {
+        checked.parentElement.parentElement.querySelector('.target-radio').checked = true;
       }
     });
   });
