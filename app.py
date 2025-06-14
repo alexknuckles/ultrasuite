@@ -496,12 +496,8 @@ def monthly_report():
         month_count = last_month_num if last_month_year == year else 12
         avg_month = year_to_date['total'].sum() / month_count if month_count else 0
         best_month = overall_cat['total'].max() if len(overall_cat) else 0
-        avg_qty = year_to_date['quantity'].sum() / month_count if month_count else 0
-        best_qty = overall_cat['quantity'].max() if len(overall_cat) else 0
         avg_month_sign = cur_total - avg_month
         best_month_sign = cur_total - best_month
-        avg_qty_sign = cur_qty - avg_qty
-        best_qty_sign = cur_qty - best_qty
         last_rows.append({
             'type': labels.get(cat, cat),
             'total': cur_total,
@@ -510,10 +506,6 @@ def monthly_report():
             'avg_month_sign': avg_month_sign,
             'best_month': best_month,
             'best_month_sign': best_month_sign,
-            'avg_qty': avg_qty,
-            'avg_qty_sign': avg_qty_sign,
-            'best_qty': best_qty,
-            'best_qty_sign': best_qty_sign,
         })
 
     # overall totals for the last full month
@@ -526,7 +518,6 @@ def monthly_report():
         & (summary_type['month_num'] == last_month_num)
     ]['total'].sum()
     total_val = total_cur['total']
-    total_qty = total_cur['quantity']
     vs_last = '-'
     if prev_total_cur > 0:
         vs_last = f"{((total_val - prev_total_cur) / prev_total_cur) * 100:.1f}%"
@@ -539,8 +530,6 @@ def monthly_report():
     month_count = last_month_num if last_month_year == year else 12
     avg_month = ytd['total'] / month_count if month_count else 0
     best_month = summary_type['total'].max() if len(summary_type) else 0
-    avg_qty = ytd['quantity'] / month_count if month_count else 0
-    best_qty = summary_type['quantity'].max() if len(summary_type) else 0
     last_rows.append({
         'type': 'Total',
         'total': total_val,
@@ -549,10 +538,6 @@ def monthly_report():
         'avg_month_sign': total_val - avg_month,
         'best_month': best_month,
         'best_month_sign': total_val - best_month,
-        'avg_qty': avg_qty,
-        'avg_qty_sign': total_qty - avg_qty,
-        'best_qty': best_qty,
-        'best_qty_sign': total_qty - best_qty,
     })
 
     # detailed breakdown by SKU for the last full month
