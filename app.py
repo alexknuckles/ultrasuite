@@ -514,6 +514,51 @@ def monthly_report():
             'best_qty_sign': best_qty_sign,
         })
 
+    # overall totals for the last full month
+    total_cur = summary_type[
+        (summary_type['year'] == last_month_year)
+        & (summary_type['month_num'] == last_month_num)
+    ].agg({'total': 'sum', 'quantity': 'sum'})
+    prev_total_cur = summary_type[
+        (summary_type['year'] == last_month_year - 1)
+        & (summary_type['month_num'] == last_month_num)
+    ]['total'].sum()
+    total_val = total_cur['total']
+    total_qty = total_cur['quantity']
+    vs_last = '-'
+    if prev_total_cur > 0:
+        vs_last = f"{((total_val - prev_total_cur) / prev_total_cur) * 100:.1f}%"
+    elif total_val > 0:
+        vs_last = '∞'
+    ytd = summary_type[
+        (summary_type['year'] == last_month_year)
+        & (summary_type['month_num'] <= last_month_num)
+    ].agg({'total': 'sum', 'quantity': 'sum'})
+    month_count = last_month_num if last_month_year == year else 12
+    avg_month = ytd['total'] / month_count if month_count else 0
+    best_month = summary_type[
+        (summary_type['year'] == last_month_year)
+        & (summary_type['month_num'] <= last_month_num)
+    ]['total'].max() if month_count else 0
+    avg_qty = ytd['quantity'] / month_count if month_count else 0
+    best_qty = summary_type[
+        (summary_type['year'] == last_month_year)
+        & (summary_type['month_num'] <= last_month_num)
+    ]['quantity'].max() if month_count else 0
+    last_rows.append({
+        'type': 'Total',
+        'total': total_val,
+        'vs_last': vs_last,
+        'avg_month': avg_month,
+        'avg_month_sign': total_val - avg_month,
+        'best_month': best_month,
+        'best_month_sign': total_val - best_month,
+        'avg_qty': avg_qty,
+        'avg_qty_sign': total_qty - avg_qty,
+        'best_qty': best_qty,
+        'best_qty_sign': total_qty - best_qty,
+    })
+
     # detailed breakdown by SKU for the last full month
     summary_sku = all_data.groupby(
         ['year', 'month_num', 'canonical', 'type']
