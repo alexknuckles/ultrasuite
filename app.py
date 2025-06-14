@@ -16,9 +16,18 @@ app = Flask(__name__)
 app.secret_key = 'secret'
 
 def format_dt(value):
+    """Format ISO timestamp into a readable string like 'May 4th, 2025 - 5:30pm'."""
     try:
         dt = datetime.fromisoformat(value)
-        return dt.strftime('%-m/%-d/%y %-I:%M%p').lower()
+
+        def _suffix(day):
+            if 11 <= day % 100 <= 13:
+                return "th"
+            return {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+
+        month = dt.strftime("%B")
+        time_str = dt.strftime("%-I:%M%p").lower()
+        return f"{month} {dt.day}{_suffix(dt.day)}, {dt.year} - {time_str}"
     except Exception:
         return value
 

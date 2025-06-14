@@ -119,10 +119,10 @@
 
   function updateTargets() {
     document.querySelectorAll('.sku-card').forEach(function(card){
-      var cb = card.querySelector('.merge-check');
+      var radio = card.querySelector('.target-radio');
       var wrap = card.querySelector('.target-wrap');
-      if (cb && wrap) {
-        wrap.classList.toggle('is-invisible', !cb.checked);
+      if (radio && wrap) {
+        wrap.classList.toggle('is-invisible', !radio.checked);
       }
     });
   }
