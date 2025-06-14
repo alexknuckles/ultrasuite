@@ -236,8 +236,12 @@ def monthly_report():
             pct = '∞'
         rows.append((month, current, previous, pct))
 
-    machine = all_data[all_data['type']=='machine']
-    chem = all_data[all_data['type']!='machine']
+    year_data = all_data[
+        (all_data["year"] == year)
+        & (all_data["month_num"] <= cutoff_month)
+    ]
+    machine = year_data[year_data['type'] == 'machine']
+    chem = year_data[year_data['type'] != 'machine']
     machine_data = {}
     machine_qty = {}
     for row in machine.itertuples():
