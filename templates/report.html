@@ -22,7 +22,7 @@
 
     <div id="by-month" class="tab-pane">
       <h4 class="title is-5">Last Month Sales by Type ({{ last_month_label }})</h4>
-      <img src="{{ url_for('last_month_chart', year=selected_year) }}" class="my-3" alt="Last Month Chart">
+      <img id="lastMonthChart" data-src="{{ url_for('last_month_chart', year=selected_year) }}" class="my-3" alt="Last Month Chart">
 
       <h4 class="title is-5 mt-5">Last Full Month by Type ({{ last_month_label }})</h4>
       <table class="table is-fullwidth is-striped is-narrow">
@@ -88,7 +88,7 @@
 
     <div id="by-year" class="tab-pane is-hidden">
       <h4 class="title is-5">Overall Sales by Month ({{ selected_year }})</h4>
-      <img src="{{ url_for('report_chart', year=selected_year) }}" class="my-3" alt="Monthly Chart">
+      <img id="yearChart" data-src="{{ url_for('report_chart', year=selected_year) }}" class="my-3" alt="Monthly Chart">
       <table class="table is-fullwidth is-bordered mb-5">
         <thead>
           <tr><th>Month</th><th>{{ selected_year }} $</th><th>{{ selected_year - 1 }} $</th><th>% Change</th></tr>
@@ -148,7 +148,24 @@
       document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.add('is-hidden'); });
       var target = tab.getAttribute('data-target');
       document.getElementById(target).classList.remove('is-hidden');
+      if(target === 'by-year') {
+        var img = document.getElementById('yearChart');
+        if(img && !img.src){
+          img.src = img.getAttribute('data-src') + '&t=' + Date.now();
+        }
+      } else if(target === 'by-month') {
+        var img2 = document.getElementById('lastMonthChart');
+        if(img2 && !img2.src){
+          img2.src = img2.getAttribute('data-src') + '&t=' + Date.now();
+        }
+      }
     });
+  });
+  document.addEventListener('DOMContentLoaded', function(){
+    var monthImg = document.getElementById('lastMonthChart');
+    if(monthImg){
+      monthImg.src = monthImg.getAttribute('data-src') + '&t=' + Date.now();
+    }
   });
 </script>
 {% endblock %}
