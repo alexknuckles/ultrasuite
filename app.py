@@ -496,14 +496,22 @@ def monthly_report():
         best_month = year_to_date['total'].max() if len(year_to_date) else 0
         avg_qty = year_to_date['quantity'].sum() / month_count if month_count else 0
         best_qty = year_to_date['quantity'].max() if len(year_to_date) else 0
+        avg_month_sign = cur_total - avg_month
+        best_month_sign = cur_total - best_month
+        avg_qty_sign = cur_qty - avg_qty
+        best_qty_sign = cur_qty - best_qty
         last_rows.append({
             'type': labels.get(cat, cat),
             'total': cur_total,
             'vs_last': vs_last,
             'avg_month': avg_month,
+            'avg_month_sign': avg_month_sign,
             'best_month': best_month,
+            'best_month_sign': best_month_sign,
             'avg_qty': avg_qty,
+            'avg_qty_sign': avg_qty_sign,
             'best_qty': best_qty,
+            'best_qty_sign': best_qty_sign,
         })
 
     # detailed breakdown by SKU for the last full month
@@ -537,6 +545,10 @@ def monthly_report():
             avg_qty = year_qty / cutoff_month if cutoff_month else 0
             best_month = ydf['total'].max() if len(ydf) else 0
             best_qty = ydf['quantity'].max() if len(ydf) else 0
+            avg_month_sign = month_total - avg_month
+            avg_qty_sign = month_qty - avg_qty
+            best_month_sign = month_total - best_month
+            best_qty_sign = month_qty - best_qty
             cat_rows.append({
                 'sku': sku,
                 'year_total': year_total,
@@ -544,11 +556,15 @@ def monthly_report():
                 'month_total': month_total,
                 'month_qty': month_qty,
                 'avg_month': avg_month,
+                'avg_month_sign': avg_month_sign,
                 'avg_qty': avg_qty,
+                'avg_qty_sign': avg_qty_sign,
                 'last_year': last_year_total,
                 'last_year_sign': last_year_sign,
                 'best_month': best_month,
+                'best_month_sign': best_month_sign,
                 'best_qty': best_qty,
+                'best_qty_sign': best_qty_sign,
             })
         sku_details[cat] = cat_rows
 
