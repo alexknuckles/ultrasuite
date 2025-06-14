@@ -157,7 +157,6 @@ def _suggest_merges(canonicals, threshold=0.95):
     suggestions.sort(key=lambda x: -x[2])
     return suggestions
 
-
 @app.route('/sku-map', methods=['GET', 'POST'])
 def sku_map_page():
     conn = get_db()
@@ -173,13 +172,13 @@ def sku_map_page():
             if target and selected:
                 type_row = conn.execute(
                     'SELECT type FROM sku_map WHERE canonical_sku=? LIMIT 1',
-                    (target,)
+                    (target,),
                 ).fetchone()
                 target_type = type_row['type'] if type_row else 'machine'
                 for canonical in selected:
                     rows = conn.execute(
                         'SELECT alias FROM sku_map WHERE canonical_sku=?',
-                        (canonical,)
+                        (canonical,),
                     ).fetchall()
                     for r in rows:
                         conn.execute(
@@ -191,10 +190,7 @@ def sku_map_page():
                 conn.execute('UPDATE sku_map SET type=? WHERE canonical_sku=?', (target_type, target))
                 conn.commit()
                 flash('Entries merged.')
-        conn.close()
-        return redirect(url_for('sku_map_page'))
-
-        if 'merge_suggestions' in request.form:
+        elif 'merge_suggestions' in request.form:
             _save_types(conn, request.form)
             pairs = [k.split('_')[1] for k in request.form if k.startswith('suggest_')]
             for idx in pairs:
@@ -214,38 +210,37 @@ def sku_map_page():
                         conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (merge_from,))
             conn.commit()
             flash('Suggestions merged.')
+        else:
+            entries = [k.split('_')[1] for k in request.form.keys() if k.startswith('canonical_')]
+            for idx in entries:
+                canonical = request.form.get(f'canonical_{idx}', '').lower().strip()
+                aliases = request.form.get(f'aliases_{idx}', '')
+                type_val = request.form.get(f'type_{idx}', 'machine')
+                if not canonical:
+                    continue
+                alias_list = [a.lower().strip() for a in aliases.split(',') if a.strip()]
+                alias_set = set(alias_list + [canonical])
+                conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (canonical,))
+                for alias in alias_set:
+                    conn.execute(
+                        'REPLACE INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
+                        (alias, canonical, type_val)
+                    )
+            canonical_new = request.form.get('canonical_new', '').lower().strip()
+            aliases_new = request.form.get('aliases_new', '')
+            type_new = request.form.get('type_new', 'machine')
+            if canonical_new:
+                alias_list = [a.lower().strip() for a in aliases_new.split(',') if a.strip()]
+                alias_set = set(alias_list + [canonical_new])
+                for alias in alias_set:
+                    conn.execute(
+                        'REPLACE INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
+                        (alias, canonical_new, type_new)
+                    )
+            conn.commit()
+            flash('SKU map updated.')
         conn.close()
         return redirect(url_for('sku_map_page'))
-
-        entries = [k.split('_')[1] for k in request.form.keys() if k.startswith('canonical_')]
-        for idx in entries:
-            canonical = request.form.get(f'canonical_{idx}', '').lower().strip()
-            aliases = request.form.get(f'aliases_{idx}', '')
-            type_val = request.form.get(f'type_{idx}', 'machine')
-            if not canonical:
-                continue
-            alias_list = [a.lower().strip() for a in aliases.split(',') if a.strip()]
-            alias_set = set(alias_list + [canonical])
-            conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (canonical,))
-            for alias in alias_set:
-                conn.execute(
-                    'REPLACE INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
-                    (alias, canonical, type_val)
-                )
-        # handle new entry
-        canonical_new = request.form.get('canonical_new', '').lower().strip()
-        aliases_new = request.form.get('aliases_new', '')
-        type_new = request.form.get('type_new', 'machine')
-        if canonical_new:
-            alias_list = [a.lower().strip() for a in aliases_new.split(',') if a.strip()]
-            alias_set = set(alias_list + [canonical_new])
-            for alias in alias_set:
-                conn.execute(
-                    'REPLACE INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
-                    (alias, canonical_new, type_new)
-                )
-        conn.commit()
-        flash('SKU map updated.')
 
     rows = conn.execute('SELECT alias, canonical_sku, type FROM sku_map').fetchall()
     conn.close()
