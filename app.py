@@ -187,8 +187,7 @@ def monthly_report():
     conn.close()
 
     all_data = pd.concat([shopify, qbo], ignore_index=True)
-    # always coerce to datetime to avoid mixed dtypes from SQLite
-    all_data['created_at'] = pd.to_datetime(all_data['created_at'], errors='coerce')
+
     all_data = all_data.dropna(subset=['created_at'])
 
     m = mapping.set_index('alias')
@@ -258,7 +257,10 @@ def report_chart():
     conn.close()
 
     all_data = pd.concat([shopify, qbo])
-    all_data['created_at'] = pd.to_datetime(all_data['created_at'], errors='coerce')
+    all_data['created_at'] = (
+        pd.to_datetime(all_data['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
+        .dt.tz_localize(None)
+    )
     all_data = all_data.dropna(subset=['created_at'])
     all_data['year'] = all_data['created_at'].dt.year
     all_data['month'] = all_data['created_at'].dt.strftime('%b')
@@ -292,7 +294,10 @@ def debug_summary():
     conn = get_db()
     df = pd.read_sql_query('SELECT * FROM shopify', conn)
     conn.close()
-    df['created_at'] = pd.to_datetime(df['created_at'], errors='coerce')
+    df['created_at'] = (
+        pd.to_datetime(df['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
+        .dt.tz_localize(None)
+    )
     df['total'] = pd.to_numeric(df['total'], errors='coerce').fillna(0)
     df = df.dropna(subset=['created_at'])
     df['month'] = df['created_at'].dt.strftime('%Y-%m')
