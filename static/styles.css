@@ -24,17 +24,17 @@ body {
   text-align: left;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: flex-start;
 }
 .sku-card {
   margin-bottom: 0.5rem;
 }
 .sku-card .card-content {
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem;
 }
 .sku-card .field {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
 }
 .sku-card.selected {
   border-color: #485fc7;
