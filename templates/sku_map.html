@@ -17,22 +17,22 @@
           <div class="card-content">
             <div class="columns is-variable is-1">
               <div class="column is-narrow merge-col">
-                <div class="field">
+                <div class="field is-flex is-align-items-center">
                   <input id="merge_{{ loop.index0 }}" class="switch is-rounded is-info merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
-                  <label for="merge_{{ loop.index0 }}">Merge</label>
+                  <label for="merge_{{ loop.index0 }}" class="mr-2">Merge</label>
+                  <label class="radio ml-2 target-wrap is-hidden">
+                    <input class="target-radio" type="radio" name="merge_target" value="{{ entry.canonical }}">
+                    Target
+                  </label>
                 </div>
-                <label class="radio mt-2">
-                  <input class="target-radio" type="radio" name="merge_target" value="{{ entry.canonical }}">
-                  Target
-                </label>
               </div>
               <div class="column">
-                <div class="field">
-                  <label class="label">Canonical SKU</label>
-                  <p>{{ entry.canonical }}</p>
+                <div class="field is-flex is-align-items-center">
+                  <label class="label mb-0 mr-1">SKU</label>
+                  <span>{{ entry.canonical }}</span>
                   <input type="hidden" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}">
                 </div>
-                <div class="field">
+                <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
                   <label class="label">Aliases</label>
                   <input type="hidden" class="alias-input" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
                   <div class="alias-badges mb-1"></div>
@@ -61,10 +61,10 @@
               <div class="column is-narrow merge-col"></div>
               <div class="column">
                 <div class="field">
-                  <label class="label">Canonical SKU</label>
+                  <label class="label">SKU</label>
                   <input class="input" type="text" name="canonical_new">
                 </div>
-                <div class="field">
+                <div class="field alias-field">
                   <label class="label">Aliases</label>
                   <input type="hidden" class="alias-input" name="aliases_new">
                   <div class="alias-badges mb-1"></div>
@@ -150,6 +150,13 @@
     });
   });
 
+  function updateTargets() {
+    var anyChecked = document.querySelector('.merge-check:checked');
+    document.querySelectorAll('.target-wrap').forEach(function(wrap){
+      wrap.classList.toggle('is-hidden', !anyChecked);
+    });
+  }
+
   document.querySelectorAll('.merge-check').forEach(function(cb) {
     cb.addEventListener('change', function() {
       var checked = document.querySelector('.merge-check:checked');
@@ -164,15 +171,18 @@
       if (card) {
         card.classList.toggle('selected', cb.checked);
       }
+      updateTargets();
     });
     var card = cb.closest('.sku-card');
     if (card) {
       card.classList.toggle('selected', cb.checked);
     }
   });
+  updateTargets();
 
   document.querySelectorAll('.alias-input').forEach(function(input) {
     var container = input.nextElementSibling;
+    var field = input.closest('.alias-field');
     function render() {
       container.innerHTML = '';
       var aliases = input.value.split(',').map(function(a){ return a.trim(); }).filter(Boolean);
@@ -192,6 +202,9 @@
         tag.appendChild(del);
         container.appendChild(tag);
       });
+      if (field) {
+        field.style.display = aliases.length ? '' : 'none';
+      }
     }
     render();
   });
