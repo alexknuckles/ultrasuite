@@ -14,6 +14,16 @@ from flask import Flask, render_template, request, redirect, url_for, flash, sen
 
 app = Flask(__name__)
 app.secret_key = 'secret'
+
+def format_dt(value):
+    try:
+        dt = datetime.fromisoformat(value)
+        return dt.strftime('%-m/%-d/%y %-I:%M%p').lower()
+    except Exception:
+        return value
+
+app.jinja_env.filters['format_dt'] = format_dt
+
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

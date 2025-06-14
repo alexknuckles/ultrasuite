@@ -15,7 +15,7 @@
         {% for entry in grouped %}
         <div class="card sku-card">
           <div class="card-content">
-            <div class="columns is-variable is-1">
+            <div class="columns is-variable is-1 is-vcentered sku-row">
               <div class="column is-narrow merge-col">
                 <input id="merge_{{ loop.index0 }}" class="switch is-rounded is-info merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
                 <label for="merge_{{ loop.index0 }}" class="mr-2">Merge</label>
@@ -53,37 +53,6 @@
           </div>
         </div>
         {% endfor %}
-        <div class="card sku-card">
-          <div class="card-content">
-            <div class="columns is-variable is-1">
-              <div class="column is-narrow merge-col"></div>
-              <div class="column">
-                <div class="field">
-                  <label class="label">SKU</label>
-                  <input class="input" type="text" name="canonical_new">
-                </div>
-                <div class="field alias-field">
-                  <label class="label">Aliases</label>
-                  <input type="hidden" class="alias-input" name="aliases_new">
-                  <div class="alias-badges mb-1"></div>
-                </div>
-              </div>
-              <div class="column is-narrow">
-                <div class="field is-flex is-align-items-center">
-                  <label class="label mb-0 mr-1">Type</label>
-                  <div class="select">
-                    <select name="type_new">
-                      <option value="machine">Machine</option>
-                      <option value="detergent">Detergent</option>
-                      <option value="filters">Filters</option>
-                      <option value="maintenance">Maintenance</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
         <div class="buttons mb-5">
           <button class="button is-light" type="submit" name="merge" value="1">Merge Selected</button>
           <button class="button is-primary" type="submit" name="save" value="1">Save Changes</button>

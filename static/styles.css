@@ -45,3 +45,11 @@ body {
 .target-wrap {
   min-width: 5rem;
 }
+
+.sku-card .sku-row {
+  align-items: center;
+}
+
+.report-content {
+  overflow-x: auto;
+}

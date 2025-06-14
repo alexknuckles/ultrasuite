@@ -12,7 +12,7 @@
           <thead><tr><th>Source</th><th>Last Uploaded</th></tr></thead>
           <tbody>
           {% for row in meta %}
-            <tr><td>{{ row.source }}</td><td>{{ row.last_updated or 'Never' }}</td></tr>
+            <tr><td>{{ row.source }}</td><td>{{ row.last_updated|format_dt if row.last_updated else 'Never' }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
