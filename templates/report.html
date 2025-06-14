@@ -52,7 +52,7 @@
         </thead>
         <tbody>
           {% for r in last_rows %}
-          <tr>
+          <tr{% if r.type == 'Total' %} class="has-background-light has-text-weight-bold"{% endif %}>
             <td>{{ r.type }}</td>
             <td>${{ "%.2f"|format(r.total) }}</td>
             <td>{{ r.vs_last | trend }}</td>
