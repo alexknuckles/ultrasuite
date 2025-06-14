@@ -190,7 +190,7 @@ def monthly_report():
 
     # ensure numeric totals for reliable aggregation
     all_data['total'] = pd.to_numeric(all_data['total'], errors='coerce').fillna(0)
-    all_data["quantity"] = pd.to_numeric(all_data["quantity"], errors="coerce").fillna(0)
+    all_data['quantity'] = pd.to_numeric(all_data['quantity'], errors='coerce').fillna(0)
 
     all_data['created_at'] = (
         pd.to_datetime(
@@ -227,10 +227,10 @@ def monthly_report():
     months_order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
     rows = []
     for i, month in enumerate(months_order[:cutoff_month], start=1):
-        current = this_year["total"].get(month, 0)
-        current_qty = int(this_year["quantity"].get(month, 0))
-        previous = last_year["total"].get(month, 0)
-        previous_qty = int(last_year["quantity"].get(month, 0))
+        current = this_year['total'].get(month, 0)
+        current_qty = int(this_year['quantity'].get(month, 0))
+        previous = last_year['total'].get(month, 0)
+        previous_qty = int(last_year['quantity'].get(month, 0))
         pct = '-'
         if previous > 0:
             pct = f"{((current-previous)/previous)*100:.1f}%"
@@ -245,23 +245,23 @@ def monthly_report():
     for row in machine.itertuples():
         machine_data.setdefault(row.canonical, {}).setdefault(row.month, 0)
         machine_data[row.canonical][row.month] += row.total
-        machine_data[row.canonical]["total"] = machine_data[row.canonical].get("total",0)+row.total
+        machine_data[row.canonical]['total'] = machine_data[row.canonical].get('total',0)+row.total
         machine_qty.setdefault(row.canonical, {}).setdefault(row.month, 0)
         machine_qty[row.canonical][row.month] += row.quantity
-        machine_qty[row.canonical]["total"] = machine_qty[row.canonical].get("total",0)+row.quantity
+        machine_qty[row.canonical]['total'] = machine_qty[row.canonical].get('total',0)+row.quantity
     chem_data = {}
     chem_qty = {}
     for row in chem.itertuples():
         chem_data.setdefault(row.canonical, {}).setdefault(row.month, 0)
         chem_data[row.canonical][row.month] += row.total
-        chem_data[row.canonical]["total"] = chem_data[row.canonical].get("total",0)+row.total
+        chem_data[row.canonical]['total'] = chem_data[row.canonical].get('total',0)+row.total
         chem_qty.setdefault(row.canonical, {}).setdefault(row.month, 0)
         chem_qty[row.canonical][row.month] += row.quantity
-        chem_qty[row.canonical]["total"] = chem_qty[row.canonical].get("total",0)+row.quantity
+        chem_qty[row.canonical]['total'] = chem_qty[row.canonical].get('total',0)+row.quantity
 
-    years = sorted(summary["year"].unique(), reverse=True)
+    years = sorted(summary['year'].unique(), reverse=True)
     return render_template(
-        "report.html",
+        'report.html',
         rows=rows,
         selected_year=year,
         years=years,
@@ -282,7 +282,7 @@ def report_chart():
     conn.close()
 
     all_data = pd.concat([shopify, qbo])
-    all_data["quantity"] = pd.to_numeric(all_data["quantity"], errors="coerce").fillna(0)
+    all_data['quantity'] = pd.to_numeric(all_data['quantity'], errors='coerce').fillna(0)
     all_data['created_at'] = (
         pd.to_datetime(all_data['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
         .dt.tz_localize(None)
