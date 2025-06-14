@@ -6,8 +6,8 @@
     <div class="tabs is-boxed" id="mapTabs">
       <ul>
         <li class="is-active" data-target="map"><a>Mapping</a></li>
-        <li data-target="sug"><a>Suggestions</a></li>
         <li data-target="merged"><a>Merged</a></li>
+        <li data-target="sug"><a>Suggestions</a></li>
       </ul>
     </div>
     <div id="map" class="tab-pane">
@@ -87,20 +87,17 @@
       {% endif %}
     </div>
     <div id="merged" class="tab-pane is-hidden">
-      <table class="table is-fullwidth is-narrow">
-        <thead>
-          <tr><th>Alias</th><th>Canonical</th><th>Type</th></tr>
-        </thead>
-        <tbody>
-        {% for r in merged %}
-        <tr>
-          <td>{{ r.alias }}</td>
-          <td>{{ r.canonical_sku }}</td>
-          <td>{{ r.type }}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-      </table>
+      {% for r in merged %}
+      <div class="card sku-card">
+        <div class="card-content">
+          <div class="columns is-variable is-1 sku-row">
+            <div class="column"><strong>{{ r.alias }}</strong></div>
+            <div class="column">→ {{ r.canonical_sku }}</div>
+            <div class="column is-narrow">{{ r.type }}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
     </div>
   </div>
 </div>
