@@ -93,7 +93,7 @@
             <td>{{ "%.2f"|format(r.month_qty) }}</td>
             <td>{{ ("$%.2f"|format(r.avg_month)) | trend }}</td>
             <td>{{ ("%.2f"|format(r.avg_qty)) | trend }}</td>
-            <td>{{ ("$%.2f"|format(r.last_year)) | trend }}</td>
+            <td>{{ ("$%.2f"|format(r.last_year)) | trend(r.last_year_sign) }}</td>
             <td>{{ ("$%.2f"|format(r.best_month)) | trend }}</td>
             <td>{{ ("%.2f"|format(r.best_qty)) | trend }}</td>
           </tr>
