@@ -144,5 +144,29 @@
       }
     });
   });
+
+  // allow clicking the entire cell to toggle checkbox/radio
+  document.querySelectorAll('#skuTable tbody tr').forEach(function(row) {
+    var cbCell = row.cells[0];
+    var radioCell = row.cells[1];
+    if (cbCell && cbCell.querySelector('input')) {
+      cbCell.style.cursor = 'pointer';
+      cbCell.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'INPUT') {
+          var input = cbCell.querySelector('input');
+          input.checked = !input.checked;
+          input.dispatchEvent(new Event('change'));
+        }
+      });
+    }
+    if (radioCell && radioCell.querySelector('input')) {
+      radioCell.style.cursor = 'pointer';
+      radioCell.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'INPUT') {
+          radioCell.querySelector('input').checked = true;
+        }
+      });
+    }
+  });
 </script>
 {% endblock %}
