@@ -127,15 +127,20 @@ def _update_sku_map(conn, sku_series):
             )
 
 
-def _suggest_merges(canonicals, threshold=0.8):
-    cleaned = {c: re.sub(r'[^a-z0-9]', '', c.lower()) for c in canonicals}
+def _clean_sku(text):
+    text = text.lower().replace('gal', '')
+    return re.sub(r'[^a-z0-9]', '', text)
+
+
+def _suggest_merges(canonicals, threshold=0.95):
+    cleaned = {c: _clean_sku(c) for c in canonicals}
     suggestions = []
     for a, b in itertools.combinations(canonicals, 2):
         ca, cb = cleaned[a], cleaned[b]
         if not ca or not cb or ca[0] != cb[0]:
             continue
-        ratio = SequenceMatcher(None, ca, cb).ratio()
-        if ratio >= threshold or ca in cb or cb in ca:
+        ratio = 1.0 if ca == cb else SequenceMatcher(None, ca, cb).ratio()
+        if ratio >= threshold:
             suggestions.append((a, b, ratio))
     suggestions.sort(key=lambda x: -x[2])
     return suggestions
@@ -167,6 +172,27 @@ def sku_map_page():
                         conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (canonical,))
                 conn.commit()
                 flash('Entries merged.')
+            return redirect(url_for('sku_map_page'))
+
+        if 'merge_suggestions' in request.form:
+            pairs = [k.split('_')[1] for k in request.form if k.startswith('suggest_')]
+            for idx in pairs:
+                merge_from = request.form.get(f'sug_merge_{idx}', '').lower().strip()
+                merge_to = request.form.get(f'sug_target_{idx}', '').lower().strip()
+                if merge_from and merge_to:
+                    rows = conn.execute(
+                        'SELECT alias, type FROM sku_map WHERE canonical_sku=?',
+                        (merge_from,),
+                    ).fetchall()
+                    for r in rows:
+                        conn.execute(
+                            'REPLACE INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
+                            (r['alias'], merge_to, r['type']),
+                        )
+                    if merge_from != merge_to:
+                        conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (merge_from,))
+            conn.commit()
+            flash('Suggestions merged.')
             return redirect(url_for('sku_map_page'))
 
         entries = [k.split('_')[1] for k in request.form.keys() if k.startswith('canonical_')]
@@ -217,7 +243,7 @@ def sku_map_page():
 
     # generate merge suggestions
     canonicals = sorted(grouped.keys())
-    suggestions = _suggest_merges(canonicals)
+    suggestions = _suggest_merges(canonicals, threshold=0.95)
 
     return render_template('sku_map.html', grouped=grouped_list, suggestions=suggestions)
 
