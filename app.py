@@ -362,29 +362,6 @@ def monthly_report():
         (all_data["year"] == year)
         & (all_data["month_num"] <= cutoff_month)
     ]
-    machine = year_data[year_data['type'] == 'machine']
-    chem = year_data[year_data['type'] != 'machine']
-    machine_data = {}
-    machine_qty = {}
-    for row in machine.itertuples():
-        machine_data.setdefault(row.canonical, {}).setdefault(row.month, 0)
-        machine_data[row.canonical][row.month] += row.total
-        machine_data[row.canonical]["total"] = machine_data[row.canonical].get("total",0)+row.total
-        machine_qty.setdefault(row.canonical, {}).setdefault(row.month, 0)
-        machine_qty[row.canonical][row.month] += row.quantity
-        machine_qty[row.canonical]["total"] = machine_qty[row.canonical].get("total",0)+row.quantity
-    chem_data = {}
-    chem_qty = {}
-    for row in chem.itertuples():
-        chem_data.setdefault(row.canonical, {}).setdefault(row.month, 0)
-        chem_data[row.canonical][row.month] += row.total
-        chem_data[row.canonical]["total"] = chem_data[row.canonical].get("total",0)+row.total
-        chem_qty.setdefault(row.canonical, {}).setdefault(row.month, 0)
-        chem_qty[row.canonical][row.month] += row.quantity
-        chem_qty[row.canonical]["total"] = chem_qty[row.canonical].get("total",0)+row.quantity
-
-    # yearly summary by type
-    summary_type = all_data.groupby(['year', 'month_num', 'type']).agg({'total': 'sum', 'quantity': 'sum'}).reset_index()
     categories = ['machine', 'detergent_filter_kits', 'detergent', 'filters', 'parts', 'service', 'shopify', 'shipping']
     labels = {
         'machine': 'Machines',
@@ -396,6 +373,30 @@ def monthly_report():
         'shopify': 'Shopify',
         'shipping': 'Shipping',
     }
+
+    monthly_data = {cat: {} for cat in categories}
+    monthly_qty = {cat: {} for cat in categories}
+    for row in year_data.itertuples():
+        data = monthly_data.setdefault(row.type, {})
+        qty = monthly_qty.setdefault(row.type, {})
+        d = data.setdefault(row.canonical, {})
+        d[row.month] = d.get(row.month, 0) + row.total
+        d['total'] = d.get('total', 0) + row.total
+        q = qty.setdefault(row.canonical, {})
+        q[row.month] = q.get(row.month, 0) + row.quantity
+        q['total'] = q.get('total', 0) + row.quantity
+
+    machine_data = monthly_data['machine']
+    machine_qty = monthly_qty['machine']
+    dfk_data = monthly_data['detergent_filter_kits']
+    dfk_qty = monthly_qty['detergent_filter_kits']
+    other_types = [c for c in categories if c not in ('machine', 'detergent_filter_kits')]
+    other_data = {c: monthly_data[c] for c in other_types}
+    other_qty = {c: monthly_qty[c] for c in other_types}
+
+
+    # yearly summary by type
+    summary_type = all_data.groupby(['year', 'month_num', 'type']).agg({'total': 'sum', 'quantity': 'sum'}).reset_index()
     type_rows = []
     for cat in categories:
         cur = summary_type[(summary_type['year'] == year) & (summary_type['type'] == cat)]
@@ -488,8 +489,11 @@ def monthly_report():
         months=months_order[:cutoff_month],
         machine_data=machine_data,
         machine_qty=machine_qty,
-        chem_data=chem_data,
-        chem_qty=chem_qty,
+        dfk_data=dfk_data,
+        dfk_qty=dfk_qty,
+        other_data=other_data,
+        other_qty=other_qty,
+        labels=labels,
         type_rows=type_rows,
         last_month_label=last_month_label,
         last_rows=last_rows,
