@@ -66,6 +66,15 @@ def init_db():
 
 init_db()
 
+def migrate_types():
+    """Update old type names and ensure new categories exist."""
+    conn = get_db()
+    conn.execute("UPDATE sku_map SET type='parts' WHERE type='maintenance'")
+    conn.commit()
+    conn.close()
+
+migrate_types()
+
 
 @app.route('/')
 def dashboard():
@@ -374,6 +383,47 @@ def monthly_report():
         chem_qty[row.canonical][row.month] += row.quantity
         chem_qty[row.canonical]["total"] = chem_qty[row.canonical].get("total",0)+row.quantity
 
+    # yearly summary by type
+    summary_type = all_data.groupby(['year', 'month_num', 'type']).agg({'total': 'sum', 'quantity': 'sum'}).reset_index()
+    categories = ['machine', 'detergent_filter_kits', 'detergent', 'filters', 'parts', 'service', 'shopify', 'shipping']
+    labels = {
+        'machine': 'Machines',
+        'detergent_filter_kits': 'Detergent & Filter Kits',
+        'detergent': 'Detergents',
+        'filters': 'Filters',
+        'parts': 'Parts',
+        'service': 'Service',
+        'shopify': 'Shopify',
+        'shipping': 'Shipping',
+    }
+    type_rows = []
+    for cat in categories:
+        cur = summary_type[(summary_type['year'] == year) & (summary_type['type'] == cat)]
+        prev = summary_type[(summary_type['year'] == year - 1) & (summary_type['type'] == cat)]
+        totals = cur.set_index('month_num').reindex(range(1, cutoff_month + 1), fill_value=0)
+        qtys = totals['quantity']
+        totals = totals['total']
+        total_cur = totals.sum()
+        total_prev = prev['total'].sum()
+        vs_last = '-'
+        if total_prev > 0:
+            vs_last = f"{((total_cur - total_prev) / total_prev) * 100:.1f}%"
+        elif total_cur > 0:
+            vs_last = '∞'
+        avg_month = total_cur / cutoff_month
+        best_month = totals.max() if len(totals) else 0
+        avg_qty = qtys.sum() / cutoff_month
+        best_qty = qtys.max() if len(qtys) else 0
+        type_rows.append({
+            'type': labels.get(cat, cat),
+            'total': total_cur,
+            'vs_last': vs_last,
+            'avg_month': avg_month,
+            'best_month': best_month,
+            'avg_qty': avg_qty,
+            'best_qty': best_qty,
+        })
+
     years = sorted(summary["year"].unique(), reverse=True)
     return render_template(
         "report.html",
@@ -385,6 +435,7 @@ def monthly_report():
         machine_qty=machine_qty,
         chem_data=chem_data,
         chem_qty=chem_qty,
+        type_rows=type_rows,
     )
 
 
@@ -428,6 +479,7 @@ def report_chart():
     plt.close(fig)
     output.seek(0)
     return send_file(output, mimetype='image/png')
+
 
 
 @app.route('/debug')
