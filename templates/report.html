@@ -14,13 +14,15 @@
 <h4>Overall Sales by Month ({{ selected_year }})</h4>
 <img src="{{ url_for('report_chart', year=selected_year) }}" class="img-fluid my-3" alt="Monthly Chart">
 <table class="table table-bordered">
-  <thead><tr><th>Month</th><th>{{ selected_year }}</th><th>{{ selected_year - 1 }}</th><th>% Change</th></tr></thead>
+  <thead><tr><th>Month</th><th>{{ selected_year }} $</th><th>{{ selected_year }} Qty</th><th>{{ selected_year - 1 }} $</th><th>{{ selected_year - 1 }} Qty</th><th>% Change</th></tr></thead>
   <tbody>
-    {% for month, current, previous, pct in rows %}
+    {% for month, current, current_qty, previous, previous_qty, pct in rows %}
     <tr>
       <td>{{ month }}</td>
       <td>${{ "%.2f"|format(current or 0) }}</td>
+      <td>{{ current_qty }}</td>
       <td>${{ "%.2f"|format(previous or 0) }}</td>
+      <td>{{ previous_qty }}</td>
       <td>{{ pct }}</td>
     </tr>
     {% endfor %}
