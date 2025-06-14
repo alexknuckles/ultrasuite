@@ -6,6 +6,7 @@
     <div class="tabs is-boxed" id="mapTabs">
       <ul>
         <li class="is-active" data-target="map"><a>Mapping</a></li>
+        <li data-target="unmapped"><a>Unmapped</a></li>
         <li data-target="merged"><a>Merged</a></li>
         <li data-target="sug"><a>Suggestions</a></li>
       </ul>
@@ -43,6 +44,7 @@
                   <label class="label mb-0 mr-1">Type</label>
                   <div class="select">
                     <select name="type_{{ loop.index0 }}">
+                      <option value="unmapped" {% if entry.type == 'unmapped' %}selected{% endif %}>Unmapped</option>
                       <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
                       <option value="detergent_filter_kits" {% if entry.type == 'detergent_filter_kits' %}selected{% endif %}>Detergent & Filter Kits</option>
                       <option value="detergent" {% if entry.type == 'detergent' %}selected{% endif %}>Detergents</option>
@@ -90,6 +92,36 @@
       {% else %}
       <p>No suggestions available.</p>
       {% endif %}
+    </div>
+    <div id="unmapped" class="tab-pane is-hidden">
+      {% for entry in unmapped %}
+      <div class="card sku-card">
+        <div class="card-content">
+          <div class="columns is-variable is-1 is-vcentered sku-row">
+            <div class="column">
+              <div class="field is-flex is-align-items-center">
+                <label class="label mb-0 mr-1">SKU</label>
+                <span>{{ entry.canonical }}</span>
+              </div>
+              <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
+                <label class="label">Aliases</label>
+                <div class="alias-badges mb-1">
+                  {% for a in entry.aliases.split(',') if a.strip() %}
+                  <span class="tag is-info is-light">{{ a.strip() }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            <div class="column is-narrow">
+              <div class="field is-flex is-align-items-center">
+                <label class="label mb-0 mr-1">Type</label>
+                <span>{{ entry.type }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
     </div>
     <div id="merged" class="tab-pane is-hidden">
       {% for entry in merged %}
