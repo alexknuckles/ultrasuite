@@ -187,15 +187,18 @@ def monthly_report():
     conn.close()
 
     all_data = pd.concat([shopify, qbo], ignore_index=True)
+    # always ensure datetimes for consistency
     all_data['created_at'] = pd.to_datetime(all_data['created_at'], errors='coerce')
     all_data = all_data.dropna(subset=['created_at'])
 
     m = mapping.set_index('alias')
     def map_row(alias, field):
-        rec = m.get(alias.lower().strip()) if isinstance(alias, str) else None
-        if rec is not None:
-            return rec[field]
-        return alias.lower().strip() if field == 'canonical_sku' else 'machine'
+        if isinstance(alias, str):
+            key = alias.lower().strip()
+            if key in m.index:
+                return m.loc[key, field]
+            return key if field == 'canonical_sku' else 'machine'
+        return alias if field == 'canonical_sku' else 'machine'
 
     all_data['canonical'] = all_data['sku'].apply(lambda x: map_row(x, 'canonical_sku'))
     all_data['type'] = all_data['sku'].apply(lambda x: map_row(x, 'type'))
