@@ -14,14 +14,16 @@
 <h4>Overall Sales by Month ({{ selected_year }})</h4>
 <img src="{{ url_for('report_chart', year=selected_year) }}" class="img-fluid my-3" alt="Monthly Chart">
 <table class="table table-bordered">
-  <thead><tr><th>Month</th><th>{{ selected_year }}</th><th>{{ selected_year - 1 }}</th><th>% Change</th></tr></thead>
+    <thead><tr><th>Month</th><th>{{ selected_year }} $</th><th>{{ selected_year }} Qty</th><th>{{ selected_year - 1 }} $</th><th>{{ selected_year - 1 }} Qty</th><th>% Change</th></tr></thead>
   <tbody>
-    {% for month, current, previous, pct in rows %}
+    {% for month, current, current_qty, previous, previous_qty, pct in rows %}
     <tr>
       <td>{{ month }}</td>
-      <td>${{ "%.2f"|format(current or 0) }}</td>
+        <td>${{ "%.2f"|format(current or 0) }}</td>
+        <td>{{ current_qty }}</td>
       <td>${{ "%.2f"|format(previous or 0) }}</td>
-      <td>{{ pct }}</td>
+        <td>{{ previous_qty }}</td>
+        <td>{{ pct }}</td>
     </tr>
     {% endfor %}
   </tbody>
@@ -36,6 +38,16 @@
     {% endfor %}
   </tbody>
 </table>
+<h4 class="mt-3">Machine Quantity by Month</h4>
+<table class="table table-sm table-striped">
+  <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
+  <tbody>
+    {% for sku, row in machine_qty.items() %}
+    <tr><td>{{ sku }}</td>{% for m in months %}<td>{{ row.get(m, 0)|int }}</td>{% endfor %}<td>{{ row['total']|int }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 
 <h4 class="mt-5">Detergent & Filter Sales by Month</h4>
 <table class="table table-sm table-striped">
@@ -46,6 +58,16 @@
     {% endfor %}
   </tbody>
 </table>
+<h4 class="mt-3">Detergent & Filter Quantity by Month</h4>
+<table class="table table-sm table-striped">
+  <thead><tr><th>SKU</th>{% for m in months %}<th>{{ m }}</th>{% endfor %}<th>Total</th></tr></thead>
+  <tbody>
+    {% for sku, row in chem_qty.items() %}
+    <tr><td>{{ sku }}</td>{% for m in months %}<td>{{ row.get(m, 0)|int }}</td>{% endfor %}<td>{{ row['total']|int }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 
 <button onclick="window.print()" class="btn btn-secondary mt-3">🖨️ Print Report</button>
 {% endblock %}
