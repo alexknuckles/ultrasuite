@@ -47,17 +47,6 @@ init_db()
 @app.route('/')
 def dashboard():
     conn = get_db()
-    meta_df = pd.read_sql_query('SELECT * FROM meta', conn)
-    sku_df = pd.read_sql_query(
-        'SELECT canonical_sku, COUNT(*)-1 as alias_count FROM sku_map GROUP BY canonical_sku',
-        conn,
-    )
-    conn.close()
-    return render_template(
-        'dashboard.html',
-        meta=meta_df.itertuples(),
-        sku_stats=sku_df.itertuples(),
-    )
 
 
 @app.route('/upload', methods=['GET', 'POST'])
