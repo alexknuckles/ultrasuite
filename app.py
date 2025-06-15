@@ -488,9 +488,13 @@ def monthly_report():
             vs_last = f"{((cur_total - prev_total) / prev_total) * 100:.1f}%"
         elif cur_total > 0:
             vs_last = '∞'
-        overall_cat = summary_type[summary_type['type'] == cat]
-        avg_month = overall_cat['total'].mean() if len(overall_cat) else 0
-        best_month = overall_cat['total'].max() if len(overall_cat) else 0
+        prev_same = summary_type[
+            (summary_type['type'] == cat)
+            & (summary_type['month_num'] == last_month_num)
+            & (summary_type['year'] < last_month_year)
+        ]
+        avg_month = prev_same['total'].mean() if len(prev_same) else 0
+        best_month = prev_same['total'].max() if len(prev_same) else 0
         avg_month_sign = cur_total - avg_month
         best_month_sign = cur_total - best_month
         last_rows.append({
@@ -518,8 +522,12 @@ def monthly_report():
         vs_last = f"{((total_val - prev_total_cur) / prev_total_cur) * 100:.1f}%"
     elif total_val > 0:
         vs_last = '∞'
-    avg_month = summary_type['total'].mean() if len(summary_type) else 0
-    best_month = summary_type['total'].max() if len(summary_type) else 0
+    prev_months = summary_type[
+        (summary_type['month_num'] == last_month_num)
+        & (summary_type['year'] < last_month_year)
+    ]
+    avg_month = prev_months['total'].mean() if len(prev_months) else 0
+    best_month = prev_months['total'].max() if len(prev_months) else 0
     last_rows.append({
         'type': 'Total',
         'total': total_val,
@@ -558,10 +566,14 @@ def monthly_report():
             month_qty = ldf['quantity'].sum()
             last_year_total = pdf['total'].sum()
             last_year_sign = month_total - last_year_total
-            avg_month = overall_sku['total'].mean() if len(overall_sku) else 0
-            avg_qty = overall_sku['quantity'].mean() if len(overall_sku) else 0
-            best_month = overall_sku['total'].max() if len(overall_sku) else 0
-            best_qty = overall_sku['quantity'].max() if len(overall_sku) else 0
+            prev_sku = overall_sku[
+                (overall_sku['month_num'] == last_month_num)
+                & (overall_sku['year'] < last_month_year)
+            ]
+            avg_month = prev_sku['total'].mean() if len(prev_sku) else 0
+            avg_qty = prev_sku['quantity'].mean() if len(prev_sku) else 0
+            best_month = prev_sku['total'].max() if len(prev_sku) else 0
+            best_qty = prev_sku['quantity'].max() if len(prev_sku) else 0
             avg_month_sign = month_total - avg_month
             avg_qty_sign = month_qty - avg_qty
             best_month_sign = month_total - best_month
