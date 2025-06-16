@@ -28,6 +28,7 @@
       <a class="navbar-item" href="/upload">Upload Data</a>
       <a class="navbar-item" href="/sku-map">SKU Map</a>
       <a class="navbar-item" href="/monthly-report">Reports</a>
+      <a class="navbar-item" href="/settings">Settings</a>
     </div>
   </div>
 </nav>
@@ -52,6 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+</script>
+<script>
+(function(){
+  const root = document.documentElement;
+  const p = localStorage.getItem('ultra-primary');
+  const h = localStorage.getItem('ultra-highlight');
+  const dark = localStorage.getItem('ultra-dark');
+  const fs = localStorage.getItem('ultra-font-size');
+  if (p) root.style.setProperty('--ultra-primary', p);
+  if (h) root.style.setProperty('--ultra-highlight', h);
+  if (fs) root.style.setProperty('--base-font-size', fs);
+  if (dark === '1') document.body.classList.add('dark-mode');
+})();
 </script>
 </body>
 </html>
