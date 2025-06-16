@@ -169,7 +169,7 @@
       <form method="POST">
         <table class="table is-fullwidth is-narrow">
           <thead>
-            <tr><th></th><th>Keep</th><th>Merge</th><th>Score</th></tr>
+            <tr><th></th><th>Keep</th><th>Merge</th><th class="no-wrap">Score</th></tr>
           </thead>
           <tbody>
           {% for s in suggestions %}
@@ -179,7 +179,7 @@
             </td>
             <td>{{ s[0] }}<input type="hidden" name="sug_target_{{ loop.index0 }}" value="{{ s[0] }}"></td>
             <td>{{ s[1] }}<input type="hidden" name="sug_merge_{{ loop.index0 }}" value="{{ s[1] }}"></td>
-            <td>{{ (s[2]*100)|round(1) }}%</td>
+            <td class="no-wrap">{{ (s[2]*100)|round(1) }}%</td>
           </tr>
           {% endfor %}
           </tbody>
