@@ -6,52 +6,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ultrasuite</title>
   <link rel="icon" href="{{ url_for('favicon') }}">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-<nav class="navbar is-primary mb-4" role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-    <a class="navbar-item" href="/">
-      <img src="{{ url_for('logo') }}" alt="ultrasuite logo" style="height:1.75rem; margin-right:0.5rem;">
-      <span>ultrasuite</span>
-    </a>
-    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarNav">
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-    </a>
+<header class="mdc-top-app-bar mb-4">
+  <div class="mdc-top-app-bar__row">
+    <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+      <a href="/" class="mdc-top-app-bar__title">
+        <img src="{{ url_for('logo') }}" alt="ultrasuite logo" style="height:1.75rem; margin-right:0.5rem; vertical-align:middle;">
+        ultrasuite
+      </a>
+    </section>
+    <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
+      <a class="mdc-button" href="/">Dashboard</a>
+      <a class="mdc-button" href="/upload">Upload Data</a>
+      <a class="mdc-button" href="/sku-map">SKU Map</a>
+      <a class="mdc-button" href="/monthly-report">Reports</a>
+      <a class="mdc-button" href="/settings">Settings</a>
+    </section>
   </div>
-  <div id="navbarNav" class="navbar-menu">
-    <div class="navbar-start">
-      <a class="navbar-item" href="/">Dashboard</a>
-      <a class="navbar-item" href="/upload">Upload Data</a>
-      <a class="navbar-item" href="/sku-map">SKU Map</a>
-      <a class="navbar-item" href="/monthly-report">Reports</a>
-      <a class="navbar-item" href="/settings">Settings</a>
-    </div>
-  </div>
-</nav>
+</header>
 <section class="section pt-0">
   <div class="container">
   {% with messages = get_flashed_messages() %}
     {% if messages %}
-      <div class="notification is-info">{{ messages[0] }}</div>
+      <div class="notification">{{ messages[0] }}</div>
     {% endif %}
   {% endwith %}
   {% block content %}{% endblock %}
   </div>
 </section>
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const burger = document.querySelector('.navbar-burger');
-  const menu = document.getElementById('navbarNav');
-  if (burger) {
-    burger.addEventListener('click', () => {
-      burger.classList.toggle('is-active');
-      menu.classList.toggle('is-active');
-    });
-  }
+  mdc.autoInit();
 });
 </script>
 <script>

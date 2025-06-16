@@ -1,17 +1,17 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="card">
+<div class="mdc-card">
   <div class="card-content">
     <h2 class="title is-4 mb-4">Settings</h2>
     <form id="settingsForm">
       <h3 class="title is-5 mb-2">Appearance</h3>
       <div class="field mb-4">
         <label class="label" for="darkMode">Dark Mode</label>
-        <input type="checkbox" id="darkMode" class="switch is-rounded">
+        <input type="checkbox" id="darkMode" class="switch">
       </div>
       <div class="buttons">
-        <button type="submit" class="button is-primary">Save</button>
-        <button type="button" id="resetBtn" class="button is-light">Reset</button>
+        <button type="submit" class="mdc-button mdc-button--raised">Save</button>
+        <button type="button" id="resetBtn" class="mdc-button">Reset</button>
       </div>
     </form>
   </div>
