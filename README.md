@@ -1,6 +1,8 @@
 # ultrasuite
 
-<img src="./ultrasuite-logo.png" alt="ultrasuite logo" width="200">
+<p align="center">
+  <img src="./ultrasuite-logo.png" alt="ultrasuite logo" width="200">
+</p>
 
 This repository contains a Flask web application for aggregating and analyzing sales data from Shopify and QuickBooks Online. The app lets you upload transaction files, manage SKU aliases, and view monthly sales reports.
 
@@ -11,6 +13,7 @@ This repository contains a Flask web application for aggregating and analyzing s
 - **SKU Mapping** – Map multiple alias SKUs to a canonical SKU and categorize them by type.
 - **Reports** – View monthly trends, last month details, and yearly comparisons with interactive charts.
 - **Debug View** – Simple view for debugging transaction aggregates.
+- **Settings Page** – Customize theme colors, toggle dark mode, and adjust font size.
 
 Uploaded data is stored in a local SQLite database (`finance.db`), and charts are rendered using Matplotlib.
 

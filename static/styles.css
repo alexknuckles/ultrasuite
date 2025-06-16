@@ -12,13 +12,23 @@
 }
 
 body {
-  background-color: #f8f9fa;
+  background-color: var(--ultra-background);
+  color: var(--ultra-text);
+  font-size: var(--base-font-size);
 }
 
 /* color scheme matching logo */
 :root {
   --ultra-primary: #5e4e69;
   --ultra-highlight: #e6e4e8;
+  --ultra-background: #f8f9fa;
+  --ultra-text: #363636;
+  --base-font-size: 1rem;
+}
+
+body.dark-mode {
+  --ultra-background: #272727;
+  --ultra-text: #f8f9fa;
 }
 
 a,

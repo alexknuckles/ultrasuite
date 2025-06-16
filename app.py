@@ -767,6 +767,10 @@ def last_month_chart():
 
 
 
+@app.route('/settings')
+def settings_page():
+    return render_template('settings.html')
+
 @app.route('/debug')
 def debug_summary():
     conn = get_db()
