@@ -156,7 +156,16 @@
   </div>
 </div>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function() {
+  // ensure only the active tab is visible on load
+  var active = document.querySelector('#mapTabs .is-active');
+  if (active) {
+    document.querySelectorAll('.tab-pane').forEach(function(p){
+      p.classList.add('is-hidden');
+    });
+    var target = active.getAttribute('data-target');
+    document.getElementById(target).classList.remove('is-hidden');
+  }
   document.getElementById('searchBox').addEventListener('input', function() {
     var term = this.value.toLowerCase();
     document.querySelectorAll('#map .sku-card').forEach(function(card) {
