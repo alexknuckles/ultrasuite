@@ -331,7 +331,6 @@ def sku_map_page():
 
     rows = conn.execute('SELECT alias, canonical_sku, type FROM sku_map').fetchall()
     conn.close()
-    merged_rows = [r for r in rows if r['alias'] != r['canonical_sku']]
     grouped = {}
     for r in rows:
         entry = grouped.setdefault(r['canonical_sku'], {
@@ -341,11 +340,18 @@ def sku_map_page():
         })
         if r['alias'] != r['canonical_sku']:
             entry['aliases'].append(r['alias'])
+
     grouped_list = []
     for g in grouped.values():
-        g['aliases'] = ', '.join(sorted(g['aliases']))
+        aliases_sorted = sorted(g['aliases'])
+        g['alias_count'] = len(aliases_sorted)
+        g['aliases'] = ', '.join(aliases_sorted)
         grouped_list.append(g)
-    merged_groups = [g for g in grouped_list if g['aliases'] and g['type'] != 'unmapped']
+
+    merged_groups = [
+        g for g in grouped_list
+        if g['alias_count'] > 1 and g['type'] != 'unmapped'
+    ]
     unmapped_groups = [g for g in grouped_list if g['type'] == 'unmapped']
 
     # generate merge suggestions
