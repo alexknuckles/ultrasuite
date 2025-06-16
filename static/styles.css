@@ -102,7 +102,6 @@ a:hover {
 .mdc-top-app-bar a {
   color: var(--mdc-theme-on-primary);
   text-decoration: none;
-  margin-right: 0.5rem;
   display: inline-flex;
   align-items: center;
   padding: 0 0.75rem;
@@ -120,6 +119,7 @@ a:hover {
 .nav-links {
   margin-left: 1rem;
   display: flex;
+  gap: 0.5rem;
 }
 
 .nav-toggle {
