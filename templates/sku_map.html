@@ -156,6 +156,7 @@
   </div>
 </div>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('searchBox').addEventListener('input', function() {
     var term = this.value.toLowerCase();
     document.querySelectorAll('#map .sku-card').forEach(function(card) {
@@ -289,5 +290,6 @@
       }
     });
   });
+});
 </script>
 {% endblock %}

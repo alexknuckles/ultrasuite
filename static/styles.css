@@ -25,6 +25,8 @@
 .alias-badges .tag {
   display: flex;
   align-items: center;
+  border-radius: 1rem;
+  padding: 0 0.5rem;
 }
 
 .delete.is-small {
@@ -35,6 +37,7 @@
   line-height: 1;
   cursor: pointer;
   color: inherit;
+  margin-left: 0.25rem;
 }
 
 .is-invisible { visibility: hidden; }
@@ -139,6 +142,7 @@ button.theme-toggle {
 .tag.is-info.is-light {
   background-color: var(--ultra-primary);
   color: #fff;
+  border-radius: 1rem;
 }
 
 /* simple switch */
