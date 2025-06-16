@@ -35,6 +35,13 @@ a:hover {
   border-color: var(--ultra-primary);
 }
 
+/* keep navbar hover consistent with theme */
+.navbar.is-primary .navbar-item:hover,
+.navbar.is-primary .navbar-burger:hover {
+  background-color: var(--ultra-highlight);
+  color: var(--ultra-primary);
+}
+
 .button.is-primary {
   background-color: var(--ultra-primary);
   border-color: var(--ultra-primary);
@@ -67,6 +74,11 @@ a:hover {
   justify-content: flex-start;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* avoid text selection highlighting on merge label */
+.sku-card .merge-col label {
+  user-select: none;
 }
 .sku-card {
   margin-bottom: 0.5rem;
