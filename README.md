@@ -18,7 +18,7 @@ Uploaded data is stored in a local SQLite database (`finance.db`), and charts ar
 
 1. Install Python 3 and the required packages:
    ```bash
-   pip install Flask pandas matplotlib
+   pip install Flask pandas matplotlib openpyxl
    ```
 2. Run the application:
    ```bash
@@ -27,6 +27,12 @@ Uploaded data is stored in a local SQLite database (`finance.db`), and charts ar
 3. Open your browser to `http://localhost:5000`.
 
 Data uploads and database files are kept locally; no external services are required.
+
+## Customization
+
+The UI color scheme can be adjusted by editing the CSS variables in
+`static/styles.css`. The primary and highlight colors are defined as
+`--ultra-primary` and `--ultra-highlight` under the `:root` selector.
 
 ## Project Layout
 
