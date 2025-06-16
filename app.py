@@ -10,7 +10,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, send_from_directory
 from markupsafe import Markup
 
 app = Flask(__name__)
@@ -118,7 +118,11 @@ migrate_types()
 
 @app.route('/favicon.ico')
 def favicon():
-    return send_file(os.path.join(app.root_path, 'ultrasuite-favicon.ico'), mimetype='image/vnd.microsoft.icon')
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'favicon.ico',
+        mimetype='image/vnd.microsoft.icon'
+    )
 
 
 @app.route('/logo.png')

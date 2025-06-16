@@ -15,6 +15,25 @@ body {
   background-color: #f8f9fa;
 }
 
+/* color scheme matching logo */
+:root {
+  --ultra-primary: #4e3b50;
+}
+
+.navbar.is-primary {
+  background-color: var(--ultra-primary);
+  border-color: var(--ultra-primary);
+}
+
+.button.is-primary {
+  background-color: var(--ultra-primary);
+  border-color: var(--ultra-primary);
+}
+
+.has-text-primary {
+  color: var(--ultra-primary) !important;
+}
+
 .card {
   margin-bottom: 1rem;
 }
@@ -38,7 +57,7 @@ body {
   margin-bottom: 0.15rem;
 }
 .sku-card.selected {
-  border-color: #485fc7;
+  border-color: var(--ultra-primary);
   background-color: #f5f7ff;
 }
 
