@@ -342,6 +342,7 @@ input.switch:checked::before {
 
 .report-content {
   overflow-x: auto;
+  white-space: nowrap;
 }
 .tab-pane.is-hidden {
   display: none;
