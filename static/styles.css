@@ -217,6 +217,7 @@ input.switch:checked::before {
 .table td {
   padding: 0.5rem;
   border: 1px solid var(--ultra-highlight);
+  word-break: break-word;
 }
 
 .table.is-narrow th,
@@ -277,6 +278,11 @@ input.switch:checked::before {
 .tab-buttons .mdc-button {
   background-color: var(--ultra-highlight);
   color: var(--ultra-text);
+  height: auto;
+  white-space: normal;
+  padding: 0.25rem 0.75rem;
+  min-width: 0;
+  line-height: 1.2;
 }
 
 .tab-buttons .mdc-button.is-active {
