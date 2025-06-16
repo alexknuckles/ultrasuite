@@ -622,6 +622,7 @@ def report_chart():
 
     all_data = pd.concat([shopify, qbo])
     all_data["quantity"] = pd.to_numeric(all_data["quantity"], errors="coerce").fillna(0)
+    all_data["total"] = pd.to_numeric(all_data["total"], errors="coerce").fillna(0)
     all_data['created_at'] = (
         pd.to_datetime(all_data['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
         .dt.tz_localize(None)
