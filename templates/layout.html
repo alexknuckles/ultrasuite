@@ -57,14 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
 (function(){
   const root = document.documentElement;
-  const p = localStorage.getItem('ultra-primary');
-  const h = localStorage.getItem('ultra-highlight');
-  const dark = localStorage.getItem('ultra-dark');
-  const fs = localStorage.getItem('ultra-font-size');
-  if (p) root.style.setProperty('--ultra-primary', p);
-  if (h) root.style.setProperty('--ultra-highlight', h);
-  if (fs) root.style.setProperty('--base-font-size', fs);
-  if (dark === '1') document.body.classList.add('dark-mode');
+  const THEMES = {
+    default: { primary: '#5e4e69', highlight: '#e6e4e8' },
+    ocean: { primary: '#1976d2', highlight: '#bbdefb' },
+    sunset: { primary: '#d84315', highlight: '#ffe0b2' },
+    forest: { primary: '#2e7d32', highlight: '#c8e6c9' }
+  };
+  const themeName = localStorage.getItem('ultra-theme') || 'default';
+  const theme = THEMES[themeName] || THEMES.default;
+  root.style.setProperty('--ultra-primary', theme.primary);
+  root.style.setProperty('--ultra-highlight', theme.highlight);
+  if (localStorage.getItem('ultra-dark') === '1') {
+    document.body.classList.add('dark-mode');
+  }
 })();
 </script>
 </body>

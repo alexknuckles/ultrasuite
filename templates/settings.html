@@ -4,21 +4,21 @@
   <div class="card-content">
     <h2 class="title is-4 mb-4">Settings</h2>
     <form id="settingsForm">
+      <h3 class="title is-5 mb-2">Appearance</h3>
       <div class="field mb-4">
-        <label class="label">Primary Color</label>
-        <input type="color" id="primaryColor" class="input">
-      </div>
-      <div class="field mb-4">
-        <label class="label">Highlight Color</label>
-        <input type="color" id="highlightColor" class="input">
+        <label class="label">Theme</label>
+        <div class="select is-fullwidth">
+          <select id="themeSelect">
+            <option value="default">Default</option>
+            <option value="ocean">Ocean</option>
+            <option value="sunset">Sunset</option>
+            <option value="forest">Forest</option>
+          </select>
+        </div>
       </div>
       <div class="field mb-4">
         <label class="label" for="darkMode">Dark Mode</label>
         <input type="checkbox" id="darkMode" class="switch is-rounded">
-      </div>
-      <div class="field mb-4">
-        <label class="label" for="fontSize">Base Font Size</label>
-        <input type="range" id="fontSize" min="0.8" max="1.2" step="0.05">
       </div>
       <div class="buttons">
         <button type="submit" class="button is-primary">Save</button>
@@ -30,43 +30,42 @@
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const root = document.documentElement;
-    const primaryInput = document.getElementById('primaryColor');
-    const highlightInput = document.getElementById('highlightColor');
+    const themeSelect = document.getElementById('themeSelect');
     const darkInput = document.getElementById('darkMode');
-    const fontInput = document.getElementById('fontSize');
+    const THEMES = {
+      default: { primary: '#5e4e69', highlight: '#e6e4e8' },
+      ocean: { primary: '#1976d2', highlight: '#bbdefb' },
+      sunset: { primary: '#d84315', highlight: '#ffe0b2' },
+      forest: { primary: '#2e7d32', highlight: '#c8e6c9' }
+    };
     function load() {
-      const cp = localStorage.getItem('ultra-primary') || getComputedStyle(root).getPropertyValue('--ultra-primary').trim();
-      const ch = localStorage.getItem('ultra-highlight') || getComputedStyle(root).getPropertyValue('--ultra-highlight').trim();
+      const themeName = localStorage.getItem('ultra-theme') || 'default';
+      themeSelect.value = themeName;
       const dm = localStorage.getItem('ultra-dark') === '1';
-      const fs = localStorage.getItem('ultra-font-size') || getComputedStyle(root).getPropertyValue('--base-font-size').trim();
-      primaryInput.value = cp;
-      highlightInput.value = ch;
+      applyTheme(themeName);
       darkInput.checked = dm;
-      fontInput.value = parseFloat(fs);
+      document.body.classList.toggle('dark-mode', dm);
+    }
+    function applyTheme(name) {
+      const t = THEMES[name] || THEMES.default;
+      root.style.setProperty('--ultra-primary', t.primary);
+      root.style.setProperty('--ultra-highlight', t.highlight);
     }
     function apply() {
-      root.style.setProperty('--ultra-primary', primaryInput.value);
-      root.style.setProperty('--ultra-highlight', highlightInput.value);
-      root.style.setProperty('--base-font-size', fontInput.value + 'rem');
+      applyTheme(themeSelect.value);
       document.body.classList.toggle('dark-mode', darkInput.checked);
     }
     load();
-    apply();
     document.getElementById('settingsForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      localStorage.setItem('ultra-primary', primaryInput.value);
-      localStorage.setItem('ultra-highlight', highlightInput.value);
+      localStorage.setItem('ultra-theme', themeSelect.value);
       localStorage.setItem('ultra-dark', darkInput.checked ? '1' : '0');
-      localStorage.setItem('ultra-font-size', fontInput.value + 'rem');
       apply();
     });
     document.getElementById('resetBtn').addEventListener('click', function() {
-      localStorage.removeItem('ultra-primary');
-      localStorage.removeItem('ultra-highlight');
+      localStorage.removeItem('ultra-theme');
       localStorage.removeItem('ultra-dark');
-      localStorage.removeItem('ultra-font-size');
       load();
-      apply();
     });
   });
 </script>
