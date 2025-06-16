@@ -46,9 +46,17 @@ a:hover {
   border-color: var(--ultra-primary);
 }
 
+/* navbar text should respect theme text color */
+.navbar.is-primary .navbar-item,
+.navbar.is-primary .navbar-burger {
+  color: var(--ultra-text);
+}
+
 /* keep navbar hover consistent with theme */
 .navbar.is-primary .navbar-item:hover,
-.navbar.is-primary .navbar-burger:hover {
+.navbar.is-primary .navbar-burger:hover,
+.navbar.is-primary .navbar-item.is-active,
+.navbar.is-primary .navbar-item:focus {
   background-color: var(--ultra-highlight);
   color: var(--ultra-primary);
 }
@@ -115,4 +123,9 @@ a:hover {
 
 .report-content {
   overflow-x: auto;
+}
+
+/* titles should also adapt to text color */
+.title {
+  color: var(--ultra-text);
 }
