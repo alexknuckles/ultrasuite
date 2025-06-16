@@ -103,6 +103,15 @@ a:hover {
   margin-left: 1rem;
 }
 
+button.theme-toggle {
+  background: none;
+  border: none;
+  color: var(--mdc-theme-on-primary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0 0.75rem;
+}
+
 /* buttons */
 .mdc-button {
   color: var(--ultra-text);
