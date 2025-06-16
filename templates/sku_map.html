@@ -156,7 +156,7 @@
   </div>
 </div>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  // run immediately since script is loaded at the end of the page
   // ensure only the active tab is visible on load
   var active = document.querySelector('#mapTabs .is-active');
   if (active) {
@@ -299,6 +299,5 @@
       }
     });
   });
-});
 </script>
 {% endblock %}
