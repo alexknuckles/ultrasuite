@@ -90,7 +90,7 @@ a:hover {
   padding: 0 0.75rem;
   height: 100%;
 }
-.mdc-top-app-bar a:hover {
+.mdc-top-app-bar a:not(.mdc-top-app-bar__title):hover {
   background-color: var(--ultra-highlight);
   color: var(--ultra-primary);
 }
