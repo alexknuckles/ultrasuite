@@ -9,6 +9,8 @@
       <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="sug">Suggestions</button>
     </div>
+    <div id="map">
+      <input type="text" id="searchBox" class="input mb-4" placeholder="Search SKUs">
       <form method="POST">
         <input type="hidden" id="merge_target" name="merge_target" value="">
         {% for entry in grouped %}
@@ -55,7 +57,6 @@
               <div class="alias-badges mb-1"></div>
             </div>
           </div>
-        </div>
         </div>
         {% endfor %}
         <div class="buttons mb-5">
