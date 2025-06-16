@@ -135,7 +135,8 @@ def dashboard():
     conn = get_db()
     meta_df = pd.read_sql_query('SELECT * FROM meta', conn)
     sku_df = pd.read_sql_query(
-        'SELECT canonical_sku, COUNT(*)-1 as alias_count FROM sku_map GROUP BY canonical_sku',
+        'SELECT type, COUNT(DISTINCT canonical_sku) as sku_count '
+        'FROM sku_map GROUP BY type',
         conn,
     )
     conn.close()
