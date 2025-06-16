@@ -3,13 +3,11 @@
 <div class="mdc-card">
   <div class="card-content">
     <h2 class="title is-4 mb-4">SKU Alias Mapping</h2>
-    <div class="tabs is-boxed" id="mapTabs">
-      <ul>
-        <li class="is-active" data-target="map"><a>Mapping</a></li>
-        <li data-target="unmapped"><a>Unmapped</a></li>
-        <li data-target="merged"><a>Merged</a></li>
-        <li data-target="sug"><a>Suggestions</a></li>
-      </ul>
+    <div class="buttons tab-buttons mb-4" id="mapTabs">
+      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="map">Mapping</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="unmapped">Unmapped</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="sug">Suggestions</button>
     </div>
     <div class="page-nav" id="pageNav">
       <button type="button" id="prevPage" class="mdc-button" disabled>Prev</button>
@@ -35,7 +33,7 @@
               <div class="column">
                 <div class="field is-flex is-align-items-center">
                   <label class="label mb-0 mr-1">SKU</label>
-                  <span>{{ entry.canonical }}</span>
+                  <strong>{{ entry.canonical }}</strong>
                   <input type="hidden" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}">
                 </div>
               </div>
@@ -108,7 +106,7 @@
             <div class="column">
               <div class="field is-flex is-align-items-center">
                 <label class="label mb-0 mr-1">SKU</label>
-                <span>{{ entry.canonical }}</span>
+                <strong>{{ entry.canonical }}</strong>
               </div>
             </div>
             <div class="column is-narrow">
@@ -140,7 +138,7 @@
             <div class="column">
               <div class="field is-flex is-align-items-center">
                 <label class="label mb-0 mr-1">SKU</label>
-                <span>{{ entry.canonical }}</span>
+                <strong>{{ entry.canonical }}</strong>
               </div>
             </div>
             <div class="column is-narrow">
@@ -204,9 +202,9 @@
   });
   paginate();
 
-  document.querySelectorAll('#mapTabs li').forEach(function(tab){
+  document.querySelectorAll('#mapTabs button').forEach(function(tab){
     tab.addEventListener('click', function(){
-      document.querySelectorAll('#mapTabs li').forEach(function(t){
+      document.querySelectorAll('#mapTabs button').forEach(function(t){
         t.classList.remove('is-active');
       });
       tab.classList.add('is-active');
