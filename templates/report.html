@@ -13,11 +13,9 @@
         </select>
       </div>
     </form>
-    <div class="tabs is-boxed" id="reportTabs">
-      <ul>
-        <li class="is-active" data-target="by-month"><a>By Month</a></li>
-        <li data-target="by-year"><a>By Year</a></li>
-      </ul>
+    <div class="buttons tab-buttons mb-4" id="reportTabs">
+      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="by-month">By Month</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="by-year">By Year</button>
     </div>
 
     <div id="by-month" class="tab-pane">
@@ -141,9 +139,9 @@
   </div>
 </div>
 <script>
-  document.querySelectorAll('#reportTabs li').forEach(function(tab){
+  document.querySelectorAll('#reportTabs button').forEach(function(tab){
     tab.addEventListener('click', function(){
-      document.querySelectorAll('#reportTabs li').forEach(function(t){ t.classList.remove('is-active'); });
+      document.querySelectorAll('#reportTabs button').forEach(function(t){ t.classList.remove('is-active'); });
       tab.classList.add('is-active');
       document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.add('is-hidden'); });
       var target = tab.getAttribute('data-target');
