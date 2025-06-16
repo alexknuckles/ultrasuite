@@ -1,6 +1,6 @@
 # ultrasuite
 
-![ultrasuite logo](./ultrasuite-logo.png)
+<img src="./ultrasuite-logo.png" alt="ultrasuite logo" width="200">
 
 This repository contains a Flask web application for aggregating and analyzing sales data from Shopify and QuickBooks Online. The app lets you upload transaction files, manage SKU aliases, and view monthly sales reports.
 
