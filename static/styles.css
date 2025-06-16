@@ -21,6 +21,15 @@ body {
   --ultra-highlight: #e6e4e8;
 }
 
+a,
+a:visited {
+  color: var(--ultra-primary);
+}
+
+a:hover {
+  color: var(--ultra-primary);
+}
+
 .navbar.is-primary {
   background-color: var(--ultra-primary);
   border-color: var(--ultra-primary);
