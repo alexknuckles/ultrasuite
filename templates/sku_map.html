@@ -11,6 +11,11 @@
         <li data-target="sug"><a>Suggestions</a></li>
       </ul>
     </div>
+    <div class="page-nav" id="pageNav">
+      <button type="button" id="prevPage" class="mdc-button" disabled>Prev</button>
+      <span id="pageInfo">Page 1</span>
+      <button type="button" id="nextPage" class="mdc-button">Next</button>
+    </div>
     <div id="map" class="tab-pane">
       <input type="text" id="searchBox" class="input mb-4" placeholder="Search SKUs">
       <form method="POST">
@@ -33,11 +38,6 @@
                   <span>{{ entry.canonical }}</span>
                   <input type="hidden" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}">
                 </div>
-                <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
-                  <label class="label">Aliases</label>
-                  <input type="hidden" class="alias-input" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
-                  <div class="alias-badges mb-1"></div>
-                </div>
               </div>
               <div class="column is-narrow">
                 <div class="field is-flex is-align-items-center">
@@ -52,9 +52,16 @@
                       <option value="parts" {% if entry.type == 'parts' %}selected{% endif %}>Parts</option>
                       <option value="service" {% if entry.type == 'service' %}selected{% endif %}>Service</option>
                       <option value="shopify" {% if entry.type == 'shopify' %}selected{% endif %}>Shopify</option>
-                      <option value="shipping" {% if entry.type == 'shipping' %}selected{% endif %}>Shipping</option>
-                    </select>
-                  </div>
+                    <option value="shipping" {% if entry.type == 'shipping' %}selected{% endif %}>Shipping</option>
+                  </select>
+                </div>
+              </div>
+              </div>
+              <div class="column">
+                <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
+                  <label class="label">Aliases</label>
+                  <input type="hidden" class="alias-input" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
+                  <div class="alias-badges mb-1"></div>
                 </div>
               </div>
             </div>
@@ -103,6 +110,14 @@
                 <label class="label mb-0 mr-1">SKU</label>
                 <span>{{ entry.canonical }}</span>
               </div>
+            </div>
+            <div class="column is-narrow">
+              <div class="field is-flex is-align-items-center">
+                <label class="label mb-0 mr-1">Type</label>
+                <span>{{ entry.type }}</span>
+              </div>
+            </div>
+            <div class="column">
               <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
                 <label class="label">Aliases</label>
                 <div class="alias-badges mb-1">
@@ -110,12 +125,6 @@
                   <span class="tag is-info is-light">{{ a.strip() }}</span>
                   {% endfor %}
                 </div>
-              </div>
-            </div>
-            <div class="column is-narrow">
-              <div class="field is-flex is-align-items-center">
-                <label class="label mb-0 mr-1">Type</label>
-                <span>{{ entry.type }}</span>
               </div>
             </div>
           </div>
@@ -133,6 +142,14 @@
                 <label class="label mb-0 mr-1">SKU</label>
                 <span>{{ entry.canonical }}</span>
               </div>
+            </div>
+            <div class="column is-narrow">
+              <div class="field is-flex is-align-items-center">
+                <label class="label mb-0 mr-1">Type</label>
+                <span>{{ entry.type }}</span>
+              </div>
+            </div>
+            <div class="column">
               <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
                 <label class="label">Aliases</label>
                 <div class="alias-badges mb-1">
@@ -140,12 +157,6 @@
                   <span class="tag is-info is-light">{{ a.strip() }}</span>
                   {% endfor %}
                 </div>
-              </div>
-            </div>
-            <div class="column is-narrow">
-              <div class="field is-flex is-align-items-center">
-                <label class="label mb-0 mr-1">Type</label>
-                <span>{{ entry.type }}</span>
               </div>
             </div>
           </div>
@@ -158,7 +169,7 @@
 <script>
   document.getElementById('searchBox').addEventListener('input', function() {
     var term = this.value.toLowerCase();
-    document.querySelectorAll('.sku-card').forEach(function(card) {
+    document.querySelectorAll('#map .sku-card').forEach(function(card) {
       var canonicalInput = card.querySelector('input[name^="canonical_"]');
       var aliasInput = card.querySelector('input[name^="aliases_"]');
       if (canonicalInput && !canonicalInput.name.endsWith('_new')) {
@@ -169,7 +180,29 @@
         card.style.display = text.indexOf(term) !== -1 ? '' : 'none';
       }
     });
+    paginate();
   });
+
+  const PAGE_SIZE = 20;
+  let currentPage = 1;
+  function paginate() {
+    var cards = Array.from(document.querySelectorAll('#map .sku-card')).filter(function(c){ return c.style.display !== 'none'; });
+    var total = Math.max(1, Math.ceil(cards.length / PAGE_SIZE));
+    currentPage = Math.min(Math.max(currentPage, 1), total);
+    cards.forEach(function(card, idx){
+      card.style.display = Math.floor(idx / PAGE_SIZE) + 1 === currentPage ? '' : 'none';
+    });
+    document.getElementById('pageInfo').textContent = 'Page ' + currentPage + ' / ' + total;
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= total;
+  }
+  document.getElementById('prevPage').addEventListener('click', function(){
+    currentPage--; paginate();
+  });
+  document.getElementById('nextPage').addEventListener('click', function(){
+    currentPage++; paginate();
+  });
+  paginate();
 
   document.querySelectorAll('#mapTabs li').forEach(function(tab){
     tab.addEventListener('click', function(){
@@ -182,6 +215,8 @@
       });
       var target = tab.getAttribute('data-target');
       document.getElementById(target).classList.remove('is-hidden');
+      document.getElementById('pageNav').style.display = target === 'map' ? '' : 'none';
+      if (target === 'map') paginate();
     });
   });
 
