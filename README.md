@@ -13,7 +13,7 @@ This repository contains a Flask web application for aggregating and analyzing s
 - **SKU Mapping** – Map multiple alias SKUs to a canonical SKU and categorize them by type.
 - **Reports** – View monthly trends, last month details, and yearly comparisons with interactive charts.
 - **Debug View** – Simple view for debugging transaction aggregates.
-- **Settings Page** – Choose a theme and toggle dark mode.
+- **Settings Page** – Toggle dark mode.
 
 Uploaded data is stored in a local SQLite database (`finance.db`), and charts are rendered using Matplotlib.
 
@@ -33,9 +33,9 @@ Data uploads and database files are kept locally; no external services are requi
 
 ## Customization
 
-The available themes are defined in `static/styles.css` and applied via
-JavaScript on the settings page. You can customize or add themes by editing
-the color variables (`--ultra-primary`, `--ultra-highlight`) for each theme.
+The light theme uses ocean colors, and a Codex-style dark mode can be toggled
+in settings. You can customize the primary and highlight colors by editing the
+CSS variables (`--ultra-primary`, `--ultra-highlight`).
 
 ## Project Layout
 
