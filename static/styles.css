@@ -199,7 +199,24 @@ input.switch:checked::before {
   color: var(--ultra-text);
   padding: 0.75rem;
   border-top: 1px solid var(--ultra-highlight);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+.card-header {
+  background-color: var(--ultra-primary);
+  color: var(--mdc-theme-on-primary);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  margin: -0.75rem -0.75rem 0.75rem;
+}
+
+.card-header-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
 
 .box,
 .notification {
@@ -219,6 +236,11 @@ input.switch:checked::before {
   border: 1px solid var(--ultra-highlight);
   word-break: break-word;
 }
+.table th {
+  background-color: var(--ultra-primary);
+  color: var(--mdc-theme-on-primary);
+}
+
 
 .table.is-narrow th,
 .table.is-narrow td {
