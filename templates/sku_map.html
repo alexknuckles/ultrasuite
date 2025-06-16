@@ -153,7 +153,9 @@
             <label class="label">Aliases</label>
             <div class="alias-badges mb-1">
               {% for a in entry.aliases.split(',') if a.strip() %}
-              <span class="tag is-info is-light">{{ a.strip() }}</span>
+              <span class="tag is-info is-light">{{ a.strip() }}
+                <button type="button" class="delete is-small ml-1">×</button>
+              </span>
               {% endfor %}
             </div>
           </div>
@@ -291,6 +293,13 @@
     input.addEventListener('blur', render);
     input.addEventListener('change', render);
     render();
+  });
+  document.querySelectorAll('#merged .alias-badges .delete').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const tag = btn.parentElement;
+      if (tag) tag.remove();
+    });
   });
   document.querySelectorAll('.sku-card').forEach(card => {
     card.addEventListener('click', e => {

@@ -51,6 +51,9 @@ html, body {
   --mdc-theme-surface: var(--ultra-highlight);
   --mdc-theme-on-surface: var(--ultra-text);
 }
+body {
+  padding-top: 3.5rem;
+}
 
 .container {
   max-width: none;
@@ -89,8 +92,10 @@ a:hover {
 .mdc-top-app-bar {
   background-color: var(--ultra-primary);
   color: var(--ultra-text);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  width: 100%;
   z-index: 1000;
 }
 
@@ -374,8 +379,9 @@ input.switch:checked::before {
     flex-direction: column;
     position: absolute;
     top: 3.5rem;
-    left: 0;
-    width: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
     background-color: var(--ultra-primary);
   }
   .nav-links.is-open {
