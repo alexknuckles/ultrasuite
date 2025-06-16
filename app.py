@@ -611,7 +611,7 @@ def monthly_report():
             })
         sku_details[cat] = cat_rows
 
-    years = sorted(summary["year"].unique(), reverse=True)
+    years = sorted(set(summary["year"].unique()).union({year}), reverse=True)
     return render_template(
         "report.html",
         rows=rows,
