@@ -344,7 +344,7 @@ def sku_map_page():
     for g in grouped.values():
         g['aliases'] = ', '.join(sorted(g['aliases']))
         grouped_list.append(g)
-    merged_groups = [g for g in grouped_list if g['aliases']]
+    merged_groups = [g for g in grouped_list if g['aliases'] and g['type'] != 'unmapped']
     unmapped_groups = [g for g in grouped_list if g['type'] == 'unmapped']
 
     # generate merge suggestions
