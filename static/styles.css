@@ -12,6 +12,16 @@
   flex-direction: column;
 }
 
+.tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--ultra-highlight);
+  color: var(--ultra-text);
+  border-radius: 0.25rem;
+  padding: 0 0.5rem;
+  font-size: 0.9rem;
+}
+
 .alias-badges .tag {
   display: flex;
   align-items: center;
@@ -128,7 +138,7 @@ button.theme-toggle {
 
 .tag.is-info.is-light {
   background-color: var(--ultra-primary);
-  color: var(--ultra-highlight);
+  color: #fff;
 }
 
 /* simple switch */
