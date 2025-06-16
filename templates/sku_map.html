@@ -3,23 +3,23 @@
 <div class="mdc-card">
   <div class="card-content">
     <h2 class="title is-4 mb-4">SKU alias mapping</h2>
-    <div class="buttons tab-buttons mb-4" id="mapTabs">
-      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="map">Mapping</button>
-      <button type="button" class="mdc-button mdc-button--raised" data-target="unmapped">Unmapped</button>
-      <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged</button>
-      <button type="button" class="mdc-button mdc-button--raised" data-target="sug">Suggestions</button>
-    </div>
-    <div id="map" class="tab-pane">
-      <input type="text" id="searchBox" class="input mb-4" placeholder="Search SKUs">
+    <nav class="buttons tab-buttons mb-4" id="mapTabs">
+      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="map">Mapping ({{ grouped|length }})</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="unmapped">Unmapped ({{ unmapped|length }})</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged ({{ merged|length }})</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="sug">Suggestions ({{ suggestions|length }})</button>
+    </nav>
+    <section id="map" class="tab-pane">
+      <input type="text" id="searchBox" class="input mb-4" placeholder="Search SKUs and aliases">
       <form method="POST">
         <input type="hidden" id="merge_target" name="merge_target" value="">
         {% for entry in grouped %}
         <div class="mdc-card sku-card">
           <div class="card-content">
-            <div class="columns is-variable is-1 is-vcentered sku-row">
+            <div class="columns is-vcentered sku-row">
               <div class="column is-narrow merge-col">
                 <input id="merge_{{ loop.index0 }}" class="switch merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
-                <label for="merge_{{ loop.index0 }}" class="mr-2">Merge</label>
+                <label for="merge_{{ loop.index0 }}">Merge</label>
                 <span class="target-wrap is-hidden">
                   <input id="target_{{ loop.index0 }}" class="switch target-check" type="checkbox" data-value="{{ entry.canonical }}">
                   <label for="target_{{ loop.index0 }}">Parent</label>
@@ -45,10 +45,10 @@
                       <option value="parts" {% if entry.type == 'parts' %}selected{% endif %}>Parts</option>
                       <option value="service" {% if entry.type == 'service' %}selected{% endif %}>Service</option>
                       <option value="shopify" {% if entry.type == 'shopify' %}selected{% endif %}>Shopify</option>
-                    <option value="shipping" {% if entry.type == 'shipping' %}selected{% endif %}>Shipping</option>
-                  </select>
+                      <option value="shipping" {% if entry.type == 'shipping' %}selected{% endif %}>Shipping</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
               </div>
             </div>
             <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
@@ -59,13 +59,109 @@
           </div>
         </div>
         {% endfor %}
-        <div class="buttons mb-5">
+        <hr class="my-4">
+        <div class="mdc-card sku-card">
+          <div class="card-content">
+            <div class="columns is-vcentered sku-row">
+              <div class="column">
+                <div class="field is-flex is-align-items-center">
+                  <label class="label mb-0 mr-1">SKU</label>
+                  <input class="input" name="canonical_new" placeholder="New canonical SKU">
+                </div>
+              </div>
+              <div class="column is-narrow">
+                <div class="field is-flex is-align-items-center">
+                  <label class="label mb-0 mr-1">Type</label>
+                  <div class="select">
+                    <select name="type_new">
+                      <option value="unmapped">Unmapped</option>
+                      <option value="machine">Machine</option>
+                      <option value="detergent_filter_kits">Detergent & Filter Kits</option>
+                      <option value="detergent">Detergents</option>
+                      <option value="filters">Filters</option>
+                      <option value="parts">Parts</option>
+                      <option value="service">Service</option>
+                      <option value="shopify">Shopify</option>
+                      <option value="shipping">Shipping</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field alias-field" style="display:none">
+              <label class="label">Aliases</label>
+              <input type="text" class="input alias-input" name="aliases_new">
+              <div class="alias-badges mb-1"></div>
+            </div>
+          </div>
+        </div>
+        <div class="buttons mb-5 mt-4">
           <button class="mdc-button mdc-button--raised" type="submit" name="merge" value="1">Merge selected</button>
           <button class="mdc-button mdc-button--raised" type="submit" name="save" value="1">Save changes</button>
         </div>
       </form>
-    </div>
-    <div id="sug" class="tab-pane is-hidden">
+    </section>
+    <section id="unmapped" class="tab-pane is-hidden">
+      {% for entry in unmapped %}
+      <div class="mdc-card sku-card">
+        <div class="card-content">
+          <div class="columns is-vcentered sku-row">
+            <div class="column">
+              <div class="field is-flex is-align-items-center">
+                <label class="label mb-0 mr-1">SKU</label>
+                <strong>{{ entry.canonical }}</strong>
+              </div>
+            </div>
+            <div class="column is-narrow">
+              <div class="field is-flex is-align-items-center">
+                <label class="label mb-0 mr-1">Type</label>
+                <span>{{ entry.type }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
+            <label class="label">Aliases</label>
+            <div class="alias-badges mb-1">
+              {% for a in entry.aliases.split(',') if a.strip() %}
+              <span class="tag is-info is-light">{{ a.strip() }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </section>
+    <section id="merged" class="tab-pane is-hidden">
+      {% for entry in merged %}
+      <div class="mdc-card sku-card">
+        <div class="card-content">
+          <div class="columns is-vcentered sku-row">
+            <div class="column">
+              <div class="field is-flex is-align-items-center">
+                <label class="label mb-0 mr-1">SKU</label>
+                <strong>{{ entry.canonical }}</strong>
+              </div>
+            </div>
+            <div class="column is-narrow">
+              <div class="field is-flex is-align-items-center">
+                <label class="label mb-0 mr-1">Type</label>
+                <span>{{ entry.type }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
+            <label class="label">Aliases</label>
+            <div class="alias-badges mb-1">
+              {% for a in entry.aliases.split(',') if a.strip() %}
+              <span class="tag is-info is-light">{{ a.strip() }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </section>
+    <section id="sug" class="tab-pane is-hidden">
       {% if suggestions %}
       <form method="POST">
         <table class="table is-fullwidth is-narrow">
@@ -76,7 +172,7 @@
           {% for s in suggestions %}
           <tr>
             <td class="has-text-centered">
-                <input type="checkbox" name="suggest_{{ loop.index0 }}">
+              <input type="checkbox" name="suggest_{{ loop.index0 }}">
             </td>
             <td>{{ s[0] }}<input type="hidden" name="sug_target_{{ loop.index0 }}" value="{{ s[0] }}"></td>
             <td>{{ s[1] }}<input type="hidden" name="sug_merge_{{ loop.index0 }}" value="{{ s[1] }}"></td>
@@ -90,214 +186,120 @@
       {% else %}
       <p>No suggestions available.</p>
       {% endif %}
-    </div>
-    <div id="unmapped" class="tab-pane is-hidden">
-      {% for entry in unmapped %}
-      <div class="mdc-card sku-card">
-        <div class="card-content">
-          <div class="columns is-variable is-1 is-vcentered sku-row">
-            <div class="column">
-              <div class="field is-flex is-align-items-center">
-                <label class="label mb-0 mr-1">SKU</label>
-                <strong>{{ entry.canonical }}</strong>
-              </div>
-            </div>
-            <div class="column is-narrow">
-              <div class="field is-flex is-align-items-center">
-                <label class="label mb-0 mr-1">Type</label>
-                <span>{{ entry.type }}</span>
-              </div>
-            </div>
-            </div>
-            <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
-              <label class="label">Aliases</label>
-              <div class="alias-badges mb-1">
-                {% for a in entry.aliases.split(',') if a.strip() %}
-                <span class="tag is-info is-light">{{ a.strip() }}</span>
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    <div id="merged" class="tab-pane is-hidden">
-      {% for entry in merged %}
-      <div class="mdc-card sku-card">
-        <div class="card-content">
-          <div class="columns is-variable is-1 is-vcentered sku-row">
-            <div class="column">
-              <div class="field is-flex is-align-items-center">
-                <label class="label mb-0 mr-1">SKU</label>
-                <strong>{{ entry.canonical }}</strong>
-              </div>
-            </div>
-            <div class="column is-narrow">
-              <div class="field is-flex is-align-items-center">
-                <label class="label mb-0 mr-1">Type</label>
-                <span>{{ entry.type }}</span>
-              </div>
-            </div>
-            </div>
-            <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
-              <label class="label">Aliases</label>
-              <div class="alias-badges mb-1">
-                {% for a in entry.aliases.split(',') if a.strip() %}
-                <span class="tag is-info is-light">{{ a.strip() }}</span>
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
+    </section>
   </div>
 </div>
 <script>
-  // run immediately since script is loaded at the end of the page
-  // ensure only the active tab is visible on load
-  var active = document.querySelector('#mapTabs .is-active');
+(function(){
+  const active = document.querySelector('#mapTabs .is-active');
   if (active) {
-    document.querySelectorAll('.tab-pane').forEach(function(p){
-      p.classList.add('is-hidden');
-    });
-    var target = active.getAttribute('data-target');
-    document.getElementById(target).classList.remove('is-hidden');
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
+    document.getElementById(active.dataset.target).classList.remove('is-hidden');
   }
-  document.getElementById('searchBox').addEventListener('input', function() {
-    var term = this.value.toLowerCase();
-    document.querySelectorAll('#map .sku-card').forEach(function(card) {
-      var canonicalInput = card.querySelector('input[name^="canonical_"]');
-      var aliasInput = card.querySelector('input[name^="aliases_"]');
-      if (canonicalInput && !canonicalInput.name.endsWith('_new')) {
-        var text = canonicalInput.value.toLowerCase();
-        if (aliasInput) {
-          text += ' ' + aliasInput.value.toLowerCase();
+  document.querySelectorAll('#mapTabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#mapTabs button').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
+      document.getElementById(btn.dataset.target).classList.remove('is-hidden');
+    });
+  });
+  const search = document.getElementById('searchBox');
+  if (search) {
+    search.addEventListener('input', () => {
+      const term = search.value.toLowerCase();
+      document.querySelectorAll('#map .sku-card').forEach(card => {
+        const can = card.querySelector('input[name^="canonical_"]');
+        const alias = card.querySelector('input[name^="aliases_"]');
+        if (can && !can.name.endsWith('_new')) {
+          let text = can.value.toLowerCase();
+          if (alias) text += ' ' + alias.value.toLowerCase();
+          card.style.display = text.includes(term) ? '' : 'none';
         }
-        card.style.display = text.indexOf(term) !== -1 ? '' : 'none';
-      }
-    });
-  });
-
-  document.querySelectorAll('#mapTabs button').forEach(function(tab){
-    tab.addEventListener('click', function(){
-      document.querySelectorAll('#mapTabs button').forEach(function(t){
-        t.classList.remove('is-active');
       });
-      tab.classList.add('is-active');
-      document.querySelectorAll('.tab-pane').forEach(function(p){
-        p.classList.add('is-hidden');
-      });
-      var target = tab.getAttribute('data-target');
-      document.getElementById(target).classList.remove('is-hidden');
     });
-  });
-
-  function updateTargets() {
-    var anySelected = document.querySelector('.merge-check:checked');
-    var current = document.querySelector('.target-check:checked');
-    document.querySelectorAll('.sku-card').forEach(function(card){
-      var merge = card.querySelector('.merge-check');
-      var check = card.querySelector('.target-check');
-      var wrap = card.querySelector('.target-wrap');
-      if (merge && check && wrap) {
-        var show = anySelected && merge.checked && (!current || check.checked);
+  }
+  function updateTargets(){
+    const any = document.querySelector('.merge-check:checked');
+    const current = document.querySelector('.target-check:checked');
+    document.querySelectorAll('.sku-card').forEach(card => {
+      const merge = card.querySelector('.merge-check');
+      const wrap = card.querySelector('.target-wrap');
+      const t = card.querySelector('.target-check');
+      if (merge && wrap && t) {
+        const show = any && merge.checked && (!current || t.checked);
         wrap.classList.toggle('is-hidden', !show);
       }
     });
-    var hidden = document.getElementById('merge_target');
-    if (hidden) {
-      hidden.value = current ? current.getAttribute('data-value') : '';
-    }
+    const hidden = document.getElementById('merge_target');
+    if (hidden) hidden.value = current ? current.dataset.value : '';
   }
-
-  document.querySelectorAll('.merge-check').forEach(function(cb) {
-    cb.addEventListener('change', function() {
-      var card = cb.closest('.sku-card');
+  document.querySelectorAll('.merge-check').forEach(cb => {
+    const card = cb.closest('.sku-card');
+    if (card) card.classList.toggle('selected', cb.checked);
+    cb.addEventListener('change', () => {
       if (card) {
         card.classList.toggle('selected', cb.checked);
         if (!cb.checked) {
-          var t = card.querySelector('.target-check');
-          if (t && t.checked) {
-            t.checked = false;
-          }
+          const t = card.querySelector('.target-check');
+          if (t && t.checked) t.checked = false;
         }
       }
-      var currentTarget = document.querySelector('.target-check:checked');
-      if (!currentTarget) {
-        var first = document.querySelector('.merge-check:checked');
+      if (!document.querySelector('.target-check:checked')) {
+        const first = document.querySelector('.merge-check:checked');
         if (first) {
-          var check = first.closest('.sku-card').querySelector('.target-check');
-          if (check) {
-            check.checked = true;
-          }
+          const check = first.closest('.sku-card').querySelector('.target-check');
+          if (check) check.checked = true;
         }
       }
       updateTargets();
     });
-    var card = cb.closest('.sku-card');
-    if (card) {
-      card.classList.toggle('selected', cb.checked);
-    }
   });
-  updateTargets();
-
-  document.querySelectorAll('.target-check').forEach(function(tc){
-    tc.addEventListener('change', function(){
+  document.querySelectorAll('.target-check').forEach(tc => {
+    tc.addEventListener('change', () => {
       if (tc.checked) {
-        document.querySelectorAll('.target-check').forEach(function(other){
-          if (other !== tc) other.checked = false;
-        });
+        document.querySelectorAll('.target-check').forEach(o => { if (o !== tc) o.checked = false; });
       }
       updateTargets();
     });
   });
-
-  document.querySelectorAll('.alias-input').forEach(function(input) {
-    var container = input.nextElementSibling;
-    var field = input.closest('.alias-field');
-    function render() {
+  document.querySelectorAll('.alias-input').forEach(input => {
+    const container = input.nextElementSibling;
+    const field = input.closest('.alias-field');
+    function render(){
       container.innerHTML = '';
-      var aliases = Array.from(new Set(
-        input.value.split(',').map(function(a){ return a.trim(); }).filter(Boolean)
-      ));
-      aliases.forEach(function(a) {
-        var tag = document.createElement('span');
+      let aliases = Array.from(new Set(input.value.split(',').map(a => a.trim()).filter(Boolean)));
+      aliases.forEach(a => {
+        const tag = document.createElement('span');
         tag.className = 'tag is-info is-light';
         tag.textContent = a;
-        var del = document.createElement('button');
+        const del = document.createElement('button');
         del.type = 'button';
         del.className = 'delete is-small ml-1';
-        del.textContent = '\u00d7';
-        del.addEventListener('click', function(e){
+        del.textContent = '×';
+        del.addEventListener('click', e => {
           e.stopPropagation();
-          aliases = aliases.filter(function(x){ return x !== a; });
+          aliases = aliases.filter(x => x !== a);
           input.value = aliases.join(', ');
           render();
         });
         tag.appendChild(del);
         container.appendChild(tag);
       });
-      if (field) {
-        field.style.display = aliases.length ? '' : 'none';
-      }
+      if (field) field.style.display = aliases.length ? '' : 'none';
     }
+    input.addEventListener('blur', render);
+    input.addEventListener('change', render);
     render();
   });
-
-  document.querySelectorAll('.sku-card').forEach(function(card) {
-    card.addEventListener('click', function(e){
-      if (e.target.closest('input') || e.target.closest('button') || e.target.closest('select')) {
-        return;
-      }
-      var cb = card.querySelector('.merge-check');
-      if (cb) {
-        cb.checked = !cb.checked;
-        cb.dispatchEvent(new Event('change'));
-      }
+  document.querySelectorAll('.sku-card').forEach(card => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('input') || e.target.closest('button') || e.target.closest('select')) return;
+      const cb = card.querySelector('.merge-check');
+      if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); }
     });
   });
+  updateTargets();
+})();
 </script>
 {% endblock %}
