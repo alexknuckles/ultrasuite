@@ -114,6 +114,16 @@ a:hover {
 
 .nav-links {
   margin-left: 1rem;
+  display: flex;
+}
+
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--mdc-theme-on-primary);
+  font-size: 1.5rem;
+  cursor: pointer;
 }
 
 button.theme-toggle {
@@ -344,3 +354,35 @@ input.switch:checked::before {
 .mb-5 { margin-bottom: 1.5rem !important; }
 .mr-1 { margin-right: 0.25rem !important; }
 .mr-2 { margin-right: 0.5rem !important; }
+
+@media (max-width: 600px) {
+  .columns {
+    flex-direction: column;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .column,
+  .column.is-half {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .nav-toggle {
+    display: block;
+  }
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 3.5rem;
+    left: 0;
+    width: 100%;
+    background-color: var(--ultra-primary);
+  }
+  .nav-links.is-open {
+    display: flex;
+  }
+  .nav-links a {
+    padding: 0.75rem 1rem;
+    color: var(--mdc-theme-on-primary);
+  }
+}

@@ -13,11 +13,12 @@
 <header class="mdc-top-app-bar mb-4">
   <div class="mdc-top-app-bar__row">
       <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start" role="toolbar">
-        <a href="/" class="mdc-top-app-bar__title">
-          <img src="{{ url_for('logo') }}" alt="ultrasuite logo" style="height:1.75rem; margin-right:0.5rem; vertical-align:middle;">
-          ultrasuite
-        </a>
-        <div class="nav-links">
+          <a href="/" class="mdc-top-app-bar__title">
+            <img src="{{ url_for('logo') }}" alt="ultrasuite logo" style="height:1.75rem; margin-right:0.5rem; vertical-align:middle;">
+            ultrasuite
+          </a>
+          <button id="navToggle" class="nav-toggle" type="button" aria-label="Menu">☰</button>
+          <div class="nav-links">
           <a class="mdc-button" href="/">Dashboard</a>
           <a class="mdc-button" href="/upload">Upload data</a>
           <a class="mdc-button" href="/sku-map">SKU map</a>
@@ -57,6 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', function() {
   const root = document.documentElement;
   const toggle = document.getElementById('themeToggle');
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.querySelector('.nav-links');
   function apply(dark) {
     root.classList.toggle('dark-mode', dark);
     toggle.textContent = dark ? '☀️' : '🌙';
@@ -67,6 +70,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const newDark = !(localStorage.getItem('ultra-dark') === '1');
     localStorage.setItem('ultra-dark', newDark ? '1' : '0');
     apply(newDark);
+  });
+  navToggle.addEventListener('click', function() {
+    navLinks.classList.toggle('is-open');
   });
 });
 </script>
