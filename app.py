@@ -116,6 +116,16 @@ def migrate_types():
 migrate_types()
 
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_file(os.path.join(app.root_path, 'ultrasuite-favicon.ico'), mimetype='image/vnd.microsoft.icon')
+
+
+@app.route('/logo.png')
+def logo():
+    return send_file(os.path.join(app.root_path, 'ultrasuite-logo.png'), mimetype='image/png')
+
+
 @app.route('/')
 def dashboard():
     conn = get_db()
