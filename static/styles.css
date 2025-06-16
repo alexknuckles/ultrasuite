@@ -27,8 +27,9 @@ body {
 }
 
 body.dark-mode {
-  --ultra-background: #272727;
-  --ultra-text: #f8f9fa;
+  --ultra-background: #121212;
+  --ultra-text: #e0e0e0;
+  --ultra-highlight: #2a2a2a;
 }
 
 a,
