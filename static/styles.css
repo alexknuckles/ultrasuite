@@ -277,6 +277,9 @@ input.switch:checked::before {
 .tab-buttons .mdc-button {
   background-color: var(--ultra-highlight);
   color: var(--ultra-text);
+  height: auto;
+  white-space: normal;
+  padding: 0.25rem 0.75rem;
 }
 
 .tab-buttons .mdc-button.is-active {
