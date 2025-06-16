@@ -385,6 +385,17 @@
         const typeVal = typeSel ? typeSel.value : 'unmapped';
         addMapCard(alias, typeVal);
       }
+      const container = card ? card.querySelector('.alias-badges') : null;
+      const field = container ? container.closest('.alias-field') : null;
+      if (container && container.children.length === 0) {
+        if (field) field.style.display = 'none';
+        card.remove();
+        const mergedBtn = document.querySelector('#mapTabs button[data-target="merged"]');
+        if (mergedBtn) {
+          const count = document.querySelectorAll('#merged .sku-card').length;
+          mergedBtn.textContent = `Merged (${count})`;
+        }
+      }
     });
   });
 
