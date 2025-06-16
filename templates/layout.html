@@ -26,6 +26,9 @@
           <a class="mdc-button" href="/settings">Settings</a>
         </div>
       </section>
+      <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
+        <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle theme">🌙</button>
+      </section>
   </div>
 </header>
 <section class="section pt-0">
@@ -51,6 +54,21 @@ document.addEventListener('DOMContentLoaded', () => {
     root.classList.add('dark-mode');
   }
 })();
+document.addEventListener('DOMContentLoaded', function() {
+  const root = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  function apply(dark) {
+    root.classList.toggle('dark-mode', dark);
+    toggle.textContent = dark ? '☀️' : '🌙';
+  }
+  const isDark = localStorage.getItem('ultra-dark') === '1';
+  apply(isDark);
+  toggle.addEventListener('click', function() {
+    const newDark = !(localStorage.getItem('ultra-dark') === '1');
+    localStorage.setItem('ultra-dark', newDark ? '1' : '0');
+    apply(newDark);
+  });
+});
 </script>
 </body>
 </html>
