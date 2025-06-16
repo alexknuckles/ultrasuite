@@ -57,7 +57,7 @@ html, body {
 }
 
 /* codex-inspired dark mode */
-body.dark-mode {
+.dark-mode {
   --ultra-background: #0d1117;
   --ultra-text: #c9d1d9;
   --ultra-highlight: #161b22;

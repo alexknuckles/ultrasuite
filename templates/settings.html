@@ -23,10 +23,10 @@
     function load() {
       const dm = localStorage.getItem('ultra-dark') === '1';
       darkInput.checked = dm;
-      document.body.classList.toggle('dark-mode', dm);
+      root.classList.toggle('dark-mode', dm);
     }
     function apply() {
-      document.body.classList.toggle('dark-mode', darkInput.checked);
+      root.classList.toggle('dark-mode', darkInput.checked);
     }
     load();
     document.getElementById('settingsForm').addEventListener('submit', function(e) {
