@@ -14,7 +14,7 @@
       <form method="POST">
         <input type="hidden" id="merge_target" name="merge_target" value="">
         {% for entry in grouped %}
-        <div class="mdc-card sku-card">
+        <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}">
           <div class="card-content">
             <div class="columns is-vcentered sku-row">
               <div class="column is-narrow merge-col">
@@ -103,7 +103,7 @@
     </section>
     <section id="unmapped" class="tab-pane is-hidden">
       {% for entry in unmapped %}
-      <div class="mdc-card sku-card">
+      <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}">
         <div class="card-content">
           <div class="columns is-vcentered sku-row">
             <div class="column">
@@ -133,7 +133,7 @@
     </section>
     <section id="merged" class="tab-pane is-hidden">
       {% for entry in merged %}
-      <div class="mdc-card sku-card">
+      <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}">
         <div class="card-content">
           <div class="columns is-vcentered sku-row">
             <div class="column">
@@ -153,7 +153,8 @@
             <label class="label">Aliases</label>
             <div class="alias-badges mb-1">
               {% for a in entry.aliases.split(',') if a.strip() %}
-              <span class="tag is-info is-light">{{ a.strip() }}
+              <span class="tag is-info is-light" data-alias="{{ a.strip() }}">
+                {{ a.strip() }}
                 <button type="button" class="delete is-small ml-1">×</button>
               </span>
               {% endfor %}
@@ -206,6 +207,7 @@
       document.getElementById(btn.dataset.target).classList.remove('is-hidden');
     });
   });
+
   const search = document.getElementById('searchBox');
   if (search) {
     search.addEventListener('input', () => {
@@ -221,6 +223,7 @@
       });
     });
   }
+
   function updateTargets(){
     const any = document.querySelector('.merge-check:checked');
     const current = document.querySelector('.target-check:checked');
@@ -236,36 +239,8 @@
     const hidden = document.getElementById('merge_target');
     if (hidden) hidden.value = current ? current.dataset.value : '';
   }
-  document.querySelectorAll('.merge-check').forEach(cb => {
-    const card = cb.closest('.sku-card');
-    if (card) card.classList.toggle('selected', cb.checked);
-    cb.addEventListener('change', () => {
-      if (card) {
-        card.classList.toggle('selected', cb.checked);
-        if (!cb.checked) {
-          const t = card.querySelector('.target-check');
-          if (t && t.checked) t.checked = false;
-        }
-      }
-      if (!document.querySelector('.target-check:checked')) {
-        const first = document.querySelector('.merge-check:checked');
-        if (first) {
-          const check = first.closest('.sku-card').querySelector('.target-check');
-          if (check) check.checked = true;
-        }
-      }
-      updateTargets();
-    });
-  });
-  document.querySelectorAll('.target-check').forEach(tc => {
-    tc.addEventListener('change', () => {
-      if (tc.checked) {
-        document.querySelectorAll('.target-check').forEach(o => { if (o !== tc) o.checked = false; });
-      }
-      updateTargets();
-    });
-  });
-  document.querySelectorAll('.alias-input').forEach(input => {
+
+  function initAliasInput(input){
     const container = input.nextElementSibling;
     const field = input.closest('.alias-field');
     function render(){
@@ -274,6 +249,7 @@
       aliases.forEach(a => {
         const tag = document.createElement('span');
         tag.className = 'tag is-info is-light';
+        tag.dataset.alias = a;
         tag.textContent = a;
         const del = document.createElement('button');
         del.type = 'button';
@@ -293,21 +269,125 @@
     input.addEventListener('blur', render);
     input.addEventListener('change', render);
     render();
-  });
+  }
+
+  function initCard(card){
+    const cb = card.querySelector('.merge-check');
+    if (cb) {
+      card.classList.toggle('selected', cb.checked);
+      cb.addEventListener('change', () => {
+        card.classList.toggle('selected', cb.checked);
+        if (!cb.checked) {
+          const t = card.querySelector('.target-check');
+          if (t && t.checked) t.checked = false;
+        }
+        if (!document.querySelector('.target-check:checked')) {
+          const first = document.querySelector('.merge-check:checked');
+          if (first) {
+            const check = first.closest('.sku-card').querySelector('.target-check');
+            if (check) check.checked = true;
+          }
+        }
+        updateTargets();
+      });
+    }
+    card.querySelectorAll('.target-check').forEach(tc => {
+      tc.addEventListener('change', () => {
+        if (tc.checked) {
+          document.querySelectorAll('.target-check').forEach(o => { if (o !== tc) o.checked = false; });
+        }
+        updateTargets();
+      });
+    });
+    card.querySelectorAll('.alias-input').forEach(initAliasInput);
+    card.addEventListener('click', e => {
+      if (e.target.closest('input') || e.target.closest('button') || e.target.closest('select')) return;
+      if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); }
+    });
+  }
+
+  document.querySelectorAll('.sku-card').forEach(initCard);
+
+  let nextIdx = Math.max(0, ...Array.from(document.querySelectorAll('input[name^="canonical_"]')).map(i => parseInt(i.name.split('_')[1])||0)) + 1;
+
+  const typeOptions = Array.from(document.querySelector('#map select[name^="type_"]').options).map(o => `<option value="${o.value}">${o.textContent}</option>`).join('');
+
+  function createMapCard(idx, canonical, type){
+    const div = document.createElement('div');
+    div.className = 'mdc-card sku-card';
+    div.dataset.canonical = canonical;
+    div.innerHTML = `
+      <div class="card-content">
+        <div class="columns is-vcentered sku-row">
+          <div class="column is-narrow merge-col">
+            <input id="merge_${idx}" class="switch merge-check" type="checkbox" name="select_${idx}" value="${canonical}">
+            <label for="merge_${idx}">Merge</label>
+            <span class="target-wrap is-hidden">
+              <input id="target_${idx}" class="switch target-check" type="checkbox" data-value="${canonical}">
+              <label for="target_${idx}">Parent</label>
+            </span>
+          </div>
+          <div class="column">
+            <div class="field is-flex is-align-items-center">
+              <label class="label mb-0 mr-1">SKU</label>
+              <strong>${canonical}</strong>
+              <input type="hidden" name="canonical_${idx}" value="${canonical}">
+            </div>
+          </div>
+          <div class="column is-narrow">
+            <div class="field is-flex is-align-items-center">
+              <label class="label mb-0 mr-1">Type</label>
+              <div class="select">
+                <select name="type_${idx}">${typeOptions}</select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field alias-field" style="display:none">
+          <label class="label">Aliases</label>
+          <input type="hidden" class="alias-input" name="aliases_${idx}" value="">
+          <div class="alias-badges mb-1"></div>
+        </div>
+      </div>`;
+    div.querySelector(`select[name="type_${idx}"]`).value = type || 'unmapped';
+    return div;
+  }
+
+  function addMapCard(canonical, type){
+    if (document.querySelector(`#map .sku-card[data-canonical="${canonical}"]`)) return;
+    const form = document.querySelector('#map form');
+    const hr = form.querySelector('hr.my-4');
+    const card = createMapCard(nextIdx++, canonical, type);
+    form.insertBefore(card, hr);
+    initCard(card);
+    updateTargets();
+  }
+
   document.querySelectorAll('#merged .alias-badges .delete').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const tag = btn.parentElement;
+      const alias = tag.dataset.alias;
+      const card = btn.closest('.sku-card');
+      const canonical = card ? card.dataset.canonical : '';
       if (tag) tag.remove();
+      if (!alias || !canonical) return;
+      const mapCard = document.querySelector(`#map .sku-card[data-canonical="${canonical}"]`);
+      if (mapCard) {
+        const input = mapCard.querySelector('.alias-input');
+        if (input) {
+          let aliases = input.value.split(',').map(a => a.trim()).filter(Boolean);
+          aliases = aliases.filter(a => a !== alias);
+          input.value = aliases.join(', ');
+          input.dispatchEvent(new Event('change'));
+        }
+        const typeSel = mapCard.querySelector('select[name^="type_"]');
+        const typeVal = typeSel ? typeSel.value : 'unmapped';
+        addMapCard(alias, typeVal);
+      }
     });
   });
-  document.querySelectorAll('.sku-card').forEach(card => {
-    card.addEventListener('click', e => {
-      if (e.target.closest('input') || e.target.closest('button') || e.target.closest('select')) return;
-      const cb = card.querySelector('.merge-check');
-      if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); }
-    });
-  });
+
   updateTargets();
 })();
 </script>
