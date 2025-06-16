@@ -74,6 +74,13 @@ document.addEventListener('DOMContentLoaded', function() {
   navToggle.addEventListener('click', function() {
     navLinks.classList.toggle('is-open');
   });
+  document.addEventListener('click', function(e) {
+    if (navLinks.classList.contains('is-open') &&
+        !navLinks.contains(e.target) &&
+        e.target !== navToggle) {
+      navLinks.classList.remove('is-open');
+    }
+  });
 });
 </script>
 </body>
