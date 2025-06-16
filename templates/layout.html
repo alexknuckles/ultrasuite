@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 (function(){
   const root = document.documentElement;
   if (localStorage.getItem('ultra-dark') === '1') {
-    document.body.classList.add('dark-mode');
+    root.classList.add('dark-mode');
   }
 })();
 </script>
