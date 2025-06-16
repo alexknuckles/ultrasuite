@@ -350,7 +350,7 @@ def sku_map_page():
 
     merged_groups = [
         g for g in grouped_list
-        if g['alias_count'] > 1 and g['type'] != 'unmapped'
+        if g['alias_count'] > 0 and g['type'] != 'unmapped'
     ]
     unmapped_groups = [g for g in grouped_list if g['type'] == 'unmapped']
 
