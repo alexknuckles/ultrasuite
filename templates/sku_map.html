@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="card">
+<div class="mdc-card">
   <div class="card-content">
     <h2 class="title is-4 mb-4">SKU Alias Mapping</h2>
     <div class="tabs is-boxed" id="mapTabs">
@@ -16,14 +16,14 @@
       <form method="POST">
         <input type="hidden" id="merge_target" name="merge_target" value="">
         {% for entry in grouped %}
-        <div class="card sku-card">
+        <div class="mdc-card sku-card">
           <div class="card-content">
             <div class="columns is-variable is-1 is-vcentered sku-row">
               <div class="column is-narrow merge-col">
-                <input id="merge_{{ loop.index0 }}" class="switch is-rounded is-info merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
+                <input id="merge_{{ loop.index0 }}" class="switch merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
                 <label for="merge_{{ loop.index0 }}" class="mr-2">Merge</label>
                 <span class="target-wrap is-invisible">
-                  <input id="target_{{ loop.index0 }}" class="switch is-rounded is-success target-check" type="checkbox" data-value="{{ entry.canonical }}">
+                  <input id="target_{{ loop.index0 }}" class="switch target-check" type="checkbox" data-value="{{ entry.canonical }}">
                   <label for="target_{{ loop.index0 }}">Parent</label>
                 </span>
               </div>
@@ -62,8 +62,8 @@
         </div>
         {% endfor %}
         <div class="buttons mb-5">
-          <button class="button is-light" type="submit" name="merge" value="1">Merge Selected</button>
-          <button class="button is-primary" type="submit" name="save" value="1">Save Changes</button>
+          <button class="mdc-button" type="submit" name="merge" value="1">Merge Selected</button>
+          <button class="mdc-button mdc-button--raised" type="submit" name="save" value="1">Save Changes</button>
         </div>
       </form>
     </div>
@@ -87,7 +87,7 @@
           {% endfor %}
           </tbody>
         </table>
-        <button class="button is-light" type="submit" name="merge_suggestions" value="1">Merge Selected</button>
+        <button class="mdc-button" type="submit" name="merge_suggestions" value="1">Merge Selected</button>
       </form>
       {% else %}
       <p>No suggestions available.</p>
@@ -95,7 +95,7 @@
     </div>
     <div id="unmapped" class="tab-pane is-hidden">
       {% for entry in unmapped %}
-      <div class="card sku-card">
+      <div class="mdc-card sku-card">
         <div class="card-content">
           <div class="columns is-variable is-1 is-vcentered sku-row">
             <div class="column">
@@ -125,7 +125,7 @@
     </div>
     <div id="merged" class="tab-pane is-hidden">
       {% for entry in merged %}
-      <div class="card sku-card">
+      <div class="mdc-card sku-card">
         <div class="card-content">
           <div class="columns is-variable is-1 is-vcentered sku-row">
             <div class="column">

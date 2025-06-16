@@ -15,6 +15,16 @@ html, body {
   background-color: var(--ultra-background);
   color: var(--ultra-text);
   font-size: var(--base-font-size);
+  --mdc-theme-primary: var(--ultra-primary);
+  --mdc-theme-on-primary: #fff;
+  --mdc-theme-surface: var(--ultra-highlight);
+  --mdc-theme-on-surface: var(--ultra-text);
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 1rem;
 }
 
 /* ocean light theme */
@@ -42,29 +52,31 @@ a:hover {
   color: var(--ultra-primary);
 }
 
-.navbar.is-primary {
+/* top app bar */
+.mdc-top-app-bar {
   background-color: var(--ultra-primary);
-  border-color: var(--ultra-primary);
-}
-
-/* navbar text should respect theme text color */
-.navbar.is-primary .navbar-item,
-.navbar.is-primary .navbar-burger {
   color: var(--ultra-text);
 }
 
-/* keep navbar hover consistent with theme */
-.navbar.is-primary .navbar-item:hover,
-.navbar.is-primary .navbar-burger:hover,
-.navbar.is-primary .navbar-item.is-active,
-.navbar.is-primary .navbar-item:focus {
+.mdc-top-app-bar a {
+  color: var(--ultra-text);
+  text-decoration: none;
+  margin-right: 0.5rem;
+}
+
+.mdc-top-app-bar a:hover {
   background-color: var(--ultra-highlight);
   color: var(--ultra-primary);
 }
 
-.button.is-primary {
+/* buttons */
+.mdc-button {
+  color: var(--ultra-text);
+}
+
+.mdc-button.mdc-button--raised {
   background-color: var(--ultra-primary);
-  border-color: var(--ultra-primary);
+  color: var(--ultra-text);
 }
 
 .has-text-primary {
@@ -76,22 +88,78 @@ a:hover {
   color: var(--ultra-primary);
 }
 
-.switch.is-info:checked + label,
-.switch.is-info:checked + label::before {
-  background-color: var(--ultra-primary);
-  border-color: var(--ultra-primary);
+/* simple switch */
+input.switch {
+  position: relative;
+  width: 2.5rem;
+  height: 1.25rem;
+  appearance: none;
+  background-color: var(--ultra-highlight);
+  border-radius: 1rem;
+  outline: none;
+  cursor: pointer;
+  transition: background 0.3s;
 }
 
-.card {
+input.switch:checked {
+  background-color: var(--ultra-primary);
+}
+
+input.switch::before {
+  content: '';
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 0.95rem;
+  height: 0.95rem;
+  background-color: var(--ultra-background);
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+input.switch:checked::before {
+  transform: translateX(1.25rem);
+}
+
+.mdc-card {
   margin-bottom: 1rem;
   background-color: var(--ultra-highlight);
   color: var(--ultra-text);
+  padding: 1rem;
 }
 
 .box,
 .notification {
   background-color: var(--ultra-highlight);
   color: var(--ultra-text);
+}
+
+/* simple grid system */
+.columns {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -0.75rem;
+  margin-right: -0.75rem;
+}
+
+.column {
+  flex: 1;
+  padding: 0.75rem;
+}
+
+.column.is-half {
+  flex: 0 0 50%;
+  max-width: 50%;
+}
+
+.column.is-narrow {
+  flex: 0 0 auto;
+  max-width: none;
+}
+
+.buttons {
+  display: flex;
+  gap: 0.5rem;
 }
 
 /* sku mapping cards */
