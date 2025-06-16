@@ -22,7 +22,7 @@
               <div class="column is-narrow merge-col">
                 <input id="merge_{{ loop.index0 }}" class="switch merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
                 <label for="merge_{{ loop.index0 }}" class="mr-2">Merge</label>
-                <span class="target-wrap is-invisible">
+                <span class="target-wrap is-hidden">
                   <input id="target_{{ loop.index0 }}" class="switch target-check" type="checkbox" data-value="{{ entry.canonical }}">
                   <label for="target_{{ loop.index0 }}">Parent</label>
                 </span>
@@ -186,15 +186,18 @@
   });
 
   function updateTargets() {
+    var anySelected = document.querySelector('.merge-check:checked');
+    var current = document.querySelector('.target-check:checked');
     document.querySelectorAll('.sku-card').forEach(function(card){
+      var merge = card.querySelector('.merge-check');
       var check = card.querySelector('.target-check');
       var wrap = card.querySelector('.target-wrap');
-      if (check && wrap) {
-        wrap.classList.toggle('is-invisible', !check.checked);
+      if (merge && check && wrap) {
+        var show = anySelected && merge.checked && (!current || check.checked);
+        wrap.classList.toggle('is-hidden', !show);
       }
     });
     var hidden = document.getElementById('merge_target');
-    var current = document.querySelector('.target-check:checked');
     if (hidden) {
       hidden.value = current ? current.getAttribute('data-value') : '';
     }
@@ -255,6 +258,7 @@
         var del = document.createElement('button');
         del.type = 'button';
         del.className = 'delete is-small ml-1';
+        del.textContent = '\u00d7';
         del.addEventListener('click', function(e){
           e.stopPropagation();
           aliases = aliases.filter(function(x){ return x !== a; });
