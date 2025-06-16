@@ -57,16 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
 (function(){
   const root = document.documentElement;
-  const THEMES = {
-    default: { primary: '#5e4e69', highlight: '#e6e4e8' },
-    ocean: { primary: '#1976d2', highlight: '#bbdefb' },
-    sunset: { primary: '#d84315', highlight: '#ffe0b2' },
-    forest: { primary: '#2e7d32', highlight: '#c8e6c9' }
-  };
-  const themeName = localStorage.getItem('ultra-theme') || 'default';
-  const theme = THEMES[themeName] || THEMES.default;
-  root.style.setProperty('--ultra-primary', theme.primary);
-  root.style.setProperty('--ultra-highlight', theme.highlight);
   if (localStorage.getItem('ultra-dark') === '1') {
     document.body.classList.add('dark-mode');
   }
