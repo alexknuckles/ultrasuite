@@ -383,6 +383,7 @@ input.switch:checked::before {
     transform: translateX(-50%);
     width: 90%;
     background-color: var(--ultra-primary);
+    margin-left: 0;
   }
   .nav-links.is-open {
     display: flex;
