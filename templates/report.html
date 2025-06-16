@@ -4,7 +4,7 @@
   <div class="card-content report-content">
     <h2 class="title is-4">Reports</h2>
     <form method="get" class="mb-4">
-      <label class="label">Select Year:</label>
+      <label class="label">Select year:</label>
       <div class="select is-inline-block">
         <select name="year" onchange="this.form.submit()">
         {% for y in years %}
@@ -14,15 +14,15 @@
       </div>
     </form>
     <div class="buttons tab-buttons mb-4" id="reportTabs">
-      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="by-month">By Month</button>
-      <button type="button" class="mdc-button mdc-button--raised" data-target="by-year">By Year</button>
+      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="by-month">By month</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="by-year">By year</button>
     </div>
 
     <div id="by-month" class="tab-pane">
-      <h4 class="title is-5">Last Month Sales by Type ({{ last_month_label }})</h4>
+      <h4 class="title is-5">Last month sales by type ({{ last_month_label }})</h4>
       <img id="lastMonthChart" data-src="{{ url_for('last_month_chart', year=selected_year) }}" class="my-3" alt="Last Month Chart">
 
-      <h4 class="title is-5 mt-5">Last Full Month by Type ({{ last_month_label }})</h4>
+      <h4 class="title is-5 mt-5">Last full month by type ({{ last_month_label }})</h4>
       <table class="table is-fullwidth is-striped is-narrow">
         <thead>
           <tr>
@@ -85,7 +85,7 @@
     </div> <!-- by-month -->
 
     <div id="by-year" class="tab-pane is-hidden">
-      <h4 class="title is-5">Overall Sales by Month ({{ selected_year }})</h4>
+      <h4 class="title is-5">Overall sales by month ({{ selected_year }})</h4>
       <img id="yearChart" data-src="{{ url_for('report_chart', year=selected_year) }}" class="my-3" alt="Monthly Chart">
       <table class="table is-fullwidth is-bordered mb-5">
         <thead>
@@ -103,7 +103,7 @@
         </tbody>
       </table>
 
-      <h4 class="title is-5">Yearly Summary by Type</h4>
+      <h4 class="title is-5">Yearly summary by type</h4>
       <table class="table is-fullwidth is-striped is-narrow">
         <thead>
           <tr>
@@ -134,7 +134,7 @@
     </div> <!-- by-year -->
 
     <div class="has-text-right mt-4">
-      <button onclick="window.print()" class="mdc-button">🖨️ Print Report</button>
+      <button onclick="window.print()" class="mdc-button">🖨️ Print report</button>
     </div>
   </div>
 </div>
