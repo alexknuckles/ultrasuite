@@ -6,6 +6,11 @@
   overflow-y: auto;
 }
 
+.alias-field {
+  display: flex;
+  flex-direction: column;
+}
+
 .alias-badges .tag {
   display: flex;
   align-items: center;
@@ -141,7 +146,8 @@ input.switch:checked::before {
   margin-bottom: 1rem;
   background-color: var(--ultra-highlight);
   color: var(--ultra-text);
-  padding: 1rem;
+  padding: 0.75rem;
+  border-top: 1px solid var(--ultra-highlight);
 }
 
 .box,
@@ -210,7 +216,7 @@ input.switch:checked::before {
   min-width: 5rem;
 }
 .target-wrap.is-hidden {
-  display: none;
+  visibility: hidden;
 }
 
 .sku-card .sku-row {
@@ -224,6 +230,8 @@ input.switch:checked::before {
 /* titles should also adapt to text color */
 .title {
   color: var(--ultra-text);
+  margin-bottom: 0.5rem;
+  margin-top: 0;
 }
 /* minimal styling for tabs */
 .tabs {
@@ -256,3 +264,11 @@ input.switch:checked::before {
 /* text helpers replacing bulma */
 .has-text-success { color: #0f9d58; }
 .has-text-danger { color: #d93025; }
+
+/* simple margin utilities */
+.mb-0 { margin-bottom: 0 !important; }
+.mb-1 { margin-bottom: 0.25rem !important; }
+.mb-4 { margin-bottom: 1rem !important; }
+.mb-5 { margin-bottom: 1.5rem !important; }
+.mr-1 { margin-right: 0.25rem !important; }
+.mr-2 { margin-right: 0.5rem !important; }
