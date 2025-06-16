@@ -62,6 +62,10 @@ a:hover {
   color: var(--ultra-text);
   text-decoration: none;
   margin-right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  height: 100%;
 }
 
 .mdc-top-app-bar a:hover {
@@ -206,3 +210,34 @@ input.switch:checked::before {
 .title {
   color: var(--ultra-text);
 }
+/* minimal styling for tabs */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--ultra-highlight);
+  margin-bottom: 1rem;
+}
+.tabs ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.5rem;
+}
+.tabs li {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border: 1px solid var(--ultra-highlight);
+  border-bottom: none;
+  background-color: var(--ultra-background);
+}
+.tabs li.is-active {
+  background-color: var(--ultra-highlight);
+  border-bottom: 2px solid var(--ultra-primary);
+}
+.tab-pane.is-hidden {
+  display: none;
+}
+
+/* text helpers replacing bulma */
+.has-text-success { color: #0f9d58; }
+.has-text-danger { color: #d93025; }
