@@ -4,6 +4,7 @@
   gap: 0.25rem;
   max-height: 6rem;
   overflow-y: auto;
+  margin-top: 0.25rem;
 }
 
 .alias-field {
@@ -73,6 +74,9 @@ a:hover {
 .mdc-top-app-bar {
   background-color: var(--ultra-primary);
   color: var(--ultra-text);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .mdc-top-app-bar a {
@@ -214,13 +218,16 @@ input.switch:checked::before {
 
 .target-wrap {
   min-width: 5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 .target-wrap.is-hidden {
   visibility: hidden;
 }
 
 .sku-card .sku-row {
-  align-items: center;
+  align-items: flex-start;
 }
 
 .report-content {
