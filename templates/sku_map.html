@@ -9,13 +9,6 @@
       <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="sug">Suggestions</button>
     </div>
-    <div class="page-nav" id="pageNav">
-      <button type="button" id="prevPage" class="mdc-button" disabled>Prev</button>
-      <span id="pageInfo">Page 1</span>
-      <button type="button" id="nextPage" class="mdc-button">Next</button>
-    </div>
-    <div id="map" class="tab-pane">
-      <input type="text" id="searchBox" class="input mb-4" placeholder="Search SKUs">
       <form method="POST">
         <input type="hidden" id="merge_target" name="merge_target" value="">
         {% for entry in grouped %}
@@ -55,15 +48,14 @@
                 </div>
               </div>
               </div>
-              <div class="column">
-                <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
-                  <label class="label">Aliases</label>
-                  <input type="hidden" class="alias-input" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
-                  <div class="alias-badges mb-1"></div>
-                </div>
-              </div>
+            </div>
+            <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
+              <label class="label">Aliases</label>
+              <input type="hidden" class="alias-input" name="aliases_{{ loop.index0 }}" value="{{ entry.aliases }}">
+              <div class="alias-badges mb-1"></div>
             </div>
           </div>
+        </div>
         </div>
         {% endfor %}
         <div class="buttons mb-5">
@@ -115,14 +107,13 @@
                 <span>{{ entry.type }}</span>
               </div>
             </div>
-            <div class="column">
-              <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
-                <label class="label">Aliases</label>
-                <div class="alias-badges mb-1">
-                  {% for a in entry.aliases.split(',') if a.strip() %}
-                  <span class="tag is-info is-light">{{ a.strip() }}</span>
-                  {% endfor %}
-                </div>
+            </div>
+            <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
+              <label class="label">Aliases</label>
+              <div class="alias-badges mb-1">
+                {% for a in entry.aliases.split(',') if a.strip() %}
+                <span class="tag is-info is-light">{{ a.strip() }}</span>
+                {% endfor %}
               </div>
             </div>
           </div>
@@ -147,14 +138,13 @@
                 <span>{{ entry.type }}</span>
               </div>
             </div>
-            <div class="column">
-              <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
-                <label class="label">Aliases</label>
-                <div class="alias-badges mb-1">
-                  {% for a in entry.aliases.split(',') if a.strip() %}
-                  <span class="tag is-info is-light">{{ a.strip() }}</span>
-                  {% endfor %}
-                </div>
+            </div>
+            <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
+              <label class="label">Aliases</label>
+              <div class="alias-badges mb-1">
+                {% for a in entry.aliases.split(',') if a.strip() %}
+                <span class="tag is-info is-light">{{ a.strip() }}</span>
+                {% endfor %}
               </div>
             </div>
           </div>
@@ -178,29 +168,7 @@
         card.style.display = text.indexOf(term) !== -1 ? '' : 'none';
       }
     });
-    paginate();
   });
-
-  const PAGE_SIZE = 20;
-  let currentPage = 1;
-  function paginate() {
-    var cards = Array.from(document.querySelectorAll('#map .sku-card')).filter(function(c){ return c.style.display !== 'none'; });
-    var total = Math.max(1, Math.ceil(cards.length / PAGE_SIZE));
-    currentPage = Math.min(Math.max(currentPage, 1), total);
-    cards.forEach(function(card, idx){
-      card.style.display = Math.floor(idx / PAGE_SIZE) + 1 === currentPage ? '' : 'none';
-    });
-    document.getElementById('pageInfo').textContent = 'Page ' + currentPage + ' / ' + total;
-    document.getElementById('prevPage').disabled = currentPage <= 1;
-    document.getElementById('nextPage').disabled = currentPage >= total;
-  }
-  document.getElementById('prevPage').addEventListener('click', function(){
-    currentPage--; paginate();
-  });
-  document.getElementById('nextPage').addEventListener('click', function(){
-    currentPage++; paginate();
-  });
-  paginate();
 
   document.querySelectorAll('#mapTabs button').forEach(function(tab){
     tab.addEventListener('click', function(){
@@ -213,8 +181,6 @@
       });
       var target = tab.getAttribute('data-target');
       document.getElementById(target).classList.remove('is-hidden');
-      document.getElementById('pageNav').style.display = target === 'map' ? '' : 'none';
-      if (target === 'map') paginate();
     });
   });
 

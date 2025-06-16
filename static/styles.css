@@ -90,11 +90,14 @@ a:hover {
   padding: 0 0.75rem;
   height: 100%;
 }
-
 .mdc-top-app-bar a:hover {
   background-color: var(--ultra-highlight);
   color: var(--ultra-primary);
 }
+.mdc-top-app-bar .mdc-button {
+  color: var(--mdc-theme-on-primary);
+}
+
 
 .nav-links {
   margin-left: 1rem;
