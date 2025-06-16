@@ -227,7 +227,16 @@ input.switch:checked::before {
 }
 
 .sku-card .sku-row {
-  align-items: flex-start;
+  align-items: center;
+}
+
+/* pagination controls */
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
 }
 
 .report-content {
