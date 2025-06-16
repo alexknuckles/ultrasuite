@@ -80,7 +80,7 @@ a:hover {
 }
 
 .mdc-top-app-bar a {
-  color: var(--ultra-text);
+  color: var(--mdc-theme-on-primary);
   text-decoration: none;
   margin-right: 0.5rem;
   display: inline-flex;
@@ -92,6 +92,10 @@ a:hover {
 .mdc-top-app-bar a:hover {
   background-color: var(--ultra-highlight);
   color: var(--ultra-primary);
+}
+
+.nav-links {
+  margin-left: 1rem;
 }
 
 /* buttons */
