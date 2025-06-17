@@ -441,3 +441,54 @@ input.switch:checked::before {
     color: var(--mdc-theme-on-primary);
   }
 }
+
+/* date picker modal */
+.date-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.date-modal.is-hidden {
+  display: none;
+}
+.date-modal-content {
+  background-color: var(--ultra-background);
+  color: var(--ultra-text);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  max-width: 500px;
+  width: 100%;
+}
+.date-modal-left {
+  width: 6rem;
+  border-right: 1px solid var(--ultra-highlight);
+  margin-right: 1rem;
+  overflow-y: auto;
+}
+.date-modal-left ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.date-modal-left li {
+  padding: 0.5rem;
+  cursor: pointer;
+}
+.date-modal-left li.is-active,
+.date-modal-left li:hover {
+  background-color: var(--ultra-highlight);
+}
+.date-modal-right {
+  flex: 1;
+}
+.date-pane.is-hidden {
+  display: none;
+}
