@@ -363,13 +363,19 @@ def sku_map_page():
         g for g in grouped_list
         if g['alias_count'] > 0 and g['type'] != 'unmapped'
     ]
-    unmapped_groups = [g for g in grouped_list if g['type'] == 'unmapped']
+    mapped_groups = [g for g in grouped_list if g['type'] != 'unmapped']
 
     # generate merge suggestions
     canonicals = sorted(grouped.keys())
     suggestions = _suggest_merges(canonicals, threshold=0.95)
 
-    return render_template('sku_map.html', grouped=grouped_list, suggestions=suggestions, merged=merged_groups, unmapped=unmapped_groups)
+    return render_template(
+        'sku_map.html',
+        grouped=grouped_list,
+        suggestions=suggestions,
+        merged=merged_groups,
+        mapped=mapped_groups,
+    )
 
 
 @app.route('/monthly-report')
