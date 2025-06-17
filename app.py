@@ -10,7 +10,17 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, send_from_directory
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    send_file,
+    send_from_directory,
+    abort,
+)
 from markupsafe import Markup
 
 app = Flask(__name__)
@@ -771,6 +781,90 @@ def last_month_chart():
     plt.close(fig)
     output.seek(0)
     return send_file(output, mimetype='image/png')
+
+
+@app.route('/sku/<sku>')
+def sku_detail(sku):
+    """Display total quantity and sales for a SKU broken down by source."""
+    conn = get_db()
+    shopify = pd.read_sql_query(
+        'SELECT created_at, sku, quantity, total FROM shopify', conn
+    )
+    qbo = pd.read_sql_query(
+        'SELECT created_at, sku, quantity, total FROM qbo', conn
+    )
+    mapping = pd.read_sql_query('SELECT alias, canonical_sku FROM sku_map', conn)
+    conn.close()
+
+    m = mapping.set_index('alias')
+
+    def canonical(alias):
+        if isinstance(alias, str):
+            key = alias.lower().strip()
+            if key in m.index:
+                return m.loc[key, 'canonical_sku']
+            return key
+        return alias
+
+    for df in (shopify, qbo):
+        df['canonical'] = df['sku'].apply(canonical)
+        df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').fillna(0)
+        df['total'] = pd.to_numeric(df['total'], errors='coerce').fillna(0)
+
+    s_df = shopify[shopify['canonical'] == sku]
+    q_df = qbo[qbo['canonical'] == sku]
+
+    summary = {
+        'shopify': {
+            'quantity': s_df['quantity'].sum(),
+            'total': s_df['total'].sum(),
+        },
+        'qbo': {
+            'quantity': q_df['quantity'].sum(),
+            'total': q_df['total'].sum(),
+        },
+    }
+    return render_template('sku_summary.html', sku=sku, summary=summary)
+
+
+@app.route('/sku/<sku>/<source>')
+def sku_transactions(sku, source):
+    """List individual transactions for a SKU from the specified source."""
+    if source not in ('shopify', 'qbo'):
+        return abort(404)
+    conn = get_db()
+    df = pd.read_sql_query(
+        f'SELECT created_at, sku, quantity, total FROM {source}', conn
+    )
+    mapping = pd.read_sql_query('SELECT alias, canonical_sku FROM sku_map', conn)
+    conn.close()
+
+    m = mapping.set_index('alias')
+
+    def canonical(alias):
+        if isinstance(alias, str):
+            key = alias.lower().strip()
+            if key in m.index:
+                return m.loc[key, 'canonical_sku']
+            return key
+        return alias
+
+    df['canonical'] = df['sku'].apply(canonical)
+    df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').fillna(0)
+    df['total'] = pd.to_numeric(df['total'], errors='coerce').fillna(0)
+    df['created_at'] = (
+        pd.to_datetime(df['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
+        .dt.tz_localize(None)
+    )
+    df = df[df['canonical'] == sku].dropna(subset=['created_at']).sort_values('created_at')
+
+    return render_template(
+        'sku_transactions.html',
+        sku=sku,
+        source=source,
+        source_title='Shopify' if source == 'shopify' else 'QBO',
+        rows=df.itertuples(),
+    )
 
 
 

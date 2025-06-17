@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="mdc-card">
+  <div class="card-content">
+    <h2 class="title is-4 mb-4">SKU details: {{ sku }}</h2>
+    <table class="table is-fullwidth is-striped is-narrow">
+      <thead>
+        <tr><th>Source</th><th>Quantity</th><th>Total $</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="{{ url_for('sku_transactions', sku=sku, source='shopify') }}">Shopify</a></td>
+          <td>{{ "%.2f"|format(summary.shopify.quantity) }}</td>
+          <td>${{ "%.2f"|format(summary.shopify.total) }}</td>
+        </tr>
+        <tr>
+          <td><a href="{{ url_for('sku_transactions', sku=sku, source='qbo') }}">QBO</a></td>
+          <td>{{ "%.2f"|format(summary.qbo.quantity) }}</td>
+          <td>${{ "%.2f"|format(summary.qbo.total) }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <a class="mdc-button" href="{{ url_for('monthly_report') }}">&larr; Back to report</a>
+  </div>
+</div>
+{% endblock %}

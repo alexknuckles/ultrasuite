@@ -67,7 +67,7 @@
         <tbody>
           {% for r in rows %}
           <tr>
-            <td>{{ r.sku }}</td>
+            <td><a href="{{ url_for('sku_detail', sku=r.sku) }}">{{ r.sku }}</a></td>
             <td>${{ "%.2f"|format(r.year_total) }}</td>
             <td>{{ "%.2f"|format(r.year_qty) }}</td>
             <td>${{ "%.2f"|format(r.month_total) }}</td>
