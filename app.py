@@ -698,10 +698,9 @@ def sku_details_page():
     """Show transactions and totals for a SKU across uploads."""
     sku = request.args.get('sku', '').lower().strip()
     source = request.args.get('source', 'both').lower()
+    period = request.args.get('period', '')
     start = request.args.get('start')
     end = request.args.get('end')
-    year = request.args.get('year', type=int)
-    month = request.args.get('month', type=int)
     conn = get_db()
     shopify = pd.read_sql_query(
         'SELECT created_at, sku, description, quantity, price, total FROM shopify',
@@ -735,13 +734,15 @@ def sku_details_page():
     shopify = parse_dates(shopify)
     qbo = parse_dates(qbo)
 
-    years = sorted(
-        pd.concat([shopify[['created_at']], qbo[['created_at']]])['created_at'].dt.year.dropna().unique(),
-        reverse=True,
-    )
-    months = [
-        {'num': i, 'name': name}
-        for i, name in enumerate(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], start=1)
+    all_dates = pd.concat([shopify[['created_at']], qbo[['created_at']]])['created_at'].dropna()
+    years = sorted(all_dates.dt.year.dropna().unique(), reverse=True)
+    month_periods = sorted(all_dates.dt.to_period('M').unique(), reverse=True)
+    month_options = [
+        {
+            'value': f"month-{p.year}-{p.month:02d}",
+            'label': p.strftime('%b %Y'),
+        }
+        for p in month_periods
     ]
 
     def canonical(alias):
@@ -751,6 +752,16 @@ def sku_details_page():
                 return m.loc[key, 'canonical_sku']
             return key
         return alias
+
+    if not start and not end:
+        if period.startswith('year-'):
+            y = int(period.split('-')[1])
+            start = f"{y}-01-01"
+            end = f"{y}-12-31"
+        elif period.startswith('month-'):
+            y, m = map(int, period.split('-')[1:])
+            start = f"{y}-{m:02d}-01"
+            end = f"{y}-{m:02d}-{monthrange(y, m)[1]:02d}"
 
     start_dt = pd.to_datetime(start) if start else None
     end_dt = pd.to_datetime(end) if end else None
@@ -765,10 +776,6 @@ def sku_details_page():
             df = df[df['created_at'] >= start_dt]
         if end_dt is not None:
             df = df[df['created_at'] <= end_dt]
-        if year:
-            df = df[df['created_at'].dt.year == year]
-        if month:
-            df = df[df['created_at'].dt.month == month]
         return df
 
     shopify = process(shopify)
@@ -814,9 +821,8 @@ def sku_details_page():
         start=start,
         end=end,
         years=years,
-        months=months,
-        selected_year=year,
-        selected_month=month,
+        month_options=month_options,
+        period=period,
     )
 
 

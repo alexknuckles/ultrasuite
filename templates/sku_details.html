@@ -26,34 +26,29 @@
         </div>
       </div>
       <div class="field mr-2">
-        <label class="label">Year</label>
+        <label class="label">Date</label>
         <div class="select">
-          <select name="year" onchange="this.form.submit()">
-            <option value="">All</option>
+          <select name="period" id="periodSelect" onchange="this.form.submit()">
+            <option value="" {% if not period %}selected{% endif %}>All</option>
             {% for y in years %}
-            <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+            <option value="year-{{ y }}" {% if period == ('year-' ~ y) %}selected{% endif %}>{{ y }}</option>
             {% endfor %}
+            {% for m in month_options %}
+            <option value="{{ m.value }}" {% if period == m.value %}selected{% endif %}>{{ m.label }}</option>
+            {% endfor %}
+            <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom range</option>
           </select>
         </div>
       </div>
-      <div class="field mr-2">
-        <label class="label">Month</label>
-        <div class="select">
-          <select name="month" onchange="this.form.submit()">
-            <option value="">All</option>
-            {% for m in months %}
-            <option value="{{ m.num }}" {% if m.num == selected_month %}selected{% endif %}>{{ m.name }}</option>
-            {% endfor %}
-          </select>
+      <div id="customRange" class="is-flex is-align-items-end mr-2" style="display:none;">
+        <div class="field mr-2">
+          <label class="label">Start</label>
+          <input type="date" class="input" name="start" value="{{ start }}">
         </div>
-      </div>
-      <div class="field mr-2">
-        <label class="label">Start</label>
-        <input type="date" class="input" name="start" value="{{ start }}">
-      </div>
-      <div class="field mr-2">
-        <label class="label">End</label>
-        <input type="date" class="input" name="end" value="{{ end }}">
+        <div class="field mr-2">
+          <label class="label">End</label>
+          <input type="date" class="input" name="end" value="{{ end }}">
+        </div>
       </div>
       <div class="field">
         <button class="mdc-button mdc-button--raised" type="submit">Filter</button>
@@ -104,4 +99,21 @@
     {% endif %}
   </div>
 </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    var select = document.getElementById('periodSelect');
+    var range = document.getElementById('customRange');
+    function update(){
+      var custom = select.value === 'custom';
+      range.style.display = custom ? 'flex' : 'none';
+      range.querySelectorAll('input').forEach(function(i){
+        i.disabled = !custom;
+      });
+    }
+    if(select){
+      select.addEventListener('change', update);
+      update();
+    }
+  });
+</script>
 {% endblock %}
