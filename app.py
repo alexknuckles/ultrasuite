@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
 from difflib import SequenceMatcher
 import itertools
@@ -798,6 +798,12 @@ def sku_details_page():
             year_num, month_num = map(int, period.split('-')[1:])
             start = f"{year_num}-{month_num:02d}-01"
             end = f"{year_num}-{month_num:02d}-{monthrange(year_num, month_num)[1]:02d}"
+        else:
+            end_dt_def = datetime.now().date()
+            start_dt_def = end_dt_def - timedelta(days=29)
+            start = start_dt_def.isoformat()
+            end = end_dt_def.isoformat()
+            period = 'custom'
 
     start_dt = pd.to_datetime(start) if start else None
     end_dt = pd.to_datetime(end) if end else None
