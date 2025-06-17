@@ -778,6 +778,8 @@ def sku_details_page():
         _y, _m = period.split('-')[1:]
         period_year_val = _y
         period_month_val = f"{_y}-{_m}"
+    elif period == 'last30':
+        period_type = 'last30'
     elif period == 'custom' or start or end:
         period_type = 'custom'
 
@@ -803,7 +805,7 @@ def sku_details_page():
             start_dt_def = end_dt_def - timedelta(days=29)
             start = start_dt_def.isoformat()
             end = end_dt_def.isoformat()
-            period = 'custom'
+            period = 'last30'
 
     start_dt = pd.to_datetime(start) if start else None
     end_dt = pd.to_datetime(end) if end else None
