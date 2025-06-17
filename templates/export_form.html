@@ -1,54 +1,58 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="mdc-card page-card">
+  <header class="card-header">
+    <p class="card-header-title">Export PDF</p>
+  </header>
   <div class="card-content">
-    <h2 class="title is-4 mb-4">Export PDF</h2>
     <form method="post">
-      <div class="field mb-4">
-        <label class="label">Select year:</label>
-        <div class="select">
-          <select name="year">
-          {% for y in years %}
-            <option value="{{ y }}">{{ y }}</option>
-          {% endfor %}
-          </select>
-        </div>
-      </div>
-      <div class="field mb-4">
-        <label class="label">Select month:</label>
-        <div class="select">
-          <select name="month">
-            <option value="" {% if not selected_month %}selected{% endif %}>Last full month</option>
-            {% for m in months %}
-            <option value="{{ m.num }}" {% if m.num == selected_month %}selected{% endif %}>{{ m.name }}</option>
+      <div class="columns">
+        <div class="column field mb-4">
+          <label class="label">Select year:</label>
+          <div class="select">
+            <select name="year">
+            {% for y in years %}
+              <option value="{{ y }}">{{ y }}</option>
             {% endfor %}
-          </select>
+            </select>
+          </div>
+        </div>
+        <div class="column field mb-4">
+          <label class="label">Select month:</label>
+          <div class="select">
+            <select name="month">
+              <option value="" {% if not selected_month %}selected{% endif %}>Last full month</option>
+              {% for m in months %}
+              <option value="{{ m.num }}" {% if m.num == selected_month %}selected{% endif %}>{{ m.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
       </div>
       <h3 class="title is-5">Monthly reports</h3>
       <div class="field mb-4">
-        <label class="checkbox">
-          <input type="checkbox" name="include_month_summary" {% if include_month_summary %}checked{% endif %}>
-          Last full month by sales type
+        <label class="switch-label">
+          <input type="checkbox" class="switch" name="include_month_summary" {% if include_month_summary %}checked{% endif %}>
+          <span>Last full month by sales type</span>
         </label>
       </div>
       <div class="field mb-4">
-        <label class="checkbox">
-          <input type="checkbox" name="include_month_details" {% if include_month_details %}checked{% endif %}>
-          Detailed by type
+        <label class="switch-label">
+          <input type="checkbox" class="switch" name="include_month_details" {% if include_month_details %}checked{% endif %}>
+          <span>Detailed by type</span>
         </label>
       </div>
       <h3 class="title is-5 mt-4">Yearly reports</h3>
       <div class="field mb-4">
-        <label class="checkbox">
-          <input type="checkbox" name="include_year_overall" {% if include_year_overall %}checked{% endif %}>
-          Overall sales by month
+        <label class="switch-label">
+          <input type="checkbox" class="switch" name="include_year_overall" {% if include_year_overall %}checked{% endif %}>
+          <span>Overall sales by month</span>
         </label>
       </div>
       <div class="field mb-4">
-        <label class="checkbox">
-          <input type="checkbox" name="include_year_summary" {% if include_year_summary %}checked{% endif %}>
-          Yearly summary by type
+        <label class="switch-label">
+          <input type="checkbox" class="switch" name="include_year_summary" {% if include_year_summary %}checked{% endif %}>
+          <span>Yearly summary by type</span>
         </label>
       </div>
       <div class="field">
