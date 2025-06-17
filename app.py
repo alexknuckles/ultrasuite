@@ -398,7 +398,7 @@ def monthly_report():
     )
     all_data = all_data.dropna(subset=['created_at'])
 
-    m = mapping.set_index('alias')
+    alias_map = mapping.set_index('alias')
     def map_row(alias, field):
         if isinstance(alias, str):
             key = alias.lower().strip()
@@ -745,23 +745,38 @@ def sku_details_page():
         for p in month_periods
     ]
 
+    period_type = ''
+    period_year_val = ''
+    period_month_val = ''
+
+    if period.startswith('year-'):
+        period_type = 'year'
+        period_year_val = period.split('-')[1]
+    elif period.startswith('month-'):
+        period_type = 'month'
+        _y, _m = period.split('-')[1:]
+        period_year_val = _y
+        period_month_val = f"{_y}-{_m}"
+    elif period == 'custom' or start or end:
+        period_type = 'custom'
+
     def canonical(alias):
         if isinstance(alias, str):
             key = alias.lower().strip()
-            if key in m.index:
-                return m.loc[key, 'canonical_sku']
+            if key in alias_map.index:
+                return alias_map.loc[key, 'canonical_sku']
             return key
         return alias
 
     if not start and not end:
         if period.startswith('year-'):
-            y = int(period.split('-')[1])
-            start = f"{y}-01-01"
-            end = f"{y}-12-31"
+            year_num = int(period.split('-')[1])
+            start = f"{year_num}-01-01"
+            end = f"{year_num}-12-31"
         elif period.startswith('month-'):
-            y, m = map(int, period.split('-')[1:])
-            start = f"{y}-{m:02d}-01"
-            end = f"{y}-{m:02d}-{monthrange(y, m)[1]:02d}"
+            year_num, month_num = map(int, period.split('-')[1:])
+            start = f"{year_num}-{month_num:02d}-01"
+            end = f"{year_num}-{month_num:02d}-{monthrange(year_num, month_num)[1]:02d}"
 
     start_dt = pd.to_datetime(start) if start else None
     end_dt = pd.to_datetime(end) if end else None
@@ -823,6 +838,9 @@ def sku_details_page():
         years=years,
         month_options=month_options,
         period=period,
+        period_type=period_type,
+        period_year=period_year_val,
+        period_month=period_month_val,
     )
 
 
