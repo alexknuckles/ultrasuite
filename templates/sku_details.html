@@ -25,8 +25,36 @@
           </select>
         </div>
       </div>
-      <input type="hidden" name="start" value="{{ start }}">
-      <input type="hidden" name="end" value="{{ end }}">
+      <div class="field mr-2">
+        <label class="label">Year</label>
+        <div class="select">
+          <select name="year" onchange="this.form.submit()">
+            <option value="">All</option>
+            {% for y in years %}
+            <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="field mr-2">
+        <label class="label">Month</label>
+        <div class="select">
+          <select name="month" onchange="this.form.submit()">
+            <option value="">All</option>
+            {% for m in months %}
+            <option value="{{ m.num }}" {% if m.num == selected_month %}selected{% endif %}>{{ m.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="field mr-2">
+        <label class="label">Start</label>
+        <input type="date" class="input" name="start" value="{{ start }}">
+      </div>
+      <div class="field mr-2">
+        <label class="label">End</label>
+        <input type="date" class="input" name="end" value="{{ end }}">
+      </div>
       <div class="field">
         <button class="mdc-button mdc-button--raised" type="submit">Filter</button>
       </div>
