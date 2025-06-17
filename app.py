@@ -402,8 +402,8 @@ def monthly_report():
     def map_row(alias, field):
         if isinstance(alias, str):
             key = alias.lower().strip()
-            if key in m.index:
-                return m.loc[key, field]
+            if key in alias_map.index:
+                return alias_map.loc[key, field]
             return key if field == 'canonical_sku' else 'unmapped'
         return alias if field == 'canonical_sku' else 'unmapped'
 
@@ -763,8 +763,8 @@ def sku_details_page():
     def canonical(alias):
         if isinstance(alias, str):
             key = alias.lower().strip()
-            if key in alias_map.index:
-                return alias_map.loc[key, 'canonical_sku']
+            if key in m.index:
+                return m.loc[key, 'canonical_sku']
             return key
         return alias
 
