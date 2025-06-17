@@ -197,9 +197,9 @@
         <tbody>
           {% for row in shopify_rows %}
           <tr>
-            <td>{{ row.month }}</td>
-            {% for val in row.values %}<td>${{ "%.2f"|format(val) }}</td>{% endfor %}
-            <td>${{ "%.2f"|format(row.avg) }}</td>
+            <td>{{ row['month'] }}</td>
+            {% for val in row['values'] %}<td>${{ "%.2f"|format(val) }}</td>{% endfor %}
+            <td>${{ "%.2f"|format(row['avg']) }}</td>
           </tr>
           {% endfor %}
           <tr class="has-background-light has-text-weight-bold">
@@ -224,9 +224,9 @@
         <tbody>
           {% for row in shopify_quarters %}
           <tr>
-            <td>{{ row.quarter }}</td>
-            {% for val in row.values %}<td>${{ "%.2f"|format(val) }}</td>{% endfor %}
-            <td>${{ "%.2f"|format(row.avg) }}</td>
+            <td>{{ row['quarter'] }}</td>
+            {% for val in row['values'] %}<td>${{ "%.2f"|format(val) }}</td>{% endfor %}
+            <td>${{ "%.2f"|format(row['avg']) }}</td>
           </tr>
           {% endfor %}
         </tbody>
