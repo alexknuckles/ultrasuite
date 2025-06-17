@@ -3,19 +3,29 @@
 <head>
   <meta charset="utf-8">
   <title>Report</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <style>
     @page { size: A4 landscape; margin: 1cm; }
     body { margin: 0; color: #363636; font-size: 10pt; }
     .page-break { page-break-after: always; }
     .logo { max-height: {{ logo_size }}px; }
-    .logo-wrap { text-align: center; margin-bottom: 0.5rem; }
+    .logo-wrap { text-align: center; margin-bottom: 0.5rem; page-break-inside: avoid; page-break-after: avoid; }
     {% set primary = primary_color or '#1976d2' %}
     {% set highlight = highlight_color or '#bbdefb' %}
     h1, h2, h3 { color: {{ primary }}; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid {{ highlight }}; padding: 4px; }
     th { background-color: {{ highlight }}; }
+    .table.is-striped tbody tr:nth-child(odd) { background-color: {{ highlight }}; }
+    .table.is-narrow th, .table.is-narrow td { padding: 2px; }
+    .table.is-bordered { border: 1px solid {{ highlight }}; }
+    .has-background-light { background-color: {{ highlight }}; }
+    .has-text-weight-bold { font-weight: 700; }
+    .has-text-right { text-align: right; }
+    .has-text-success { color: #0f9d58; }
+    .has-text-danger { color: #d93025; }
+    .mt-4 { margin-top: 1rem; }
+    .mt-5 { margin-top: 1.5rem; }
+    .mb-5 { margin-bottom: 1.5rem; }
   </style>
 </head>
 <body>
@@ -75,7 +85,7 @@
 {% if not loop.last %}<div class="page-break"></div>{% endif %}
 {% endif %}
 {% endfor %}
-<div class="page-break"></div>
+{% if include_year_overall or include_year_summary %}<div class="page-break"></div>{% endif %}
 {% elif include_year_overall or include_year_summary %}
 <div class="page-break"></div>
 {% endif %}
