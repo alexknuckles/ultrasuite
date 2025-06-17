@@ -415,6 +415,7 @@ input.switch:checked::before {
 .mt-2 { margin-top: 0.5rem !important; }
 .mt-4 { margin-top: 1rem !important; }
 .mt-5 { margin-top: 1.5rem !important; }
+.p-0 { padding: 0 !important; }
 
 @media (max-width: 600px) {
   .columns {

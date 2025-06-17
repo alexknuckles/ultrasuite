@@ -167,6 +167,7 @@
     <section id="sug" class="tab-pane is-hidden">
       {% if suggestions %}
       <form method="POST">
+        <div class="table-responsive">
         <table class="table is-fullwidth is-narrow">
           <thead>
             <tr><th></th><th>Keep</th><th>Merge</th><th class="no-wrap">Score</th></tr>
@@ -184,6 +185,7 @@
           {% endfor %}
           </tbody>
         </table>
+        </div>
         <button class="mdc-button mdc-button--raised" type="submit" name="merge_suggestions" value="1">Merge selected</button>
       </form>
       {% else %}

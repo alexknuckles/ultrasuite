@@ -23,6 +23,7 @@
       <img id="lastMonthChart" data-src="{{ url_for('last_month_chart', year=selected_year) }}" class="my-3" alt="Last Month Chart">
 
       <h4 class="title is-5 mt-5">Last full month by type ({{ last_month_label }})</h4>
+      <div class="table-responsive">
       <table class="table is-fullwidth is-striped is-narrow">
         <thead>
           <tr>
@@ -45,10 +46,12 @@
           {% endfor %}
         </tbody>
       </table>
+      </div>
 
 
       {% for cat, rows in sku_details.items() %}
       <h4 class="title is-5 mt-5">{{ labels[cat] }} Details ({{ last_month_label }})</h4>
+      <div class="table-responsive">
       <table class="table is-fullwidth is-striped is-narrow">
         <thead>
           <tr>
@@ -81,12 +84,14 @@
           {% endfor %}
         </tbody>
       </table>
+      </div>
       {% endfor %}
     </div> <!-- by-month -->
 
     <div id="by-year" class="tab-pane is-hidden">
       <h4 class="title is-5">Overall sales by month ({{ selected_year }})</h4>
       <img id="yearChart" data-src="{{ url_for('report_chart', year=selected_year) }}" class="my-3" alt="Monthly Chart">
+      <div class="table-responsive">
       <table class="table is-fullwidth is-bordered mb-5">
         <thead>
           <tr><th>Month</th><th>{{ selected_year }} $</th><th>{{ selected_year - 1 }} $</th><th>% Change</th></tr>
@@ -102,8 +107,10 @@
           {% endfor %}
         </tbody>
       </table>
+      </div>
 
       <h4 class="title is-5">Yearly summary by type</h4>
+      <div class="table-responsive">
       <table class="table is-fullwidth is-striped is-narrow">
         <thead>
           <tr>
@@ -130,6 +137,7 @@
           {% endfor %}
         </tbody>
       </table>
+      </div>
 
     </div> <!-- by-year -->
 
