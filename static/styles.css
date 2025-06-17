@@ -219,6 +219,16 @@ input.switch:checked::before {
   border-radius: 0.5rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+/* wrapper style for full page sections */
+.page-card {
+  background-color: var(--ultra-highlight);
+  color: var(--ultra-text);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
+}
 .card-header {
   background-color: var(--ultra-primary);
   color: var(--mdc-theme-on-primary);
