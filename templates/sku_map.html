@@ -101,17 +101,15 @@
       {% for entry in mapped %}
       <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}">
         <div class="card-content">
+          <div class="field is-flex is-align-items-center mb-2">
+            <label class="label mb-0 mr-1">SKU</label>
+            <strong>{{ entry.canonical }}</strong>
+          </div>
           <div class="columns is-vcentered sku-row">
-            <div class="column">
-              <div class="field is-flex is-align-items-center">
-                <label class="label mb-0 mr-1">SKU</label>
-                <strong>{{ entry.canonical }}</strong>
-              </div>
-            </div>
             <div class="column is-narrow">
               <div class="field is-flex is-align-items-center">
                 <label class="label mb-0 mr-1">Type</label>
-                <span>{{ entry.type }}</span>
+                <strong>{{ entry.type }}</strong>
               </div>
             </div>
           </div>
