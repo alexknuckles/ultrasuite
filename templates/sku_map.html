@@ -5,7 +5,7 @@
     <h2 class="title is-4 mb-4">SKU alias mapping</h2>
     <nav class="buttons tab-buttons mb-4" id="mapTabs">
       <button type="button" class="mdc-button mdc-button--raised is-active" data-target="map">Mapping ({{ grouped|length }})</button>
-      <button type="button" class="mdc-button mdc-button--raised" data-target="unmapped">Unmapped ({{ unmapped|length }})</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="mapped">Mapped ({{ mapped|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged ({{ merged|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="sug">Suggestions ({{ suggestions|length }})</button>
     </nav>
@@ -97,8 +97,8 @@
         </div>
       </form>
     </section>
-    <section id="unmapped" class="tab-pane is-hidden">
-      {% for entry in unmapped %}
+    <section id="mapped" class="tab-pane is-hidden">
+      {% for entry in mapped %}
       <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}">
         <div class="card-content">
           <div class="columns is-vcentered sku-row">
@@ -131,13 +131,11 @@
       {% for entry in merged %}
       <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}">
         <div class="card-content">
+          <div class="field is-flex is-align-items-center mb-2">
+            <label class="label mb-0 mr-1">SKU</label>
+            <strong>{{ entry.canonical }}</strong>
+          </div>
           <div class="columns is-vcentered sku-row">
-            <div class="column">
-              <div class="field is-flex is-align-items-center">
-                <label class="label mb-0 mr-1">SKU</label>
-                <strong>{{ entry.canonical }}</strong>
-              </div>
-            </div>
             <div class="column is-narrow">
               <div class="field is-flex is-align-items-center">
                 <label class="label mb-0 mr-1">Type</label>
