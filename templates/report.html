@@ -3,30 +3,32 @@
 <div class="mdc-card page-card">
   <div class="card-content report-content">
     <h2 class="title is-4">Reports</h2>
-    <form method="get" class="mb-4">
-      <label class="label">Select year:</label>
-      <div class="select is-inline-block mr-2">
-        <select name="year" onchange="this.form.submit()">
-        {% for y in years %}
-        <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
-        {% endfor %}
-        </select>
+    <nav class="buttons tab-buttons mb-4" id="reportTabs">
+      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="by-month">By month</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="by-year">By year</button>
+    </nav>
+    <form method="get" class="mb-4 filter-form">
+      <div class="field mr-2">
+        <label class="label">Select year:</label>
+        <div class="select">
+          <select name="year" onchange="this.form.submit()">
+          {% for y in years %}
+          <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+          </select>
+        </div>
       </div>
-      <span id="monthSelectWrapper">
-        <label class="label ml-2">Select month:</label>
-        <div class="select is-inline-block">
+      <div class="field mr-2" id="monthSelectWrapper">
+        <label class="label">Select month:</label>
+        <div class="select">
           <select name="month" onchange="this.form.submit()">
             {% for m in months %}
             <option value="{{ m.num }}" {% if m.num == selected_month %}selected{% endif %}>{{ m.name }}</option>
             {% endfor %}
           </select>
         </div>
-      </span>
+      </div>
     </form>
-    <div class="buttons tab-buttons mb-4" id="reportTabs">
-      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="by-month">By month</button>
-      <button type="button" class="mdc-button mdc-button--raised" data-target="by-year">By year</button>
-    </div>
 
     <div id="by-month" class="tab-pane">
       <h4 class="title is-5">Last month sales by type ({{ last_month_label }})</h4>
@@ -176,7 +178,7 @@
         if(img2 && !img2.src){
           img2.src = img2.getAttribute('data-src') + '&t=' + Date.now();
         }
-        if(monthWrap){ monthWrap.style.display = 'inline-block'; }
+        if(monthWrap){ monthWrap.style.display = ''; }
       }
     });
   });
@@ -186,7 +188,7 @@
       monthImg.src = monthImg.getAttribute('data-src') + '&t=' + Date.now();
     }
     var monthWrap = document.getElementById('monthSelectWrapper');
-    if(monthWrap){ monthWrap.style.display = 'inline-block'; }
+    if(monthWrap){ monthWrap.style.display = ''; }
   });
 </script>
 {% endblock %}
