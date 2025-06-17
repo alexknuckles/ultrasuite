@@ -30,6 +30,9 @@ from database import UPLOAD_FOLDER, get_db, get_setting, set_setting
 app = Flask(__name__)
 app.secret_key = 'secret'
 
+# Height in pixels for the branding logo on exported PDFs
+LOGO_SIZE = 80
+
 def format_dt(value):
     """Format ISO timestamp into a readable string like 'May 4th, 2025 - 5:30pm'."""
     try:
@@ -700,7 +703,7 @@ def export_report():
             'branding': get_setting('branding', ''),
             'report_title': get_setting('report_title', ''),
             'branding_logo_url': url_for('branding_logo', _external=True),
-            'logo_size': min(int(get_setting('branding_logo_size', '48') or 48), 150),
+            'logo_size': LOGO_SIZE,
             'primary_color': get_setting('branding_primary', ''),
             'highlight_color': get_setting('branding_highlight', ''),
         })
@@ -1155,10 +1158,8 @@ def settings_page():
         set_setting('branding', branding)
         report_title = request.form.get('report_title', '').strip()
         set_setting('report_title', report_title)
-        logo_size = request.form.get('logo_size', '48')
         primary_color = request.form.get('primary_color', '').strip()
         highlight_color = request.form.get('highlight_color', '').strip()
-        set_setting('branding_logo_size', logo_size)
         set_setting('branding_primary', primary_color)
         set_setting('branding_highlight', highlight_color)
         include_month_summary = 'include_month_summary' in request.form
@@ -1182,7 +1183,6 @@ def settings_page():
         return redirect(url_for('settings_page'))
     branding = get_setting('branding', '')
     report_title = get_setting('report_title', '')
-    logo_size = get_setting('branding_logo_size', '48')
     primary_color = get_setting('branding_primary', '#1976d2')
     highlight_color = get_setting('branding_highlight', '#bbdefb')
     include_month_summary = get_setting('default_include_month_summary', '1') == '1'
@@ -1193,7 +1193,6 @@ def settings_page():
     return render_template(
         'settings.html',
         branding=branding,
-        logo_size=logo_size,
         primary_color=primary_color,
         highlight_color=highlight_color,
         report_title=report_title,
