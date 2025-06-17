@@ -28,17 +28,28 @@
       <div class="field mr-2">
         <label class="label">Date</label>
         <div class="select">
-          <select name="period" id="periodSelect" onchange="this.form.submit()">
-            <option value="" {% if not period %}selected{% endif %}>All</option>
-            {% for y in years %}
-            <option value="year-{{ y }}" {% if period == ('year-' ~ y) %}selected{% endif %}>{{ y }}</option>
-            {% endfor %}
-            {% for m in month_options %}
-            <option value="{{ m.value }}" {% if period == m.value %}selected{% endif %}>{{ m.label }}</option>
-            {% endfor %}
-            <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom range</option>
+          <select id="periodType">
+            <option value="" {% if not period_type %}selected{% endif %}>All</option>
+            <option value="year" {% if period_type == 'year' %}selected{% endif %}>Year</option>
+            <option value="month" {% if period_type == 'month' %}selected{% endif %}>Month</option>
+            <option value="custom" {% if period_type == 'custom' %}selected{% endif %}>Custom range</option>
           </select>
         </div>
+      </div>
+      <input type="hidden" name="period" id="periodInput" value="{{ period }}">
+      <div id="yearContainer" class="field mr-2" style="display:none;">
+        <label class="label">Year</label>
+        <div class="select">
+          <select id="yearSelect">
+            {% for y in years %}
+            <option value="{{ y }}" {% if period_year == (y|string) %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div id="monthContainer" class="field mr-2" style="display:none;">
+        <label class="label">Month</label>
+        <input type="month" id="monthInput" class="input" value="{{ period_month }}">
       </div>
       <div id="customRange" class="is-flex is-align-items-end mr-2" style="display:none;">
         <div class="field mr-2">
@@ -101,17 +112,50 @@
 </div>
 <script>
   document.addEventListener('DOMContentLoaded', function(){
-    var select = document.getElementById('periodSelect');
+    var form = document.querySelector('form');
+    var typeSelect = document.getElementById('periodType');
+    var yearSelect = document.getElementById('yearSelect');
+    var monthInput = document.getElementById('monthInput');
+    var yearContainer = document.getElementById('yearContainer');
+    var monthContainer = document.getElementById('monthContainer');
     var range = document.getElementById('customRange');
+    var periodInput = document.getElementById('periodInput');
+
     function update(){
-      var custom = select.value === 'custom';
+      var type = typeSelect.value;
+      yearContainer.style.display = type === 'year' ? 'block' : 'none';
+      monthContainer.style.display = type === 'month' ? 'block' : 'none';
+      var custom = type === 'custom';
       range.style.display = custom ? 'flex' : 'none';
       range.querySelectorAll('input').forEach(function(i){
         i.disabled = !custom;
       });
+
+      if(type === 'year'){
+        periodInput.value = yearSelect.value ? 'year-' + yearSelect.value : '';
+      } else if(type === 'month'){
+        if(monthInput.value){
+          var parts = monthInput.value.split('-');
+          periodInput.value = 'month-' + parts[0] + '-' + parts[1];
+        } else {
+          periodInput.value = '';
+        }
+      } else if(type === 'custom'){
+        periodInput.value = 'custom';
+      } else {
+        periodInput.value = '';
+      }
     }
-    if(select){
-      select.addEventListener('change', update);
+
+    function changeAndSubmit(){
+      update();
+      if(form){ form.submit(); }
+    }
+
+    if(typeSelect){
+      [typeSelect, yearSelect, monthInput].forEach(function(el){
+        if(el){ el.addEventListener('change', changeAndSubmit); }
+      });
       update();
     }
   });
