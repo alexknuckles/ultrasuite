@@ -713,7 +713,7 @@ def sku_details_page():
     mapping = pd.read_sql_query('SELECT alias, canonical_sku, type FROM sku_map', conn)
     conn.close()
 
-    m = mapping.set_index('alias')
+    alias_map = mapping.set_index('alias')
     sku_options = sorted(
         mapping[
             (mapping['alias'] == mapping['canonical_sku'])
@@ -763,8 +763,8 @@ def sku_details_page():
     def canonical(alias):
         if isinstance(alias, str):
             key = alias.lower().strip()
-            if key in m.index:
-                return m.loc[key, 'canonical_sku']
+            if key in alias_map.index:
+                return alias_map.loc[key, 'canonical_sku']
             return key
         return alias
 
@@ -861,13 +861,13 @@ def last_month_chart():
     )
     all_data = all_data.dropna(subset=['created_at'])
 
-    m = mapping.set_index('alias')
+    alias_map = mapping.set_index('alias')
 
     def map_row(alias, field):
         if isinstance(alias, str):
             key = alias.lower().strip()
-            if key in m.index:
-                return m.loc[key, field]
+            if key in alias_map.index:
+                return alias_map.loc[key, field]
             return key if field == 'canonical_sku' else 'unmapped'
         return alias if field == 'canonical_sku' else 'unmapped'
 
@@ -954,13 +954,13 @@ def sku_detail(sku):
     mapping = pd.read_sql_query('SELECT alias, canonical_sku FROM sku_map', conn)
     conn.close()
 
-    m = mapping.set_index('alias')
+    alias_map = mapping.set_index('alias')
 
     def canonical(alias):
         if isinstance(alias, str):
             key = alias.lower().strip()
-            if key in m.index:
-                return m.loc[key, 'canonical_sku']
+            if key in alias_map.index:
+                return alias_map.loc[key, 'canonical_sku']
             return key
         return alias
 
@@ -998,13 +998,13 @@ def sku_transactions(sku, source):
     mapping = pd.read_sql_query('SELECT alias, canonical_sku FROM sku_map', conn)
     conn.close()
 
-    m = mapping.set_index('alias')
+    alias_map = mapping.set_index('alias')
 
     def canonical(alias):
         if isinstance(alias, str):
             key = alias.lower().strip()
-            if key in m.index:
-                return m.loc[key, 'canonical_sku']
+            if key in alias_map.index:
+                return alias_map.loc[key, 'canonical_sku']
             return key
         return alias
 
