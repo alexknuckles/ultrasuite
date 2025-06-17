@@ -51,6 +51,7 @@
       <td><h1 style="margin:0;">{{ report_title or branding or 'Report' }}</h1></td>
     </tr>
   </table>
+  <div class="page-break"></div>
   {% if include_month_summary %}
   <h2>Last month sales by type ({{ last_month_label }})</h2>
   <table class="table is-fullwidth is-striped is-narrow is-bordered">
@@ -69,6 +70,9 @@
     {% endfor %}
     </tbody>
   </table>
+  {% if include_month_details and has_month_details or include_year_overall or include_year_summary %}
+  <div class="page-break"></div>
+  {% endif %}
   {% endif %}
 
 {% if include_month_details and has_month_details %}
