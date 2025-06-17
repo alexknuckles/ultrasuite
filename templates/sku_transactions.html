@@ -25,6 +25,7 @@
         </div>
       </div>
     </form>
+    <div class="table-responsive">
     <table class="table is-fullwidth is-striped is-narrow">
       <thead>
         <tr>
@@ -44,6 +45,7 @@
       {% endfor %}
       </tbody>
     </table>
+    </div>
     <p class="mt-2"><strong>Total Qty:</strong> {{ "%.2f"|format(total_qty) }} &nbsp; <strong>Total $:</strong> ${{ "%.2f"|format(total_amount) }}</p>
     <a class="mdc-button" href="{{ url_for('sku_detail', sku=sku) }}">&larr; Back to SKU summary</a>
   </div>
