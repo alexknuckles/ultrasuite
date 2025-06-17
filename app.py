@@ -686,6 +686,83 @@ def report_chart():
     return send_file(output, mimetype='image/png')
 
 
+@app.route('/sku-details')
+def sku_details_page():
+    """Show transactions and totals for a SKU across uploads."""
+    sku = request.args.get('sku', '').lower().strip()
+    source = request.args.get('source', 'both').lower()
+    conn = get_db()
+    shopify = pd.read_sql_query(
+        'SELECT created_at, sku, description, quantity, price, total FROM shopify',
+        conn,
+    )
+    qbo = pd.read_sql_query(
+        'SELECT created_at, sku, description, quantity, price, total FROM qbo',
+        conn,
+    )
+    mapping = pd.read_sql_query('SELECT alias, canonical_sku FROM sku_map', conn)
+    conn.close()
+
+    m = mapping.set_index('alias')
+
+    def canonical(alias):
+        if isinstance(alias, str):
+            key = alias.lower().strip()
+            if key in m.index:
+                return m.loc[key, 'canonical_sku']
+            return key
+        return alias
+
+    for df in (shopify, qbo):
+        df['canonical'] = df['sku'].apply(canonical)
+        df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').fillna(0)
+        df['price'] = pd.to_numeric(df['price'], errors='coerce').fillna(0)
+        df['total'] = pd.to_numeric(df['total'], errors='coerce').fillna(0)
+        df['created_at'] = (
+            pd.to_datetime(df['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
+            .dt.tz_localize(None)
+        )
+        df.dropna(subset=['created_at'], inplace=True)
+
+    if sku:
+        shopify = shopify[shopify['canonical'] == sku]
+        qbo = qbo[qbo['canonical'] == sku]
+
+    show_shopify = source in ('both', 'shopify')
+    show_qbo = source in ('both', 'qbo')
+
+    summary = {
+        'shopify': {
+            'quantity': shopify['quantity'].sum(),
+            'total': shopify['total'].sum(),
+        },
+        'qbo': {
+            'quantity': qbo['quantity'].sum(),
+            'total': qbo['total'].sum(),
+        },
+    }
+
+    frames = []
+    if show_shopify:
+        frames.append(shopify.assign(source_title='Shopify'))
+    if show_qbo:
+        frames.append(qbo.assign(source_title='QBO'))
+    if frames:
+        df_all = pd.concat(frames, ignore_index=True).sort_values('created_at')
+    else:
+        df_all = pd.DataFrame(columns=shopify.columns.tolist() + ['source_title'])
+
+    return render_template(
+        'sku_details.html',
+        sku=sku,
+        rows=df_all.itertuples(),
+        summary=summary,
+        show_shopify=show_shopify,
+        show_qbo=show_qbo,
+        source=source,
+    )
+
+
 @app.route('/last-month-chart')
 def last_month_chart():
     year = request.args.get('year', default=datetime.now().year, type=int)

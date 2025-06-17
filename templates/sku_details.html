@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="mdc-card">
+  <div class="card-content">
+    <h2 class="title is-4 mb-4">SKU drilldown</h2>
+    <form method="get" class="mb-4 is-flex is-align-items-end">
+      <div class="field mr-2">
+        <label class="label">SKU</label>
+        <input class="input" type="text" name="sku" value="{{ sku }}" placeholder="Enter SKU">
+      </div>
+      <div class="field mr-2">
+        <label class="label">Upload</label>
+        <div class="select">
+          <select name="source" onchange="this.form.submit()">
+            <option value="both" {% if source == 'both' %}selected{% endif %}>Both</option>
+            <option value="shopify" {% if source == 'shopify' %}selected{% endif %}>Shopify</option>
+            <option value="qbo" {% if source == 'qbo' %}selected{% endif %}>QBO</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <button class="mdc-button mdc-button--raised" type="submit">Filter</button>
+      </div>
+    </form>
+    {% if sku %}
+    <table class="table is-fullwidth is-striped is-narrow mb-4">
+      <thead>
+        <tr><th>Source</th><th>Quantity</th><th>Total $</th></tr>
+      </thead>
+      <tbody>
+        {% if show_shopify %}
+        <tr>
+          <td>Shopify</td>
+          <td>{{ "%.2f"|format(summary.shopify.quantity) }}</td>
+          <td>${{ "%.2f"|format(summary.shopify.total) }}</td>
+        </tr>
+        {% endif %}
+        {% if show_qbo %}
+        <tr>
+          <td>QBO</td>
+          <td>{{ "%.2f"|format(summary.qbo.quantity) }}</td>
+          <td>${{ "%.2f"|format(summary.qbo.total) }}</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+    <table class="table is-fullwidth is-striped is-narrow">
+      <thead>
+        <tr>
+          <th>Date</th><th>SKU</th><th>Description</th><th>Price $</th><th>Quantity</th><th>Total $</th><th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.created_at|format_dt }}</td>
+          <td>{{ row.sku }}</td>
+          <td>{{ row.description }}</td>
+          <td>{{ "%.2f"|format(row.price) }}</td>
+          <td>{{ "%.2f"|format(row.quantity) }}</td>
+          <td>${{ "%.2f"|format(row.total) }}</td>
+          <td>{{ row.source_title }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
