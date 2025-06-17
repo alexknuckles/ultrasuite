@@ -40,6 +40,7 @@
         <div class="date-modal-left">
           <ul id="dateTabs">
             <li data-type="" class="is-active">All</li>
+            <li data-type="last30">Last 30 days</li>
             <li data-type="day">Day</li>
             <li data-type="month">Month</li>
             <li data-type="year">Year</li>
@@ -48,6 +49,7 @@
         </div>
         <div class="date-modal-right">
           <div id="pane-all" class="date-pane"></div>
+          <div id="pane-last30" class="date-pane is-hidden"></div>
           <div id="pane-day" class="date-pane is-hidden">
             <input type="date" id="dayInput" class="input">
           </div>
@@ -185,6 +187,8 @@
       var p = init.split('-');
       monthYearSelect.value = p[1];
       monthSelect.value = p[2];
+    } else if(init === 'last30'){
+      activeType = 'last30';
     } else if(init === 'custom' && startInput.value && endInput.value){
       if(startInput.value === endInput.value){
         activeType = 'day';
@@ -247,6 +251,8 @@
         label = yearSelect.value;
       } else if(activeType === 'range' && (startRange.value || endRange.value)){
         label = (startRange.value || '') + ' - ' + (endRange.value || '');
+      } else if(activeType === 'last30'){
+        label = 'Last 30 days';
       }
       dateLabel.textContent = label;
     }
@@ -264,6 +270,13 @@
         periodInput.value = 'year-' + yearSelect.value;
         startInput.value = '';
         endInput.value = '';
+      } else if(activeType === 'last30'){
+        var endDt = new Date();
+        var startDt = new Date();
+        startDt.setDate(endDt.getDate() - 29);
+        periodInput.value = 'last30';
+        startInput.value = startDt.toISOString().slice(0,10);
+        endInput.value = endDt.toISOString().slice(0,10);
       } else if(activeType === 'range' && (startRange.value || endRange.value)){
         periodInput.value = 'custom';
         startInput.value = startRange.value;
