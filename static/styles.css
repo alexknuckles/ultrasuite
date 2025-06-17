@@ -53,6 +53,14 @@ html, body {
 }
 body {
   padding-top: 3.5rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  flex: 1;
+  padding-top: 1rem;
 }
 
 .container {
