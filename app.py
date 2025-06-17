@@ -11,7 +11,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import weasyprint
+from xhtml2pdf import pisa
 from flask import (
     Flask,
     render_template,
@@ -90,6 +90,13 @@ UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'finance.db')
+
+
+def fetch_resources(uri, rel):
+    """Return local file path for xhtml2pdf resource URIs."""
+    if uri.startswith('/static'):
+        return os.path.join(app.root_path, uri.lstrip('/'))
+    return uri
 
 
 def get_db():
@@ -709,8 +716,10 @@ def export_report():
             'branding_logo_url': url_for('logo', _external=True)
         })
         html = render_template('report_pdf.html', **data)
-        pdf = weasyprint.HTML(string=html, base_url=request.url_root).write_pdf()
-        return send_file(BytesIO(pdf), download_name='report.pdf', mimetype='application/pdf')
+        output = BytesIO()
+        pisa.CreatePDF(html, dest=output, link_callback=fetch_resources)
+        output.seek(0)
+        return send_file(output, download_name='report.pdf', mimetype='application/pdf')
 
     data = calculate_report_data(datetime.now().year)
     include_month = get_setting('default_include_month', '1') == '1'
