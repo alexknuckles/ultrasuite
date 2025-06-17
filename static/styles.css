@@ -45,6 +45,7 @@
 html, body {
   background-color: var(--ultra-background);
   color: var(--ultra-text);
+  font-family: var(--ultra-font);
   font-size: var(--base-font-size);
   --mdc-theme-primary: var(--ultra-primary);
   --mdc-theme-on-primary: #fff;
@@ -56,6 +57,13 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 .page-content {
@@ -77,6 +85,7 @@ body {
   --ultra-highlight: #bbdefb;
   --ultra-background: #f8f9fa;
   --ultra-text: #363636;
+  --ultra-font: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --base-font-size: 1rem;
 }
 
