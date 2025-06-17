@@ -374,6 +374,9 @@ input.switch:checked::before {
   overflow-x: auto;
   white-space: nowrap;
 }
+.table-responsive {
+  overflow-x: auto;
+}
 .tab-pane.is-hidden {
   display: none;
 }
