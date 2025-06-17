@@ -195,6 +195,15 @@
         startRange.value = startInput.value;
         endRange.value = endInput.value;
       }
+    } else if(startInput.value && endInput.value){
+      if(startInput.value === endInput.value){
+        activeType = 'day';
+        dayInput.value = startInput.value;
+      } else {
+        activeType = 'range';
+        startRange.value = startInput.value;
+        endRange.value = endInput.value;
+      }
     }
 
     tabs.forEach(function(x){
