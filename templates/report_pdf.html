@@ -19,14 +19,12 @@
   </style>
 </head>
 <body>
-  {% if branding_logo_url %}
-  <div class="logo-wrap"><img src="{{ branding_logo_url }}" alt="logo" class="logo"></div>
-  {% endif %}
-  {% if report_title %}
-  <h1>{{ report_title }}</h1>
-  {% else %}
-  <h1>{{ branding or 'Report' }}</h1>
-  {% endif %}
+  <div class="logo-wrap">
+    {% if branding_logo_url %}
+    <img src="{{ branding_logo_url }}" alt="logo" class="logo">
+    {% endif %}
+    <h1>{{ report_title or branding or 'Report' }}</h1>
+  </div>
   {% if include_month_summary %}
   <h2>Last month sales by type ({{ last_month_label }})</h2>
   <table class="table is-fullwidth is-striped is-narrow is-bordered">
@@ -45,9 +43,6 @@
     {% endfor %}
     </tbody>
   </table>
-  {% if include_month_details and has_month_details %}
-  <div class="page-break"></div>
-  {% endif %}
   {% endif %}
 
 {% if include_month_details and has_month_details %}
@@ -80,8 +75,8 @@
 {% if not loop.last %}<div class="page-break"></div>{% endif %}
 {% endif %}
 {% endfor %}
-{% endif %}
-{% if include_year_overall or include_year_summary %}
+<div class="page-break"></div>
+{% elif include_year_overall or include_year_summary %}
 <div class="page-break"></div>
 {% endif %}
 
