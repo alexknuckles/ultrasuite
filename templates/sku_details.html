@@ -210,6 +210,7 @@
     }
 
     tabs.forEach(function(x){
+      x.classList.remove('is-active');
       var type = x.dataset.type;
       if(type === activeType){
         x.classList.add('is-active');
