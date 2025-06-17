@@ -424,6 +424,12 @@ input.switch:checked::before {
 /* text helpers */
 .has-text-success { color: #0f9d58; }
 .has-text-danger { color: #d93025; }
+.has-background-light {
+  background-color: var(--ultra-highlight) !important;
+}
+.has-text-weight-bold {
+  font-weight: 700 !important;
+}
 .no-wrap {
   white-space: nowrap;
   word-break: normal;
@@ -449,7 +455,8 @@ input.switch:checked::before {
     margin-right: 0;
   }
   .column,
-  .column.is-half {
+  .column.is-half,
+  .column.is-narrow {
     flex: 0 0 100%;
     max-width: 100%;
   }
