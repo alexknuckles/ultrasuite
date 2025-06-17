@@ -11,7 +11,7 @@
   <div class="card-content report-content">
     <h2 class="title is-4">Reports</h2>
     <div class="has-text-right mb-2">
-      <a href="{{ url_for('export_report') }}" class="mdc-button">📄 Export PDF</a>
+      <a href="{{ url_for('export_report') }}" class="mdc-button">🖨️ Export PDF</a>
     </div>
     <nav class="buttons tab-buttons mb-4" id="reportTabs">
       <button type="button" class="mdc-button mdc-button--raised is-active" data-target="by-month">By month</button>
@@ -168,8 +168,7 @@
     </div> <!-- by-year -->
 
     <div class="has-text-right mt-4">
-      <a href="{{ url_for('export_report') }}" class="mdc-button">📄 Export PDF</a>
-      <button onclick="window.print()" class="mdc-button">🖨️ Print report</button>
+      <a href="{{ url_for('export_report') }}" class="mdc-button">🖨️ Export PDF</a>
     </div>
   </div>
 </div>
