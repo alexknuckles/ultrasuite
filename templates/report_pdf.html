@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <style>
     @page { size: A4 landscape; margin: 1cm; }
-    body { margin: 0; }
+    body { margin: 0; color: #363636; }
     .page-card { box-shadow: none; }
     .page-break { page-break-after: always; }
     .logo { max-height: {{ logo_size }}px; }
@@ -14,6 +14,8 @@
       {% if primary_color %}--ultra-primary: {{ primary_color }};{% endif %}
       {% if highlight_color %}--ultra-highlight: {{ highlight_color }};{% endif %}
     }
+    h1, h2, h3 { color: var(--ultra-primary); }
+    th { background-color: var(--ultra-highlight); }
   </style>
 </head>
 <body>
@@ -39,6 +41,7 @@
     {% endfor %}
     </tbody>
   </table>
+  <div class="page-break"></div>
   {% endif %}
 
   {% if include_month_details %}
@@ -67,6 +70,7 @@
     {% endfor %}
     </tbody>
   </table>
+  {% if not loop.last %}<div class="page-break"></div>{% endif %}
   {% endfor %}
   {% endif %}
 
@@ -91,6 +95,7 @@
     {% endfor %}
     </tbody>
   </table>
+  <div class="page-break"></div>
   {% endif %}
 
   {% if include_year_summary %}

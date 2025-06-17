@@ -430,6 +430,9 @@ input.switch:checked::before {
 .has-text-weight-bold {
   font-weight: 700 !important;
 }
+.has-text-right {
+  text-align: right !important;
+}
 .no-wrap {
   white-space: nowrap;
   word-break: normal;
