@@ -293,14 +293,15 @@ input.switch:checked::before {
   margin-right: -0.75rem;
 }
 
+
 .column {
-  flex: 1;
+  flex: 0 0 auto;
   padding: 0.75rem;
 }
 
 .column.is-half {
-  flex: 0 0 50%;
-  max-width: 50%;
+  flex: 0 0 auto;
+  max-width: none;
 }
 
 .column.is-narrow {
