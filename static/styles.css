@@ -229,6 +229,9 @@ input.switch:checked::before {
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   margin-bottom: 1rem;
 }
+.page-content > .page-card {
+  margin-top: 0.75rem; /* align spacing with dashboard columns */
+}
 .card-header {
   background-color: var(--ultra-primary);
   color: var(--mdc-theme-on-primary);
