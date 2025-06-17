@@ -700,6 +700,8 @@ def sku_details_page():
     source = request.args.get('source', 'both').lower()
     start = request.args.get('start')
     end = request.args.get('end')
+    year = request.args.get('year', type=int)
+    month = request.args.get('month', type=int)
     conn = get_db()
     shopify = pd.read_sql_query(
         'SELECT created_at, sku, description, quantity, price, total FROM shopify',
@@ -709,11 +711,38 @@ def sku_details_page():
         'SELECT created_at, sku, description, quantity, price, total FROM qbo',
         conn,
     )
-    mapping = pd.read_sql_query('SELECT alias, canonical_sku FROM sku_map', conn)
+    mapping = pd.read_sql_query('SELECT alias, canonical_sku, type FROM sku_map', conn)
     conn.close()
 
     m = mapping.set_index('alias')
-    sku_options = sorted(mapping['canonical_sku'].unique())
+    sku_options = sorted(
+        mapping[
+            (mapping['alias'] == mapping['canonical_sku'])
+            & (mapping['type'] != 'unmapped')
+        ][
+            'canonical_sku'
+        ].unique()
+    )
+
+    def parse_dates(df):
+        df['created_at'] = (
+            pd.to_datetime(df['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
+            .dt.tz_localize(None)
+        )
+        df.dropna(subset=['created_at'], inplace=True)
+        return df
+
+    shopify = parse_dates(shopify)
+    qbo = parse_dates(qbo)
+
+    years = sorted(
+        pd.concat([shopify[['created_at']], qbo[['created_at']]])['created_at'].dt.year.dropna().unique(),
+        reverse=True,
+    )
+    months = [
+        {'num': i, 'name': name}
+        for i, name in enumerate(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], start=1)
+    ]
 
     def canonical(alias):
         if isinstance(alias, str):
@@ -727,19 +756,19 @@ def sku_details_page():
     end_dt = pd.to_datetime(end) if end else None
 
     def process(df):
+        df = df.copy()
         df['canonical'] = df['sku'].apply(canonical)
         df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').fillna(0)
         df['price'] = pd.to_numeric(df['price'], errors='coerce').fillna(0)
         df['total'] = pd.to_numeric(df['total'], errors='coerce').fillna(0)
-        df['created_at'] = (
-            pd.to_datetime(df['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
-            .dt.tz_localize(None)
-        )
-        df.dropna(subset=['created_at'], inplace=True)
         if start_dt is not None:
             df = df[df['created_at'] >= start_dt]
         if end_dt is not None:
             df = df[df['created_at'] <= end_dt]
+        if year:
+            df = df[df['created_at'].dt.year == year]
+        if month:
+            df = df[df['created_at'].dt.month == month]
         return df
 
     shopify = process(shopify)
@@ -784,6 +813,10 @@ def sku_details_page():
         sku_options=sku_options,
         start=start,
         end=end,
+        years=years,
+        months=months,
+        selected_year=year,
+        selected_month=month,
     )
 
 
