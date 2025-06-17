@@ -5,6 +5,7 @@ from io import BytesIO
 from difflib import SequenceMatcher
 import itertools
 import re
+from calendar import monthrange
 
 import pandas as pd
 import matplotlib
@@ -498,6 +499,8 @@ def monthly_report():
         last_month_num = 12
 
     last_month_label = datetime(last_month_year, last_month_num, 1).strftime('%b')
+    last_start = f"{last_month_year}-{last_month_num:02d}-01"
+    last_end = f"{last_month_year}-{last_month_num:02d}-{monthrange(last_month_year, last_month_num)[1]:02d}"
 
     last_rows = []
     for cat in categories:
@@ -640,6 +643,10 @@ def monthly_report():
         last_month_label=last_month_label,
         last_rows=last_rows,
         sku_details=sku_details,
+        last_month_year=last_month_year,
+        last_month_num=last_month_num,
+        last_start=last_start,
+        last_end=last_end,
     )
 
 
@@ -691,6 +698,8 @@ def sku_details_page():
     """Show transactions and totals for a SKU across uploads."""
     sku = request.args.get('sku', '').lower().strip()
     source = request.args.get('source', 'both').lower()
+    start = request.args.get('start')
+    end = request.args.get('end')
     conn = get_db()
     shopify = pd.read_sql_query(
         'SELECT created_at, sku, description, quantity, price, total FROM shopify',
@@ -704,6 +713,7 @@ def sku_details_page():
     conn.close()
 
     m = mapping.set_index('alias')
+    sku_options = sorted(mapping['canonical_sku'].unique())
 
     def canonical(alias):
         if isinstance(alias, str):
@@ -713,7 +723,10 @@ def sku_details_page():
             return key
         return alias
 
-    for df in (shopify, qbo):
+    start_dt = pd.to_datetime(start) if start else None
+    end_dt = pd.to_datetime(end) if end else None
+
+    def process(df):
         df['canonical'] = df['sku'].apply(canonical)
         df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').fillna(0)
         df['price'] = pd.to_numeric(df['price'], errors='coerce').fillna(0)
@@ -723,6 +736,14 @@ def sku_details_page():
             .dt.tz_localize(None)
         )
         df.dropna(subset=['created_at'], inplace=True)
+        if start_dt is not None:
+            df = df[df['created_at'] >= start_dt]
+        if end_dt is not None:
+            df = df[df['created_at'] <= end_dt]
+        return df
+
+    shopify = process(shopify)
+    qbo = process(qbo)
 
     if sku:
         shopify = shopify[shopify['canonical'] == sku]
@@ -760,6 +781,9 @@ def sku_details_page():
         show_shopify=show_shopify,
         show_qbo=show_qbo,
         source=source,
+        sku_options=sku_options,
+        start=start,
+        end=end,
     )
 
 
