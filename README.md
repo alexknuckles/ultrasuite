@@ -21,8 +21,11 @@ Uploaded data is stored in a local SQLite database (`finance.db`), and charts ar
 
 1. Install Python 3 and the required packages:
    ```bash
-   pip install Flask pandas matplotlib openpyxl
+   pip install Flask pandas matplotlib openpyxl xhtml2pdf
    ```
+   The application uses **xhtml2pdf** to generate PDF reports. This library is
+   pure Python and does not require additional system packages, so installing it
+   with `pip` is usually sufficient on all platforms.
 2. Run the application:
    ```bash
    python app.py
