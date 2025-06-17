@@ -14,6 +14,17 @@
           </select>
         </div>
       </div>
+      <div class="field mb-4">
+        <label class="label">Select month:</label>
+        <div class="select">
+          <select name="month">
+            <option value="" {% if not selected_month %}selected{% endif %}>Last full month</option>
+            {% for m in months %}
+            <option value="{{ m.num }}" {% if m.num == selected_month %}selected{% endif %}>{{ m.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
       <h3 class="title is-5">Monthly reports</h3>
       <div class="field mb-4">
         <label class="checkbox">

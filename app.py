@@ -688,13 +688,20 @@ def monthly_report():
 
 @app.route('/export-report', methods=['GET', 'POST'])
 def export_report():
-    if request.method == 'POST':
-        year = int(request.form.get('year', datetime.now().year))
-        include_month_summary = request.form.get('include_month_summary') == 'on'
-        include_month_details = request.form.get('include_month_details') == 'on'
-        include_year_overall = request.form.get('include_year_overall') == 'on'
-        include_year_summary = request.form.get('include_year_summary') == 'on'
-        data = calculate_report_data(year)
+    values = request.values
+    if request.method == 'POST' or 'year' in request.args:
+        year = int(values.get('year', datetime.now().year))
+        month_val = values.get('month')
+        month = int(month_val) if month_val and month_val.isdigit() else None
+        def _check(name):
+            val = values.get(name, '')
+            return str(val).lower() in {'on', '1', 'true', 'yes'}
+
+        include_month_summary = _check('include_month_summary')
+        include_month_details = _check('include_month_details')
+        include_year_overall = _check('include_year_overall')
+        include_year_summary = _check('include_year_summary')
+        data = calculate_report_data(year, month)
         data.update({
             'include_month_summary': include_month_summary,
             'include_month_details': include_month_details,
@@ -713,7 +720,9 @@ def export_report():
         output.seek(0)
         return send_file(output, download_name='report.pdf', mimetype='application/pdf')
 
-    data = calculate_report_data(datetime.now().year)
+    default_month = get_setting('default_export_month', '')
+    month_int = int(default_month) if str(default_month).isdigit() else None
+    data = calculate_report_data(datetime.now().year, month_int)
     include_month_summary = get_setting('default_include_month_summary', '1') == '1'
     include_month_details = get_setting('default_include_month_details', '1') == '1'
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
@@ -721,6 +730,8 @@ def export_report():
     return render_template(
         'export_form.html',
         years=data['years'],
+        months=data['months'],
+        selected_month=month_int,
         include_month_summary=include_month_summary,
         include_month_details=include_month_details,
         include_year_overall=include_year_overall,
@@ -1170,6 +1181,8 @@ def settings_page():
         set_setting('default_include_month_details', '1' if include_month_details else '0')
         set_setting('default_include_year_overall', '1' if include_year_overall else '0')
         set_setting('default_include_year_summary', '1' if include_year_summary else '0')
+        default_month = request.form.get('default_month', '')
+        set_setting('default_export_month', default_month)
         logo_file = request.files.get('logo')
         if logo_file and logo_file.filename:
             filename = secure_filename(logo_file.filename)
@@ -1190,6 +1203,9 @@ def settings_page():
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
     include_year_summary = get_setting('default_include_year_summary', '1') == '1'
     logo_path = get_setting('branding_logo', '')
+    month_default = get_setting('default_export_month', '')
+    month_int = int(month_default) if str(month_default).isdigit() else None
+    months = calculate_report_data(datetime.now().year)['months']
     return render_template(
         'settings.html',
         branding=branding,
@@ -1201,6 +1217,8 @@ def settings_page():
         include_year_overall=include_year_overall,
         include_year_summary=include_year_summary,
         logo_path=logo_path,
+        months=months,
+        default_month=month_int,
     )
 
 @app.route('/debug')

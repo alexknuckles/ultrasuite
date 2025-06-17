@@ -34,6 +34,17 @@
         <label class="label">Highlight color</label>
         <input class="input" type="color" name="highlight_color" value="{{ highlight_color }}">
       </div>
+      <div class="field mb-4">
+        <label class="label">Default month for exports</label>
+        <div class="select">
+          <select name="default_month">
+            <option value="" {% if not default_month %}selected{% endif %}>Last full month</option>
+            {% for m in months %}
+            <option value="{{ m.num }}" {% if m.num == default_month %}selected{% endif %}>{{ m.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
       <h3 class="title is-5">Monthly reports</h3>
       <div class="field mb-4">
         <label class="checkbox">

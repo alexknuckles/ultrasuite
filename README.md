@@ -56,6 +56,18 @@ be used from other Python code:
 - `get_last_month_details(year, month=None)` – detailed SKU breakdown for the
   last full month.
 
+### Programmatic PDF Export
+
+Pass query parameters to `/export-report` to download a PDF without using the
+web form. Parameters match the form fields:
+
+```
+/export-report?year=2025&month=4&include_month_summary=1&include_year_overall=1
+```
+
+Omit `month` to use the last full month. Options accept `1`/`true` or can be
+left out to disable a section.
+
 ## License
 
 This project is provided as-is for demonstration purposes.
