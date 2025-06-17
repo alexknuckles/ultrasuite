@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="mdc-card page-card">
+  <div class="card-content">
+    <h2 class="title is-4 mb-4">Export PDF</h2>
+    <form method="post">
+      <div class="field mb-4">
+        <label class="label">Select year:</label>
+        <div class="select">
+          <select name="year">
+          {% for y in years %}
+            <option value="{{ y }}">{{ y }}</option>
+          {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="field mb-4">
+        <label class="checkbox">
+          <input type="checkbox" name="include_month" {% if include_month %}checked{% endif %}> Include monthly report
+        </label>
+      </div>
+      <div class="field mb-4">
+        <label class="checkbox">
+          <input type="checkbox" name="include_year" {% if include_year %}checked{% endif %}> Include yearly report
+        </label>
+      </div>
+      <div class="field">
+        <button type="submit" class="mdc-button mdc-button--raised">Export</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

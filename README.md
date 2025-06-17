@@ -11,9 +11,9 @@ This repository contains a Flask web application for aggregating and analyzing s
 - **Data Upload** – Import Shopify CSV files and QuickBooks Excel exports.
 - **Dashboard** – See the last upload time for each data source and a summary of SKU aliases.
 - **SKU Mapping** – Map multiple alias SKUs to a canonical SKU and categorize them by type.
-- **Reports** – View monthly trends, last month details, and yearly comparisons with interactive charts.
+- **Reports** – View monthly trends, last month details, and yearly comparisons with interactive charts. Reports can be exported as PDF files.
 - **Debug View** – Simple view for debugging transaction aggregates.
-- **Settings Page** – Currently empty.
+- **Settings Page** – Configure branding text, upload a logo, and choose which PDF sections to include by default.
 
 Uploaded data is stored in a local SQLite database (`finance.db`), and charts are rendered using Matplotlib.
 

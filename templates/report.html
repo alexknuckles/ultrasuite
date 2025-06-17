@@ -1,5 +1,12 @@
 {% extends "layout.html" %}
 {% block content %}
+<style>
+@media print {
+  @page { size: landscape; margin: 1cm; }
+  .page-card { box-shadow: none; }
+  .report-break { page-break-after: always; }
+}
+</style>
 <div class="mdc-card page-card">
   <div class="card-content report-content">
     <h2 class="title is-4">Reports</h2>
@@ -100,6 +107,8 @@
       {% endfor %}
     </div> <!-- by-month -->
 
+    <div class="report-break"></div>
+
     <div id="by-year" class="tab-pane is-hidden">
       <h4 class="title is-5">Overall sales by month ({{ selected_year }})</h4>
       <img id="yearChart" data-src="{{ url_for('report_chart', year=selected_year) }}" class="my-3" alt="Monthly Chart">
@@ -154,6 +163,7 @@
     </div> <!-- by-year -->
 
     <div class="has-text-right mt-4">
+      <a href="{{ url_for('export_report') }}" class="mdc-button">📄 Export PDF</a>
       <button onclick="window.print()" class="mdc-button">🖨️ Print report</button>
     </div>
   </div>
