@@ -26,8 +26,10 @@
         </div>
       </div>
       <div class="field mr-2">
-        <label class="label">Date</label>
-        <button id="datePickerBtn" type="button" class="mdc-button">All</button>
+        <button id="datePickerBtn" type="button" class="mdc-button">
+          <span>📅</span>
+          <span id="dateLabel">All</span>
+        </button>
         <input type="hidden" name="period" id="periodInput" value="{{ period }}">
         <input type="hidden" name="start" id="startInput" value="{{ start or '' }}">
         <input type="hidden" name="end" id="endInput" value="{{ end or '' }}">
@@ -158,6 +160,7 @@
     var form = document.querySelector('form');
     var modal = document.getElementById('dateModal');
     var btn = document.getElementById('datePickerBtn');
+    var dateLabel = document.getElementById('dateLabel');
     var tabs = document.querySelectorAll('#dateTabs li');
     var panes = document.querySelectorAll('.date-pane');
     var periodInput = document.getElementById('periodInput');
@@ -220,17 +223,17 @@
     });
 
     function setButtonLabel(){
+      var label = 'All';
       if(activeType === 'day' && dayInput.value){
-        btn.textContent = dayInput.value;
+        label = dayInput.value;
       } else if(activeType === 'month' && monthYearSelect.value && monthSelect.value){
-        btn.textContent = monthYearSelect.value + '-' + monthSelect.value;
+        label = monthYearSelect.value + '-' + monthSelect.value;
       } else if(activeType === 'year' && yearSelect.value){
-        btn.textContent = yearSelect.value;
+        label = yearSelect.value;
       } else if(activeType === 'range' && (startRange.value || endRange.value)){
-        btn.textContent = (startRange.value || '') + ' - ' + (endRange.value || '');
-      } else {
-        btn.textContent = 'All';
+        label = (startRange.value || '') + ' - ' + (endRange.value || '');
       }
+      dateLabel.textContent = label;
     }
 
     apply.addEventListener('click', function(){
