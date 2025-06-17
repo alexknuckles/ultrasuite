@@ -728,7 +728,7 @@ def export_report():
             'branding': get_setting('branding', ''),
             'report_title': get_setting('report_title', ''),
             'branding_logo_url': url_for('branding_logo', _external=True),
-            'logo_size': get_setting('branding_logo_size', '48'),
+            'logo_size': min(int(get_setting('branding_logo_size', '48') or 48), 150),
             'primary_color': get_setting('branding_primary', ''),
             'highlight_color': get_setting('branding_highlight', ''),
         })
