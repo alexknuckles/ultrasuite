@@ -34,9 +34,6 @@
         <input type="hidden" name="start" id="startInput" value="{{ start or '' }}">
         <input type="hidden" name="end" id="endInput" value="{{ end or '' }}">
       </div>
-      <div class="field">
-        <button class="mdc-button mdc-button--raised" type="submit">Filter</button>
-      </div>
     </form>
     <div id="dateModal" class="date-modal is-hidden">
       <div class="date-modal-content">
@@ -212,6 +209,12 @@
 
     function showModal(){ modal.classList.remove('is-hidden'); }
     function hideModal(){ modal.classList.add('is-hidden'); }
+
+    modal.addEventListener('click', function(e){
+      if(e.target === modal){
+        hideModal();
+      }
+    });
 
     btn.addEventListener('click', showModal);
     cancel.addEventListener('click', hideModal);
