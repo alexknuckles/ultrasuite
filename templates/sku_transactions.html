@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="mdc-card">
+  <div class="card-content">
+    <h2 class="title is-4 mb-4">{{ sku }} transactions - {{ source_title }}</h2>
+    <table class="table is-fullwidth is-striped is-narrow">
+      <thead>
+        <tr><th>Date</th><th>Quantity</th><th>Total $</th></tr>
+      </thead>
+      <tbody>
+      {% for row in rows %}
+        <tr>
+          <td>{{ row.created_at|format_dt }}</td>
+          <td>{{ "%.2f"|format(row.quantity) }}</td>
+          <td>${{ "%.2f"|format(row.total) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <a class="mdc-button" href="{{ url_for('sku_detail', sku=sku) }}">&larr; Back to SKU summary</a>
+  </div>
+</div>
+{% endblock %}
