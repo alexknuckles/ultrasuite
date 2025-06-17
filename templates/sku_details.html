@@ -8,7 +8,7 @@
         <label class="label">SKU</label>
         <div class="select">
           <select name="sku" onchange="this.form.submit()">
-            <option value="">All</option>
+            <option value="">All mapped</option>
             {% for opt in sku_options %}
             <option value="{{ opt }}" {% if opt == sku %}selected{% endif %}>{{ opt }}</option>
             {% endfor %}
