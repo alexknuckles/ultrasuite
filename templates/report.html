@@ -135,6 +135,25 @@
       </table>
       </div>
 
+      <h4 class="title is-5 mt-5">Quarterly income</h4>
+      <div class="table-responsive">
+      <table class="table is-fullwidth is-bordered mb-5">
+        <thead>
+          <tr><th>Quarter</th><th>{{ selected_year }} $</th><th>{{ selected_year - 1 }} $</th><th>% Change</th></tr>
+        </thead>
+        <tbody>
+          {% for q, current, previous, pct in quarter_rows %}
+          <tr>
+            <td>{{ q }}</td>
+            <td>${{ "%.2f"|format(current or 0) }}</td>
+            <td>${{ "%.2f"|format(previous or 0) }}</td>
+            <td>{{ pct | trend }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+
       <h4 class="title is-5">Yearly summary by type</h4>
       <div class="table-responsive">
       <table class="table is-fullwidth is-striped is-narrow">
@@ -159,6 +178,55 @@
             <td>{{ ("$%.2f"|format(r.best_month)) | trend }}</td>
             <td>{{ ("%.2f"|format(r.avg_qty)) | trend }}</td>
             <td>{{ ("%.2f"|format(r.best_qty)) | trend }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+
+      <h4 class="title is-5 mt-5">Shopify income by month</h4>
+      <div class="table-responsive">
+      <table class="table is-fullwidth is-bordered mb-5">
+        <thead>
+          <tr>
+            <th>Month</th>
+            {% for y in shopify_years %}<th>{{ y }} $</th>{% endfor %}
+            <th>Average $</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in shopify_rows %}
+          <tr>
+            <td>{{ row.month }}</td>
+            {% for val in row.values %}<td>${{ "%.2f"|format(val) }}</td>{% endfor %}
+            <td>${{ "%.2f"|format(row.avg) }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="has-background-light has-text-weight-bold">
+            <td>Total</td>
+            {% for t in shopify_totals %}<td>${{ "%.2f"|format(t) }}</td>{% endfor %}
+            <td>${{ "%.2f"|format(shopify_avg_total) }}</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h4 class="title is-5 mt-5">Shopify income by quarter</h4>
+      <div class="table-responsive">
+      <table class="table is-fullwidth is-bordered mb-5">
+        <thead>
+          <tr>
+            <th>Quarter</th>
+            {% for y in shopify_years %}<th>{{ y }} $</th>{% endfor %}
+            <th>Average $</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in shopify_quarters %}
+          <tr>
+            <td>{{ row.quarter }}</td>
+            {% for val in row.values %}<td>${{ "%.2f"|format(val) }}</td>{% endfor %}
+            <td>${{ "%.2f"|format(row.avg) }}</td>
           </tr>
           {% endfor %}
         </tbody>

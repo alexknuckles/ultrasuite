@@ -424,6 +424,27 @@ def calculate_report_data(year, month_param=None):
             pct = '∞'
         rows.append((month, current, previous, pct))
 
+    # aggregate sales by quarter for the overall report
+    quarter_rows = []
+    quarter_map = {1: [1, 2, 3], 2: [4, 5, 6], 3: [7, 8, 9], 4: [10, 11, 12]}
+    for q, months in quarter_map.items():
+        months_in_range = [m for m in months if m <= cutoff_month]
+        if not months_in_range:
+            continue
+        cur_total = summary[
+            (summary['year'] == year) & summary['month_num'].isin(months_in_range)
+        ]['total'].sum()
+        prev_total = summary[
+            (summary['year'] == year - 1)
+            & summary['month_num'].isin(months_in_range)
+        ]['total'].sum()
+        pct = '-'
+        if prev_total > 0:
+            pct = f"{((cur_total - prev_total) / prev_total) * 100:.1f}%"
+        elif cur_total > 0:
+            pct = '∞'
+        quarter_rows.append((f'Q{q}', cur_total, prev_total, pct))
+
     year_data = all_data[
         (all_data["year"] == year)
         & (all_data["month_num"] <= cutoff_month)
@@ -439,6 +460,44 @@ def calculate_report_data(year, month_param=None):
         'shopify': 'Shopify',
         'shipping': 'Shipping',
     }
+
+    # Shopify-only monthly totals across all years
+    shopify_only = shopify.copy()
+    shopify_only['total'] = pd.to_numeric(shopify_only['total'], errors='coerce').fillna(0)
+    shopify_only['created_at'] = (
+        pd.to_datetime(shopify_only['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
+        .dt.tz_localize(None)
+    )
+    shopify_only = shopify_only.dropna(subset=['created_at'])
+    shopify_only['year'] = shopify_only['created_at'].dt.year
+    shopify_only['month_num'] = shopify_only['created_at'].dt.month
+
+    shopify_summary = shopify_only.groupby(['year', 'month_num'])['total'].sum().reset_index()
+    shopify_years = sorted(shopify_summary['year'].unique())
+    shopify_pivot = (
+        shopify_summary.pivot(index='month_num', columns='year', values='total')
+        .reindex(range(1, 13))
+        .fillna(0)
+    )
+    shopify_avg = shopify_pivot.mean(axis=1)
+    shopify_rows = []
+    for m in range(1, 13):
+        month_name = months_order[m-1]
+        values = [float(shopify_pivot.at[m, y]) if y in shopify_pivot.columns else 0.0 for y in shopify_years]
+        shopify_rows.append({'month': month_name, 'values': values, 'avg': float(shopify_avg[m])})
+
+    shopify_totals = [float(shopify_pivot[y].sum()) if y in shopify_pivot.columns else 0.0 for y in shopify_years]
+    shopify_avg_total = float(sum(shopify_totals) / len(shopify_totals)) if shopify_totals else 0.0
+
+    # Shopify totals by quarter
+    shopify_quarters = []
+    for q, months in quarter_map.items():
+        row_vals = []
+        for y in shopify_years:
+            val = shopify_summary[(shopify_summary['year'] == y) & shopify_summary['month_num'].isin(months)]['total'].sum()
+            row_vals.append(float(val))
+        avg_val = sum(row_vals) / len(row_vals) if row_vals else 0.0
+        shopify_quarters.append({'quarter': f'Q{q}', 'values': row_vals, 'avg': avg_val})
 
 
 
@@ -631,6 +690,7 @@ def calculate_report_data(year, month_param=None):
     years = sorted(set(summary["year"].unique()).union({year}), reverse=True)
     return {
         'rows': rows,
+        'quarter_rows': quarter_rows,
         'selected_year': year,
         'selected_month': last_month_num,
         'years': years,
@@ -645,6 +705,11 @@ def calculate_report_data(year, month_param=None):
         'last_month_num': last_month_num,
         'last_start': last_start,
         'last_end': last_end,
+        'shopify_years': shopify_years,
+        'shopify_rows': shopify_rows,
+        'shopify_totals': shopify_totals,
+        'shopify_avg_total': shopify_avg_total,
+        'shopify_quarters': shopify_quarters,
     }
 
 
