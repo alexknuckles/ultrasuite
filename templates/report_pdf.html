@@ -8,7 +8,8 @@
     body { margin: 0; color: #363636; font-size: 10pt; }
     .page-break { page-break-after: always; }
     .logo { max-height: {{ logo_size }}px; }
-    .logo-wrap { text-align: center; margin-bottom: 0.5rem; page-break-inside: avoid; page-break-after: avoid; }
+    .logo-wrap { width: 100%; text-align: center; margin-bottom: 0.5rem; }
+    .logo-wrap td { padding: 0; }
     {% set primary = primary_color or '#1976d2' %}
     {% set highlight = highlight_color or '#bbdefb' %}
     h1, h2, h3 { color: {{ primary }}; }
@@ -29,12 +30,18 @@
   </style>
 </head>
 <body>
-  <div class="logo-wrap">
-    {% if branding_logo_url %}
-    <img src="{{ branding_logo_url }}" alt="logo" class="logo">
-    {% endif %}
-    <h1>{{ report_title or branding or 'Report' }}</h1>
-  </div>
+  <table class="logo-wrap" style="page-break-inside: avoid;">
+    <tr>
+      <td>
+        {% if branding_logo_url %}
+        <img src="{{ branding_logo_url }}" alt="logo" class="logo">
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td><h1 style="margin:0;">{{ report_title or branding or 'Report' }}</h1></td>
+    </tr>
+  </table>
   {% if include_month_summary %}
   <h2>Last month sales by type ({{ last_month_label }})</h2>
   <table class="table is-fullwidth is-striped is-narrow is-bordered">
