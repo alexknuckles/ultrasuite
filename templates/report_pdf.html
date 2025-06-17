@@ -46,14 +46,16 @@
     {% endfor %}
     </tbody>
   </table>
-  {% if include_month_details %}
+  {% if include_month_details and has_month_details %}
+  <div class="page-break"></div>
+  {% elif include_year_overall or include_year_summary %}
   <div class="page-break"></div>
   {% endif %}
   {% endif %}
 
-  {% if include_month_details %}
-  {% for cat, rows in sku_details.items() %}
-  {% if rows %}
+{% if include_month_details and has_month_details %}
+{% for cat, rows in sku_details.items() %}
+{% if rows %}
   <h3 class="mt-4">{{ labels[cat] }} Details ({{ last_month_label }})</h3>
   <table class="table is-fullwidth is-striped is-narrow is-bordered">
     <thead>
@@ -78,14 +80,11 @@
     {% endfor %}
     </tbody>
   </table>
-  {% if not loop.last %}<div class="page-break"></div>{% endif %}
-  {% endif %}
-  {% endfor %}
-  {% endif %}
-
-  {% if (include_month_summary or include_month_details) and (include_year_overall or include_year_summary) %}
-  <div class="page-break"></div>
-  {% endif %}
+{% if not loop.last %}<div class="page-break"></div>{% endif %}
+{% endif %}
+{% endfor %}
+{% if include_year_overall or include_year_summary %}<div class="page-break"></div>{% endif %}
+{% endif %}
 
   {% if include_year_overall %}
   <h2 class="mt-5">Overall sales by month ({{ selected_year }})</h2>

@@ -695,6 +695,7 @@ def calculate_report_data(year, month_param=None):
         'last_month_label': last_month_label,
         'last_rows': last_rows,
         'sku_details': sku_details,
+        'has_month_details': any(len(v) > 0 for v in sku_details.values()),
         'last_month_year': last_month_year,
         'last_month_num': last_month_num,
         'last_start': last_start,
