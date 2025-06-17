@@ -703,6 +703,36 @@ def calculate_report_data(year, month_param=None):
     }
 
 
+def get_year_overall(year):
+    """Return month-by-month totals for ``year``."""
+    data = calculate_report_data(year)
+    return data['rows']
+
+
+def get_year_summary(year):
+    """Return yearly totals by type for ``year``."""
+    data = calculate_report_data(year)
+    return data['type_rows']
+
+
+def get_last_month_summary(year, month=None):
+    """Return summary by type for the last full month."""
+    data = calculate_report_data(year, month)
+    return {
+        'label': data['last_month_label'],
+        'rows': data['last_rows'],
+    }
+
+
+def get_last_month_details(year, month=None):
+    """Return detailed SKU breakdown for the last full month."""
+    data = calculate_report_data(year, month)
+    return {
+        'label': data['last_month_label'],
+        'sku_details': data['sku_details'],
+    }
+
+
 @app.route('/monthly-report')
 def monthly_report():
     year = request.args.get('year', default=datetime.now().year, type=int)
