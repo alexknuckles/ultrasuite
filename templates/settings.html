@@ -9,9 +9,15 @@
     </nav>
     <form method="post" enctype="multipart/form-data">
     <div id="generalSettings" class="tab-pane">
+    </div>
+    <div id="exportSettings" class="tab-pane is-hidden">
       <div class="field mb-4">
         <label class="label">Branding text (optional)</label>
         <input class="input" type="text" name="branding" value="{{ branding }}">
+      </div>
+      <div class="field mb-4">
+        <label class="label">Report title (optional)</label>
+        <input class="input" type="text" name="report_title" value="{{ report_title }}">
       </div>
       <div class="field mb-4">
         <label class="label">Branding logo</label>
@@ -32,8 +38,6 @@
         <label class="label">Highlight color</label>
         <input class="input" type="color" name="highlight_color" value="{{ highlight_color }}">
       </div>
-    </div>
-    <div id="exportSettings" class="tab-pane is-hidden">
       <h3 class="title is-5">Monthly reports</h3>
       <div class="field mb-4">
         <label class="checkbox">

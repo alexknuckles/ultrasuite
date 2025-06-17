@@ -72,6 +72,7 @@
 
 
       {% for cat, rows in sku_details.items() %}
+      {% if rows %}
       <h4 class="title is-5 mt-5">{{ labels[cat] }} Details ({{ last_month_label }})</h4>
       <div class="table-responsive">
       <table class="table is-fullwidth is-striped is-narrow">
@@ -107,6 +108,7 @@
         </tbody>
       </table>
       </div>
+      {% endif %}
       {% endfor %}
     </div> <!-- by-month -->
 

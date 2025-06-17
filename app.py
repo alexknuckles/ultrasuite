@@ -80,7 +80,8 @@ def trend(value, compare=None):
                 color = "has-text-danger"
             else:
                 return value
-        return Markup(f"<span class='{color}'>{arrow} {value}</span>")
+        inline = '#0f9d58' if color == 'has-text-success' else '#d93025'
+        return Markup(f"<span class='{color}' style='color:{inline}'>{arrow} {value}</span>")
     except Exception:
         return value
 
@@ -724,6 +725,7 @@ def export_report():
             'include_year_overall': include_year_overall,
             'include_year_summary': include_year_summary,
             'branding': get_setting('branding', ''),
+            'report_title': get_setting('report_title', ''),
             'branding_logo_url': url_for('branding_logo', _external=True),
             'logo_size': get_setting('branding_logo_size', '48'),
             'primary_color': get_setting('branding_primary', ''),
@@ -1178,6 +1180,8 @@ def settings_page():
     if request.method == 'POST':
         branding = request.form.get('branding', '').strip()
         set_setting('branding', branding)
+        report_title = request.form.get('report_title', '').strip()
+        set_setting('report_title', report_title)
         logo_size = request.form.get('logo_size', '48')
         primary_color = request.form.get('primary_color', '').strip()
         highlight_color = request.form.get('highlight_color', '').strip()
@@ -1204,6 +1208,7 @@ def settings_page():
         flash('Settings saved.')
         return redirect(url_for('settings_page'))
     branding = get_setting('branding', '')
+    report_title = get_setting('report_title', '')
     logo_size = get_setting('branding_logo_size', '48')
     primary_color = get_setting('branding_primary', '#1976d2')
     highlight_color = get_setting('branding_highlight', '#bbdefb')
@@ -1218,6 +1223,7 @@ def settings_page():
         logo_size=logo_size,
         primary_color=primary_color,
         highlight_color=highlight_color,
+        report_title=report_title,
         include_month_summary=include_month_summary,
         include_month_details=include_month_details,
         include_year_overall=include_year_overall,
