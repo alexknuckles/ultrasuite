@@ -3,7 +3,12 @@
 <div class="mdc-card page-card">
   <div class="card-content">
     <h2 class="title is-4 mb-4">Settings</h2>
+    <nav class="buttons tab-buttons mb-4" id="settingsTabs">
+      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="generalSettings">General</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="exportSettings">Export</button>
+    </nav>
     <form method="post" enctype="multipart/form-data">
+    <div id="generalSettings" class="tab-pane">
       <div class="field mb-4">
         <label class="label">Branding text (optional)</label>
         <input class="input" type="text" name="branding" value="{{ branding }}">
@@ -27,6 +32,9 @@
         <label class="label">Highlight color</label>
         <input class="input" type="color" name="highlight_color" value="{{ highlight_color }}">
       </div>
+    </div>
+    <div id="exportSettings" class="tab-pane is-hidden">
+      <h3 class="title is-5">Monthly reports</h3>
       <div class="field mb-4">
         <label class="checkbox">
           <input type="checkbox" name="include_month_summary" {% if include_month_summary %}checked{% endif %}>
@@ -39,6 +47,7 @@
           Detailed by type
         </label>
       </div>
+      <h3 class="title is-5 mt-4">Yearly reports</h3>
       <div class="field mb-4">
         <label class="checkbox">
           <input type="checkbox" name="include_year_overall" {% if include_year_overall %}checked{% endif %}>
@@ -51,8 +60,19 @@
           Yearly summary by type
         </label>
       </div>
+    </div>
       <button type="submit" class="mdc-button mdc-button--raised">Save</button>
     </form>
   </div>
 </div>
+<script>
+  document.querySelectorAll('#settingsTabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#settingsTabs button').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
+      document.getElementById(btn.dataset.target).classList.remove('is-hidden');
+    });
+  });
+</script>
 {% endblock %}
