@@ -127,6 +127,23 @@
     {% endfor %}
     </tbody>
   </table>
+
+  <h3 class="mt-4">Quarterly income</h3>
+  <table class="table is-fullwidth is-bordered mb-5">
+    <thead>
+      <tr><th>Quarter</th><th>{{ selected_year }} $</th><th>{{ selected_year - 1 }} $</th><th>% Change</th></tr>
+    </thead>
+    <tbody>
+    {% for q, current, previous, pct in quarter_rows %}
+      <tr>
+        <td>{{ q }}</td>
+        <td class="has-text-right">${{ "%.2f"|format(current or 0) }}</td>
+        <td class="has-text-right">${{ "%.2f"|format(previous or 0) }}</td>
+        <td class="has-text-right">{{ pct | trend }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
   {% if include_year_summary %}
   <div class="page-break"></div>
   {% endif %}
@@ -153,5 +170,50 @@
     </tbody>
   </table>
   {% endif %}
+
+  <h3 class="mt-5">Shopify income by month</h3>
+  <table class="table is-fullwidth is-bordered mb-5">
+    <thead>
+      <tr>
+        <th>Month</th>
+        {% for y in shopify_years %}<th>{{ y }} $</th>{% endfor %}
+        <th>Average $</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in shopify_rows %}
+      <tr>
+        <td>{{ row.month }}</td>
+        {% for val in row.values %}<td class="has-text-right">${{ "%.2f"|format(val) }}</td>{% endfor %}
+        <td class="has-text-right">${{ "%.2f"|format(row.avg) }}</td>
+      </tr>
+    {% endfor %}
+      <tr class="has-background-light has-text-weight-bold">
+        <td>Total</td>
+        {% for t in shopify_totals %}<td class="has-text-right">${{ "%.2f"|format(t) }}</td>{% endfor %}
+        <td class="has-text-right">${{ "%.2f"|format(shopify_avg_total) }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 class="mt-5">Shopify income by quarter</h3>
+  <table class="table is-fullwidth is-bordered mb-5">
+    <thead>
+      <tr>
+        <th>Quarter</th>
+        {% for y in shopify_years %}<th>{{ y }} $</th>{% endfor %}
+        <th>Average $</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in shopify_quarters %}
+      <tr>
+        <td>{{ row.quarter }}</td>
+        {% for val in row.values %}<td class="has-text-right">${{ "%.2f"|format(val) }}</td>{% endfor %}
+        <td class="has-text-right">${{ "%.2f"|format(row.avg) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
 </body>
 </html>
