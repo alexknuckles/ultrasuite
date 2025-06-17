@@ -11,18 +11,44 @@
       <div class="field mb-4">
         <label class="label">Branding logo</label>
         {% if logo_path %}
-        <img src="{{ url_for('logo') }}" alt="logo" style="max-height:3rem;" class="mb-2">
+        <img src="{{ url_for('branding_logo') }}" alt="logo" style="max-height:3rem;" class="mb-2">
         {% endif %}
         <input class="input" type="file" name="logo" accept="image/*">
       </div>
       <div class="field mb-4">
+        <label class="label">Logo height (px)</label>
+        <input class="input" type="number" name="logo_size" value="{{ logo_size }}" min="10">
+      </div>
+      <div class="field mb-4">
+        <label class="label">Primary color</label>
+        <input class="input" type="color" name="primary_color" value="{{ primary_color }}">
+      </div>
+      <div class="field mb-4">
+        <label class="label">Highlight color</label>
+        <input class="input" type="color" name="highlight_color" value="{{ highlight_color }}">
+      </div>
+      <div class="field mb-4">
         <label class="checkbox">
-          <input type="checkbox" name="include_month" {% if include_month %}checked{% endif %}> Include monthly report by default
+          <input type="checkbox" name="include_month_summary" {% if include_month_summary %}checked{% endif %}>
+          Last full month by sales type
         </label>
       </div>
       <div class="field mb-4">
         <label class="checkbox">
-          <input type="checkbox" name="include_year" {% if include_year %}checked{% endif %}> Include yearly report by default
+          <input type="checkbox" name="include_month_details" {% if include_month_details %}checked{% endif %}>
+          Detailed by type
+        </label>
+      </div>
+      <div class="field mb-4">
+        <label class="checkbox">
+          <input type="checkbox" name="include_year_overall" {% if include_year_overall %}checked{% endif %}>
+          Overall sales by month
+        </label>
+      </div>
+      <div class="field mb-4">
+        <label class="checkbox">
+          <input type="checkbox" name="include_year_summary" {% if include_year_summary %}checked{% endif %}>
+          Yearly summary by type
         </label>
       </div>
       <button type="submit" class="mdc-button mdc-button--raised">Save</button>

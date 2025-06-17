@@ -164,6 +164,13 @@ def favicon():
 
 @app.route('/logo.png')
 def logo():
+    """Serve the ultrasuite application logo."""
+    return send_file(os.path.join(app.root_path, 'ultrasuite-logo.png'), mimetype='image/png')
+
+
+@app.route('/branding-logo.png')
+def branding_logo():
+    """Serve the uploaded branding logo for reports, falling back to default."""
     custom = get_setting('branding_logo', '')
     if custom:
         path = os.path.join(app.root_path, custom)
@@ -706,14 +713,21 @@ def monthly_report():
 def export_report():
     if request.method == 'POST':
         year = int(request.form.get('year', datetime.now().year))
-        include_month = request.form.get('include_month') == 'on'
-        include_year = request.form.get('include_year') == 'on'
+        include_month_summary = request.form.get('include_month_summary') == 'on'
+        include_month_details = request.form.get('include_month_details') == 'on'
+        include_year_overall = request.form.get('include_year_overall') == 'on'
+        include_year_summary = request.form.get('include_year_summary') == 'on'
         data = calculate_report_data(year)
         data.update({
-            'include_month': include_month,
-            'include_year': include_year,
+            'include_month_summary': include_month_summary,
+            'include_month_details': include_month_details,
+            'include_year_overall': include_year_overall,
+            'include_year_summary': include_year_summary,
             'branding': get_setting('branding', ''),
-            'branding_logo_url': url_for('logo', _external=True)
+            'branding_logo_url': url_for('branding_logo', _external=True),
+            'logo_size': get_setting('branding_logo_size', '48'),
+            'primary_color': get_setting('branding_primary', ''),
+            'highlight_color': get_setting('branding_highlight', ''),
         })
         html = render_template('report_pdf.html', **data)
         output = BytesIO()
@@ -722,13 +736,17 @@ def export_report():
         return send_file(output, download_name='report.pdf', mimetype='application/pdf')
 
     data = calculate_report_data(datetime.now().year)
-    include_month = get_setting('default_include_month', '1') == '1'
-    include_year = get_setting('default_include_year', '1') == '1'
+    include_month_summary = get_setting('default_include_month_summary', '1') == '1'
+    include_month_details = get_setting('default_include_month_details', '1') == '1'
+    include_year_overall = get_setting('default_include_year_overall', '1') == '1'
+    include_year_summary = get_setting('default_include_year_summary', '1') == '1'
     return render_template(
         'export_form.html',
         years=data['years'],
-        include_month=include_month,
-        include_year=include_year,
+        include_month_summary=include_month_summary,
+        include_month_details=include_month_details,
+        include_year_overall=include_year_overall,
+        include_year_summary=include_year_summary,
     )
 
 
@@ -1160,10 +1178,20 @@ def settings_page():
     if request.method == 'POST':
         branding = request.form.get('branding', '').strip()
         set_setting('branding', branding)
-        include_month = 'include_month' in request.form
-        include_year = 'include_year' in request.form
-        set_setting('default_include_month', '1' if include_month else '0')
-        set_setting('default_include_year', '1' if include_year else '0')
+        logo_size = request.form.get('logo_size', '48')
+        primary_color = request.form.get('primary_color', '').strip()
+        highlight_color = request.form.get('highlight_color', '').strip()
+        set_setting('branding_logo_size', logo_size)
+        set_setting('branding_primary', primary_color)
+        set_setting('branding_highlight', highlight_color)
+        include_month_summary = 'include_month_summary' in request.form
+        include_month_details = 'include_month_details' in request.form
+        include_year_overall = 'include_year_overall' in request.form
+        include_year_summary = 'include_year_summary' in request.form
+        set_setting('default_include_month_summary', '1' if include_month_summary else '0')
+        set_setting('default_include_month_details', '1' if include_month_details else '0')
+        set_setting('default_include_year_overall', '1' if include_year_overall else '0')
+        set_setting('default_include_year_summary', '1' if include_year_summary else '0')
         logo_file = request.files.get('logo')
         if logo_file and logo_file.filename:
             filename = secure_filename(logo_file.filename)
@@ -1176,14 +1204,24 @@ def settings_page():
         flash('Settings saved.')
         return redirect(url_for('settings_page'))
     branding = get_setting('branding', '')
-    include_month = get_setting('default_include_month', '1') == '1'
-    include_year = get_setting('default_include_year', '1') == '1'
+    logo_size = get_setting('branding_logo_size', '48')
+    primary_color = get_setting('branding_primary', '#1976d2')
+    highlight_color = get_setting('branding_highlight', '#bbdefb')
+    include_month_summary = get_setting('default_include_month_summary', '1') == '1'
+    include_month_details = get_setting('default_include_month_details', '1') == '1'
+    include_year_overall = get_setting('default_include_year_overall', '1') == '1'
+    include_year_summary = get_setting('default_include_year_summary', '1') == '1'
     logo_path = get_setting('branding_logo', '')
     return render_template(
         'settings.html',
         branding=branding,
-        include_month=include_month,
-        include_year=include_year,
+        logo_size=logo_size,
+        primary_color=primary_color,
+        highlight_color=highlight_color,
+        include_month_summary=include_month_summary,
+        include_month_details=include_month_details,
+        include_year_overall=include_year_overall,
+        include_year_summary=include_year_summary,
         logo_path=logo_path,
     )
 

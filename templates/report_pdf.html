@@ -9,7 +9,11 @@
     body { margin: 0; }
     .page-card { box-shadow: none; }
     .page-break { page-break-after: always; }
-    .logo { max-height: 3rem; }
+    .logo { max-height: {{ logo_size }}px; }
+    :root {
+      {% if primary_color %}--ultra-primary: {{ primary_color }};{% endif %}
+      {% if highlight_color %}--ultra-highlight: {{ highlight_color }};{% endif %}
+    }
   </style>
 </head>
 <body>
@@ -17,7 +21,7 @@
   <img src="{{ branding_logo_url }}" alt="logo" class="logo">
   {% endif %}
   <h1>{{ branding or 'Report' }}</h1>
-  {% if include_month %}
+  {% if include_month_summary %}
   <h2>Last month sales by type ({{ last_month_label }})</h2>
   <table class="table is-fullwidth is-striped is-narrow">
     <thead>
@@ -35,7 +39,9 @@
     {% endfor %}
     </tbody>
   </table>
+  {% endif %}
 
+  {% if include_month_details %}
   {% for cat, rows in sku_details.items() %}
   <h3 class="mt-4">{{ labels[cat] }} Details ({{ last_month_label }})</h3>
   <table class="table is-fullwidth is-striped is-narrow">
@@ -64,11 +70,11 @@
   {% endfor %}
   {% endif %}
 
-  {% if include_month and include_year %}
+  {% if (include_month_summary or include_month_details) and (include_year_overall or include_year_summary) %}
   <div class="page-break"></div>
   {% endif %}
 
-  {% if include_year %}
+  {% if include_year_overall %}
   <h2 class="mt-5">Overall sales by month ({{ selected_year }})</h2>
   <table class="table is-fullwidth is-bordered mb-5">
     <thead>
@@ -85,7 +91,9 @@
     {% endfor %}
     </tbody>
   </table>
+  {% endif %}
 
+  {% if include_year_summary %}
   <h3>Yearly summary by type</h3>
   <table class="table is-fullwidth is-striped is-narrow">
     <thead>
