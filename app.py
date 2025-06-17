@@ -820,6 +820,10 @@ def sku_details_page():
     if sku:
         shopify = shopify[shopify['canonical'] == sku]
         qbo = qbo[qbo['canonical'] == sku]
+    else:
+        mapped = set(sku_options)
+        shopify = shopify[shopify['canonical'].isin(mapped)]
+        qbo = qbo[qbo['canonical'].isin(mapped)]
 
     show_shopify = source in ('both', 'shopify')
     show_qbo = source in ('both', 'qbo')
