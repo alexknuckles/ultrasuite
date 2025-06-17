@@ -5,13 +5,23 @@
     <h2 class="title is-4">Reports</h2>
     <form method="get" class="mb-4">
       <label class="label">Select year:</label>
-      <div class="select is-inline-block">
+      <div class="select is-inline-block mr-2">
         <select name="year" onchange="this.form.submit()">
         {% for y in years %}
         <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
         {% endfor %}
         </select>
       </div>
+      <span id="monthSelectWrapper">
+        <label class="label ml-2">Select month:</label>
+        <div class="select is-inline-block">
+          <select name="month" onchange="this.form.submit()">
+            {% for m in months %}
+            <option value="{{ m.num }}" {% if m.num == selected_month %}selected{% endif %}>{{ m.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </span>
     </form>
     <div class="buttons tab-buttons mb-4" id="reportTabs">
       <button type="button" class="mdc-button mdc-button--raised is-active" data-target="by-month">By month</button>
@@ -20,7 +30,7 @@
 
     <div id="by-month" class="tab-pane">
       <h4 class="title is-5">Last month sales by type ({{ last_month_label }})</h4>
-      <img id="lastMonthChart" data-src="{{ url_for('last_month_chart', year=selected_year) }}" class="my-3" alt="Last Month Chart">
+      <img id="lastMonthChart" data-src="{{ url_for('last_month_chart', year=selected_year, month=selected_month) }}" class="my-3" alt="Last Month Chart">
 
       <h4 class="title is-5 mt-5">Last full month by type ({{ last_month_label }})</h4>
       <div class="table-responsive">
@@ -154,16 +164,19 @@
       document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.add('is-hidden'); });
       var target = tab.getAttribute('data-target');
       document.getElementById(target).classList.remove('is-hidden');
+      var monthWrap = document.getElementById('monthSelectWrapper');
       if(target === 'by-year') {
         var img = document.getElementById('yearChart');
         if(img && !img.src){
           img.src = img.getAttribute('data-src') + '&t=' + Date.now();
         }
+        if(monthWrap){ monthWrap.style.display = 'none'; }
       } else if(target === 'by-month') {
         var img2 = document.getElementById('lastMonthChart');
         if(img2 && !img2.src){
           img2.src = img2.getAttribute('data-src') + '&t=' + Date.now();
         }
+        if(monthWrap){ monthWrap.style.display = 'inline-block'; }
       }
     });
   });
@@ -172,6 +185,8 @@
     if(monthImg){
       monthImg.src = monthImg.getAttribute('data-src') + '&t=' + Date.now();
     }
+    var monthWrap = document.getElementById('monthSelectWrapper');
+    if(monthWrap){ monthWrap.style.display = 'inline-block'; }
   });
 </script>
 {% endblock %}
