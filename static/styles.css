@@ -210,6 +210,12 @@ input.switch:checked::before {
   transform: translateX(1.25rem);
 }
 
+.switch-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .mdc-card {
   margin-bottom: 1rem;
   background-color: var(--ultra-highlight);
