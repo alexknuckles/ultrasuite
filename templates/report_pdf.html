@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Report</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    @page { size: A4 landscape; margin: 1cm; }
+    body { margin: 0; }
+    .page-card { box-shadow: none; }
+    .page-break { page-break-after: always; }
+    .logo { max-height: 3rem; }
+  </style>
+</head>
+<body>
+  {% if branding_logo_url %}
+  <img src="{{ branding_logo_url }}" alt="logo" class="logo">
+  {% endif %}
+  <h1>{{ branding or 'Report' }}</h1>
+  {% if include_month %}
+  <h2>Last month sales by type ({{ last_month_label }})</h2>
+  <table class="table is-fullwidth is-striped is-narrow">
+    <thead>
+      <tr><th>Type</th><th>{{ last_month_label }} $</th><th>vs Last Year</th><th>Avg Month $</th><th>Best Month $</th></tr>
+    </thead>
+    <tbody>
+    {% for r in last_rows %}
+      <tr{% if r.type == 'Total' %} class="has-background-light has-text-weight-bold"{% endif %}>
+        <td>{{ r.type }}</td>
+        <td>${{ "%.2f"|format(r.total) }}</td>
+        <td>{{ r.vs_last | trend }}</td>
+        <td>{{ ("$%.2f"|format(r.avg_month)) | trend(r.avg_month_sign) }}</td>
+        <td>{{ ("$%.2f"|format(r.best_month)) | trend(r.best_month_sign) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  {% for cat, rows in sku_details.items() %}
+  <h3 class="mt-4">{{ labels[cat] }} Details ({{ last_month_label }})</h3>
+  <table class="table is-fullwidth is-striped is-narrow">
+    <thead>
+      <tr>
+        <th>SKU</th><th>Yearly $</th><th>Yearly Qty</th><th>{{ last_month_label }} $</th><th>{{ last_month_label }} Qty</th><th>Avg Month $</th><th>Avg Qty</th><th>Last Year $</th><th>Best Month $</th><th>Best Qty</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td>{{ r.sku }}</td>
+        <td>${{ "%.2f"|format(r.year_total) }}</td>
+        <td>{{ "%.2f"|format(r.year_qty) }}</td>
+        <td>${{ "%.2f"|format(r.month_total) }}</td>
+        <td>{{ "%.2f"|format(r.month_qty) }}</td>
+        <td>{{ ("$%.2f"|format(r.avg_month)) | trend(r.avg_month_sign) }}</td>
+        <td>{{ ("%.2f"|format(r.avg_qty)) | trend(r.avg_qty_sign) }}</td>
+        <td>{{ ("$%.2f"|format(r.last_year)) | trend(r.last_year_sign) }}</td>
+        <td>{{ ("$%.2f"|format(r.best_month)) | trend(r.best_month_sign) }}</td>
+        <td>{{ ("%.2f"|format(r.best_qty)) | trend(r.best_qty_sign) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+  {% endif %}
+
+  {% if include_month and include_year %}
+  <div class="page-break"></div>
+  {% endif %}
+
+  {% if include_year %}
+  <h2 class="mt-5">Overall sales by month ({{ selected_year }})</h2>
+  <table class="table is-fullwidth is-bordered mb-5">
+    <thead>
+      <tr><th>Month</th><th>{{ selected_year }} $</th><th>{{ selected_year - 1 }} $</th><th>% Change</th></tr>
+    </thead>
+    <tbody>
+    {% for month, current, previous, pct in rows %}
+      <tr>
+        <td>{{ month }}</td>
+        <td>${{ "%.2f"|format(current or 0) }}</td>
+        <td>${{ "%.2f"|format(previous or 0) }}</td>
+        <td>{{ pct | trend }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Yearly summary by type</h3>
+  <table class="table is-fullwidth is-striped is-narrow">
+    <thead>
+      <tr><th>Type</th><th>Total $</th><th>vs Last Year</th><th>Avg Month $</th><th>Best Month $</th><th>Avg Qty</th><th>Best Qty</th></tr>
+    </thead>
+    <tbody>
+    {% for r in type_rows %}
+      <tr>
+        <td>{{ r.type }}</td>
+        <td>${{ "%.2f"|format(r.total) }}</td>
+        <td>{{ r.vs_last | trend }}</td>
+        <td>{{ ("$%.2f"|format(r.avg_month)) | trend }}</td>
+        <td>{{ ("$%.2f"|format(r.best_month)) | trend }}</td>
+        <td>{{ ("%.2f"|format(r.avg_qty)) | trend }}</td>
+        <td>{{ ("%.2f"|format(r.best_qty)) | trend }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</body>
+</html>

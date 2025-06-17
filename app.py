@@ -11,6 +11,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import weasyprint
 from flask import (
     Flask,
     render_template,
@@ -23,6 +24,7 @@ from flask import (
     abort,
 )
 from markupsafe import Markup
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = 'secret'
@@ -111,6 +113,9 @@ def init_db():
     c.execute(
         "CREATE TABLE IF NOT EXISTS sku_map (alias TEXT PRIMARY KEY, canonical_sku TEXT, type TEXT)"
     )
+    c.execute(
+        "CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)"
+    )
     conn.commit()
     conn.close()
 
@@ -127,6 +132,20 @@ def migrate_types():
 migrate_types()
 
 
+def get_setting(key, default=""):
+    conn = get_db()
+    row = conn.execute('SELECT value FROM settings WHERE key=?', (key,)).fetchone()
+    conn.close()
+    return row['value'] if row else default
+
+
+def set_setting(key, value):
+    conn = get_db()
+    conn.execute('REPLACE INTO settings(key, value) VALUES (?, ?)', (key, value))
+    conn.commit()
+    conn.close()
+
+
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(
@@ -138,6 +157,11 @@ def favicon():
 
 @app.route('/logo.png')
 def logo():
+    custom = get_setting('branding_logo', '')
+    if custom:
+        path = os.path.join(app.root_path, custom)
+        if os.path.exists(path):
+            return send_file(path, mimetype='image/png')
     return send_file(os.path.join(app.root_path, 'ultrasuite-logo.png'), mimetype='image/png')
 
 
@@ -378,10 +402,7 @@ def sku_map_page():
     )
 
 
-@app.route('/monthly-report')
-def monthly_report():
-    year = request.args.get('year', default=datetime.now().year, type=int)
-    month_param = request.args.get('month', type=int)
+def calculate_report_data(year, month_param=None):
     conn = get_db()
     shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)
     qbo = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM qbo', conn)
@@ -648,22 +669,57 @@ def monthly_report():
         sku_details[cat] = cat_rows
 
     years = sorted(set(summary["year"].unique()).union({year}), reverse=True)
+    return {
+        'rows': rows,
+        'selected_year': year,
+        'selected_month': last_month_num,
+        'years': years,
+        'months': month_choices,
+        'labels': labels,
+        'type_rows': type_rows,
+        'last_month_label': last_month_label,
+        'last_rows': last_rows,
+        'sku_details': sku_details,
+        'last_month_year': last_month_year,
+        'last_month_num': last_month_num,
+        'last_start': last_start,
+        'last_end': last_end,
+    }
+
+
+@app.route('/monthly-report')
+def monthly_report():
+    year = request.args.get('year', default=datetime.now().year, type=int)
+    month_param = request.args.get('month', type=int)
+    data = calculate_report_data(year, month_param)
+    return render_template('report.html', **data)
+
+
+@app.route('/export-report', methods=['GET', 'POST'])
+def export_report():
+    if request.method == 'POST':
+        year = int(request.form.get('year', datetime.now().year))
+        include_month = request.form.get('include_month') == 'on'
+        include_year = request.form.get('include_year') == 'on'
+        data = calculate_report_data(year)
+        data.update({
+            'include_month': include_month,
+            'include_year': include_year,
+            'branding': get_setting('branding', ''),
+            'branding_logo_url': url_for('logo', _external=True)
+        })
+        html = render_template('report_pdf.html', **data)
+        pdf = weasyprint.HTML(string=html, base_url=request.url_root).write_pdf()
+        return send_file(BytesIO(pdf), download_name='report.pdf', mimetype='application/pdf')
+
+    data = calculate_report_data(datetime.now().year)
+    include_month = get_setting('default_include_month', '1') == '1'
+    include_year = get_setting('default_include_year', '1') == '1'
     return render_template(
-        "report.html",
-        rows=rows,
-        selected_year=year,
-        selected_month=last_month_num,
-        years=years,
-        months=month_choices,
-        labels=labels,
-        type_rows=type_rows,
-        last_month_label=last_month_label,
-        last_rows=last_rows,
-        sku_details=sku_details,
-        last_month_year=last_month_year,
-        last_month_num=last_month_num,
-        last_start=last_start,
-        last_end=last_end,
+        'export_form.html',
+        years=data['years'],
+        include_month=include_month,
+        include_year=include_year,
     )
 
 
@@ -1090,9 +1146,37 @@ def sku_transactions(sku, source):
 
 
 
-@app.route('/settings')
+@app.route('/settings', methods=['GET', 'POST'])
 def settings_page():
-    return render_template('settings.html')
+    if request.method == 'POST':
+        branding = request.form.get('branding', '').strip()
+        set_setting('branding', branding)
+        include_month = 'include_month' in request.form
+        include_year = 'include_year' in request.form
+        set_setting('default_include_month', '1' if include_month else '0')
+        set_setting('default_include_year', '1' if include_year else '0')
+        logo_file = request.files.get('logo')
+        if logo_file and logo_file.filename:
+            filename = secure_filename(logo_file.filename)
+            ext = os.path.splitext(filename)[1].lower()
+            if ext in {'.png', '.jpg', '.jpeg', '.gif'}:
+                save_name = f'branding_logo{ext}'
+                path = os.path.join(UPLOAD_FOLDER, save_name)
+                logo_file.save(path)
+                set_setting('branding_logo', os.path.join(UPLOAD_FOLDER, save_name))
+        flash('Settings saved.')
+        return redirect(url_for('settings_page'))
+    branding = get_setting('branding', '')
+    include_month = get_setting('default_include_month', '1') == '1'
+    include_year = get_setting('default_include_year', '1') == '1'
+    logo_path = get_setting('branding_logo', '')
+    return render_template(
+        'settings.html',
+        branding=branding,
+        include_month=include_month,
+        include_year=include_year,
+        logo_path=logo_path,
+    )
 
 @app.route('/debug')
 def debug_summary():
