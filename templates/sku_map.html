@@ -16,6 +16,11 @@
         {% for entry in grouped %}
         <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}">
           <div class="card-content">
+            <div class="field is-flex is-align-items-center mb-2">
+              <label class="label mb-0 mr-1">SKU</label>
+              <strong>{{ entry.canonical }}</strong>
+              <input type="hidden" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}">
+            </div>
             <div class="columns is-vcentered sku-row">
               <div class="column is-narrow merge-col">
                 <input id="merge_{{ loop.index0 }}" class="switch merge-check" type="checkbox" name="select_{{ loop.index0 }}" value="{{ entry.canonical }}">
@@ -24,13 +29,6 @@
                   <input id="target_{{ loop.index0 }}" class="switch target-check" type="checkbox" data-value="{{ entry.canonical }}">
                   <label for="target_{{ loop.index0 }}">Parent</label>
                 </span>
-              </div>
-              <div class="column">
-                <div class="field is-flex is-align-items-center">
-                  <label class="label mb-0 mr-1">SKU</label>
-                  <strong>{{ entry.canonical }}</strong>
-                  <input type="hidden" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}">
-                </div>
               </div>
               <div class="column is-narrow">
                 <div class="field is-flex is-align-items-center">
@@ -62,13 +60,11 @@
         <hr class="my-4">
         <div class="mdc-card sku-card">
           <div class="card-content">
+            <div class="field is-flex is-align-items-center mb-2">
+              <label class="label mb-0 mr-1">SKU</label>
+              <input class="input" name="canonical_new" placeholder="New canonical SKU">
+            </div>
             <div class="columns is-vcentered sku-row">
-              <div class="column">
-                <div class="field is-flex is-align-items-center">
-                  <label class="label mb-0 mr-1">SKU</label>
-                  <input class="input" name="canonical_new" placeholder="New canonical SKU">
-                </div>
-              </div>
               <div class="column is-narrow">
                 <div class="field is-flex is-align-items-center">
                   <label class="label mb-0 mr-1">Type</label>
@@ -320,6 +316,11 @@
     div.dataset.canonical = canonical;
     div.innerHTML = `
       <div class="card-content">
+        <div class="field is-flex is-align-items-center mb-2">
+          <label class="label mb-0 mr-1">SKU</label>
+          <strong>${canonical}</strong>
+          <input type="hidden" name="canonical_${idx}" value="${canonical}">
+        </div>
         <div class="columns is-vcentered sku-row">
           <div class="column is-narrow merge-col">
             <input id="merge_${idx}" class="switch merge-check" type="checkbox" name="select_${idx}" value="${canonical}">
@@ -328,13 +329,6 @@
               <input id="target_${idx}" class="switch target-check" type="checkbox" data-value="${canonical}">
               <label for="target_${idx}">Parent</label>
             </span>
-          </div>
-          <div class="column">
-            <div class="field is-flex is-align-items-center">
-              <label class="label mb-0 mr-1">SKU</label>
-              <strong>${canonical}</strong>
-              <input type="hidden" name="canonical_${idx}" value="${canonical}">
-            </div>
           </div>
           <div class="column is-narrow">
             <div class="field is-flex is-align-items-center">
