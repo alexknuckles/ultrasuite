@@ -292,6 +292,14 @@ input.switch:checked::before {
   gap: 0.5rem;
 }
 
+/* form with inline filters */
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
 /* button-style tabs */
 .tab-buttons {
   margin-bottom: 1rem;
@@ -403,6 +411,13 @@ input.switch:checked::before {
   .column.is-half {
     flex: 0 0 100%;
     max-width: 100%;
+  }
+  .filter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-form .field {
+    margin-right: 0 !important;
   }
   .nav-toggle {
     display: block;

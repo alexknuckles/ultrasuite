@@ -3,7 +3,7 @@
 <div class="mdc-card">
   <div class="card-content">
     <h2 class="title is-4 mb-4">SKU drilldown</h2>
-    <form method="get" class="mb-4 is-flex is-align-items-end">
+    <form method="get" class="mb-4 filter-form">
       <div class="field mr-2">
         <label class="label">SKU</label>
         <div class="select">
@@ -147,14 +147,16 @@
       }
     }
 
-    function changeAndSubmit(){
+    function maybeSubmit(){
       update();
-      if(form){ form.submit(); }
+      if(form && typeSelect.value !== 'custom'){
+        form.submit();
+      }
     }
 
     if(typeSelect){
       [typeSelect, yearSelect, monthInput].forEach(function(el){
-        if(el){ el.addEventListener('change', changeAndSubmit); }
+        if(el){ el.addEventListener('change', maybeSubmit); }
       });
       update();
     }
