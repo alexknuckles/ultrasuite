@@ -381,6 +381,7 @@ def sku_map_page():
 @app.route('/monthly-report')
 def monthly_report():
     year = request.args.get('year', default=datetime.now().year, type=int)
+    month_param = request.args.get('month', type=int)
     conn = get_db()
     shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)
     qbo = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM qbo', conn)
@@ -426,6 +427,11 @@ def monthly_report():
     last_year = summary[summary['year'] == year - 1].set_index('month')
 
     months_order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    months_list = [
+        {'num': i, 'name': m}
+        for i, m in enumerate(months_order, start=1)
+    ]
+    month_choices = months_list[:cutoff_month]
     rows = []
     for i, month in enumerate(months_order[:cutoff_month], start=1):
         current = this_year["total"].get(month, 0)
@@ -493,16 +499,20 @@ def monthly_report():
 
     # last full month summary by type
     now = datetime.now()
-    if year == now.year:
-        if now.month == 1:
-            last_month_year = year - 1
-            last_month_num = 12
+    if month_param:
+        last_month_year = year
+        last_month_num = month_param
+    else:
+        if year == now.year:
+            if now.month == 1:
+                last_month_year = year - 1
+                last_month_num = 12
+            else:
+                last_month_year = year
+                last_month_num = now.month - 1
         else:
             last_month_year = year
-            last_month_num = now.month - 1
-    else:
-        last_month_year = year
-        last_month_num = 12
+            last_month_num = 12
 
     last_month_label = datetime(last_month_year, last_month_num, 1).strftime('%b')
     last_start = f"{last_month_year}-{last_month_num:02d}-01"
@@ -642,8 +652,9 @@ def monthly_report():
         "report.html",
         rows=rows,
         selected_year=year,
+        selected_month=last_month_num,
         years=years,
-        months=months_order[:cutoff_month],
+        months=month_choices,
         labels=labels,
         type_rows=type_rows,
         last_month_label=last_month_label,
@@ -857,6 +868,7 @@ def sku_details_page():
 @app.route('/last-month-chart')
 def last_month_chart():
     year = request.args.get('year', default=datetime.now().year, type=int)
+    month_param = request.args.get('month', type=int)
     conn = get_db()
     shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)
     qbo = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM qbo', conn)
@@ -886,16 +898,20 @@ def last_month_chart():
     all_data['month_num'] = all_data['created_at'].dt.month
 
     now = datetime.now()
-    if year == now.year:
-        if now.month == 1:
-            last_year = year - 1
-            last_month = 12
+    if month_param:
+        last_year = year
+        last_month = month_param
+    else:
+        if year == now.year:
+            if now.month == 1:
+                last_year = year - 1
+                last_month = 12
+            else:
+                last_year = year
+                last_month = now.month - 1
         else:
             last_year = year
-            last_month = now.month - 1
-    else:
-        last_year = year
-        last_month = 12
+            last_month = 12
 
     summary = (
         all_data.groupby(['year', 'month_num', 'type'])['total']
