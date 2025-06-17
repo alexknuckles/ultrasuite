@@ -701,6 +701,10 @@ def sku_details_page():
     period = request.args.get('period', '')
     start = request.args.get('start')
     end = request.args.get('end')
+    if start in (None, '', 'None'):
+        start = None
+    if end in (None, '', 'None'):
+        end = None
     conn = get_db()
     shopify = pd.read_sql_query(
         'SELECT created_at, sku, description, quantity, price, total FROM shopify',
