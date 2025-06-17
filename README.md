@@ -45,6 +45,17 @@ CSS variables (`--ultra-primary`, `--ultra-highlight`).
 - `app.py` – main Flask application.
 - `templates/` – Jinja2 templates for all pages.
 
+## Programmatic Reports
+
+Several helper functions in `app.py` return the underlying report data so it can
+be used from other Python code:
+
+- `get_year_overall(year)` – monthly totals for the given year.
+- `get_year_summary(year)` – totals by sales type for the year.
+- `get_last_month_summary(year, month=None)` – last full month totals by type.
+- `get_last_month_details(year, month=None)` – detailed SKU breakdown for the
+  last full month.
+
 ## License
 
 This project is provided as-is for demonstration purposes.
