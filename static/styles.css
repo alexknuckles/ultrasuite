@@ -68,7 +68,7 @@ textarea {
 
 .page-content {
   flex: 1;
-  padding-top: 1rem;
+  padding-top: 2rem; /* extra spacing below the fixed nav */
 }
 
 .container {
@@ -402,7 +402,9 @@ input.switch:checked::before {
   white-space: nowrap;
 }
 .table-responsive {
+  width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .tab-pane.is-hidden {
   display: none;
