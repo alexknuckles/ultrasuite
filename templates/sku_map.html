@@ -119,7 +119,10 @@
             <label class="label">Aliases</label>
             <div class="alias-badges mb-1">
               {% for a in entry.aliases.split(',') if a.strip() %}
-              <span class="tag is-info is-light">{{ a.strip() }}</span>
+              <span class="tag is-info is-light" data-alias="{{ a.strip() }}">
+                {{ a.strip() }}
+                <button type="button" class="delete is-small ml-1">×</button>
+              </span>
               {% endfor %}
             </div>
           </div>
@@ -357,7 +360,7 @@
     updateTargets();
   }
 
-  document.querySelectorAll('#merged .alias-badges .delete').forEach(btn => {
+  document.querySelectorAll('#merged .alias-badges .delete, #mapped .alias-badges .delete').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const tag = btn.parentElement;
@@ -384,10 +387,11 @@
       if (container && container.children.length === 0) {
         if (field) field.style.display = 'none';
         card.remove();
-        const mergedBtn = document.querySelector('#mapTabs button[data-target="merged"]');
-        if (mergedBtn) {
-          const count = document.querySelectorAll('#merged .sku-card').length;
-          mergedBtn.textContent = `Merged (${count})`;
+        const sec = btn.closest('#merged') ? 'merged' : 'mapped';
+        const tabBtn = document.querySelector(`#mapTabs button[data-target="${sec}"]`);
+        if (tabBtn) {
+          const count = document.querySelectorAll(`#${sec} .sku-card`).length;
+          tabBtn.textContent = sec.charAt(0).toUpperCase() + sec.slice(1) + ` (${count})`;
         }
       }
     });
