@@ -3,20 +3,48 @@
 <div class="mdc-card">
   <div class="card-content">
     <h2 class="title is-4 mb-4">{{ sku }} transactions - {{ source_title }}</h2>
+    <form method="get" class="mb-4">
+      <div class="is-flex is-align-items-center mb-1">
+        <label class="mr-1">Year:</label>
+        <div class="select mr-2">
+          <select name="year" onchange="this.form.submit()">
+            <option value="">All</option>
+            {% for y in years %}
+            <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <label class="mr-1">Month:</label>
+        <div class="select">
+          <select name="month" onchange="this.form.submit()">
+            <option value="">All</option>
+            {% for m in months %}
+            <option value="{{ m.num }}" {% if m.num == selected_month %}selected{% endif %}>{{ m.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </form>
     <table class="table is-fullwidth is-striped is-narrow">
       <thead>
-        <tr><th>Date</th><th>Quantity</th><th>Total $</th></tr>
+        <tr>
+          <th>Date</th><th>SKU</th><th>Description</th><th>Price $</th><th>Quantity</th><th>Total $</th>
+        </tr>
       </thead>
       <tbody>
       {% for row in rows %}
         <tr>
           <td>{{ row.created_at|format_dt }}</td>
+          <td>{{ row.sku }}</td>
+          <td>{{ row.description }}</td>
+          <td>{{ "%.2f"|format(row.price) }}</td>
           <td>{{ "%.2f"|format(row.quantity) }}</td>
           <td>${{ "%.2f"|format(row.total) }}</td>
         </tr>
       {% endfor %}
       </tbody>
     </table>
+    <p class="mt-2"><strong>Total Qty:</strong> {{ "%.2f"|format(total_qty) }} &nbsp; <strong>Total $:</strong> ${{ "%.2f"|format(total_amount) }}</p>
     <a class="mdc-button" href="{{ url_for('sku_detail', sku=sku) }}">&larr; Back to SKU summary</a>
   </div>
 </div>

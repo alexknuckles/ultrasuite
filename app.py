@@ -834,7 +834,8 @@ def sku_transactions(sku, source):
         return abort(404)
     conn = get_db()
     df = pd.read_sql_query(
-        f'SELECT created_at, sku, quantity, total FROM {source}', conn
+        f'SELECT created_at, sku, description, price, quantity, total FROM {source}',
+        conn,
     )
     mapping = pd.read_sql_query('SELECT alias, canonical_sku FROM sku_map', conn)
     conn.close()
@@ -851,12 +852,31 @@ def sku_transactions(sku, source):
 
     df['canonical'] = df['sku'].apply(canonical)
     df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce').fillna(0)
+    df['price'] = pd.to_numeric(df['price'], errors='coerce').fillna(0)
     df['total'] = pd.to_numeric(df['total'], errors='coerce').fillna(0)
     df['created_at'] = (
         pd.to_datetime(df['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
         .dt.tz_localize(None)
     )
-    df = df[df['canonical'] == sku].dropna(subset=['created_at']).sort_values('created_at')
+    df = df[df['canonical'] == sku].dropna(subset=['created_at'])
+
+    years = sorted(df['created_at'].dt.year.dropna().unique(), reverse=True)
+    months = [
+        {'num': i, 'name': name}
+        for i, name in enumerate(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], start=1)
+    ]
+
+    year = request.args.get('year', type=int)
+    month = request.args.get('month', type=int)
+    if year:
+        df = df[df['created_at'].dt.year == year]
+    if month:
+        df = df[df['created_at'].dt.month == month]
+
+    df = df.sort_values('created_at')
+
+    total_qty = df['quantity'].sum()
+    total_amount = df['total'].sum()
 
     return render_template(
         'sku_transactions.html',
@@ -864,6 +884,12 @@ def sku_transactions(sku, source):
         source=source,
         source_title='Shopify' if source == 'shopify' else 'QBO',
         rows=df.itertuples(),
+        years=years,
+        months=months,
+        selected_year=year,
+        selected_month=month,
+        total_qty=total_qty,
+        total_amount=total_amount,
     )
 
 
