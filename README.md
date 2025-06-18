@@ -16,7 +16,7 @@ Ultrasuite is a Flask application for aggregating Shopify and QuickBooks Online 
 
 Data is stored locally in `finance.db` and charts are generated with Matplotlib.
 
-Download the latest release from the [releases page](https://github.com/example/ultrasuite/releases/latest).
+Download the latest release from the [releases page](https://github.com/example/ultrasuite/releases).
 
 ## Building from Source
 
