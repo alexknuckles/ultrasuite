@@ -14,6 +14,7 @@ if (Test-Path build) { Remove-Item build -Recurse -Force }
 pyinstaller --noconfirm --onefile `
     --add-data "templates;templates" `
     --add-data "static;static" `
+    --collect-submodules reportlab.graphics.barcode `
     app.py
 
 Write-Host "Executable created at dist/app.exe"
