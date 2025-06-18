@@ -12,13 +12,13 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
 Name: "desktopurl"; Description: "Create a desktop shortcut to the ultrasuite page"; Flags: unchecked
 
 [Files]
-Source: "..\\dist\\app.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\\dist\\ultrasuite-gui.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\ultrasuite"; Filename: "{app}\app.exe"
+Name: "{group}\ultrasuite"; Filename: "{app}\ultrasuite-gui.exe"
 Name: "{group}\ultrasuite Web"; Filename: "http://localhost:5000"
-Name: "{userdesktop}\ultrasuite"; Filename: "{app}\app.exe"; Tasks: desktopicon
+Name: "{userdesktop}\ultrasuite"; Filename: "{app}\ultrasuite-gui.exe"; Tasks: desktopicon
 Name: "{userdesktop}\ultrasuite Web"; Filename: "http://localhost:5000"; Tasks: desktopurl
 
 [Run]
-Filename: "{app}\app.exe"; Description: "Launch ultrasuite"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\ultrasuite-gui.exe"; Description: "Launch ultrasuite"; Flags: nowait postinstall skipifsilent
