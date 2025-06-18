@@ -75,6 +75,7 @@ Omit `month` to use the last full month. Options accept `1`/`true` or can be lef
    ```powershell
    iscc build-scripts/installer.iss
    ```
+   The resulting `ultrasuite-setup.exe` will be created in the `dist` directory.
 
 
 
