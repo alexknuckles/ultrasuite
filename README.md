@@ -1,43 +1,32 @@
 # ultrasuite
 
-<p align="center">
-  <img src="./ultrasuite-logo.png" alt="ultrasuite logo" width="200">
-</p>
+![ultrasuite logo](./ultrasuite-logo.png)
 
-This repository contains a Flask web application for aggregating and analyzing sales data from Shopify and QuickBooks Online. The app lets you upload transaction files, manage SKU aliases, and view monthly sales reports.
+Ultrasuite is a Flask application for aggregating Shopify and QuickBooks Online sales data. Upload transaction files, manage SKU aliases, and view comprehensive monthly or yearly reports.
 
 ## Features
 
 - **Data Upload** – Import Shopify CSV files and QuickBooks Excel exports.
-- **Dashboard** – See the last upload time for each data source and a summary of SKU aliases.
-- **SKU Mapping** – Map multiple alias SKUs to a canonical SKU and categorize them by type.
-- **Reports** – View monthly trends, last month details, and yearly comparisons with interactive charts. Reports can be exported as PDF files.
-- **Settings Page** – Configure a logo, color theme, and choose which PDF sections to include by default.
+- **Dashboard** – View last upload dates and a summary of SKU aliases.
+- **SKU Mapping** – Map alias SKUs to canonical SKUs and categorize them by type.
+- **Reports** – Interactive charts for monthly trends and yearly comparisons, with optional PDF export.
+- **Settings** – Choose a logo, color theme, and default report sections.
 
-Uploaded data is stored in a local SQLite database (`finance.db`), and charts are rendered using Matplotlib.
+Data is stored locally in `finance.db` and charts are generated with Matplotlib.
 
 ## Getting Started
 
-1. Install Python 3 and the required packages:
+1. Install Python 3 along with the dependencies:
    ```bash
    pip install Flask pandas matplotlib openpyxl xhtml2pdf
    ```
-   The application uses **xhtml2pdf** to generate PDF reports. This library is
-   pure Python and does not require additional system packages, so installing it
-   with `pip` is usually sufficient on all platforms.
-2. Run the application:
+2. Start the application:
    ```bash
    python app.py
    ```
-3. Open your browser to `http://localhost:5000`.
+3. Open `http://localhost:5000` in your browser.
 
-Data uploads and database files are kept locally; no external services are required.
-
-## Customization
-
-The light theme uses ocean colors, and a Codex-style dark mode can be toggled
-from the navigation bar. You can customize the primary and highlight colors by editing the
-CSS variables (`--ultra-primary`, `--ultra-highlight`).
+All data stays on your machine; no external services are required.
 
 ## Project Layout
 
@@ -46,28 +35,24 @@ CSS variables (`--ultra-primary`, `--ultra-highlight`).
 
 ## Programmatic Reports
 
-Several helper functions in `app.py` return the underlying report data so it can
-be used from other Python code:
+Helper functions in `app.py` expose the underlying report data for integration into other Python code:
 
 - `get_year_overall(year)` – monthly totals for the given year.
 - `get_year_summary(year)` – totals by sales type for the year.
 - `get_last_month_summary(year, month=None)` – last full month totals by type.
-- `get_last_month_details(year, month=None)` – detailed SKU breakdown for the
-  last full month.
+- `get_last_month_details(year, month=None)` – detailed SKU breakdown for the last full month.
 - `get_shopify_monthly()` – Shopify income by month across all years.
 - `get_shopify_quarterly()` – Shopify income by quarter across all years.
 
 ### Programmatic PDF Export
 
-Pass query parameters to `/export-report` to download a PDF without using the
-web form. Parameters match the form fields:
+Call `/export-report` with query parameters to download a PDF:
 
 ```
 /export-report?year=2025&month=4&include_month_summary=1&include_year_overall=1
 ```
 
-Omit `month` to use the last full month. Options accept `1`/`true` or can be
-left out to disable a section.
+Omit `month` to use the last full month. Options accept `1`/`true` or can be left out to disable a section.
 
 ## License
 
