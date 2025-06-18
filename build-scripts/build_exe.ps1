@@ -15,6 +15,6 @@ pyinstaller --noconfirm --onefile `
     --add-data "templates;templates" `
     --add-data "static;static" `
     --collect-submodules reportlab.graphics.barcode `
-    app.py
+    gui.py
 
 Write-Host "Executable created at dist/app.exe"
