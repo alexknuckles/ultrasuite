@@ -139,6 +139,7 @@
     {% endfor %}
     </tbody>
   </table>
+  <div class="page-break"></div>
 
   <h3 class="mt-4">Quarterly income</h3>
   <table class="table is-fullwidth is-bordered mb-5">
@@ -156,9 +157,7 @@
     {% endfor %}
     </tbody>
   </table>
-  {% if include_year_summary %}
   <div class="page-break"></div>
-  {% endif %}
   {% endif %}
 
   {% if include_year_summary %}
@@ -182,6 +181,9 @@
     </tbody>
   </table>
   {% endif %}
+{% if include_shopify %}
+<div class="page-break"></div>
+{% endif %}
 
 {% if include_shopify %}
   <h3 class="mt-5">Shopify income by month</h3>
@@ -212,6 +214,8 @@
       </tr>
     </tbody>
   </table>
+
+  <div class="page-break"></div>
 
   <h3 class="mt-5">Shopify income by quarter</h3>
   <table class="table is-fullwidth is-bordered mb-5">
