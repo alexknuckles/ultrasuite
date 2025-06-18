@@ -22,11 +22,13 @@ Data is stored locally in `finance.db` and charts are generated with Matplotlib.
    ```bash
    pip install Flask pandas matplotlib openpyxl xhtml2pdf pywebview
    ```
-2. Start the application:
+2. Start the application. To run the Flask server use `python app.py`, or launch
+   the desktop version with `python gui.py`:
    ```bash
-   python gui.py
+   python app.py  # runs the Flask server
+   # or
+   python gui.py  # opens the app in a pywebview window
    ```
-   The legacy command `python app.py` still runs the server only.
 3. Open `http://localhost:5000` in your browser if you prefer using a web browser.
 
 All data stays on your machine; no external services are required.
