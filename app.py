@@ -1398,10 +1398,6 @@ def sku_transactions(sku, source):
 @app.route('/settings', methods=['GET', 'POST'])
 def settings_page():
     if request.method == 'POST':
-        branding = request.form.get('branding', '').strip()
-        set_setting('branding', branding)
-        report_title = request.form.get('report_title', '').strip()
-        set_setting('report_title', report_title)
         primary_color = request.form.get('primary_color', '').strip()
         highlight_color = request.form.get('highlight_color', '').strip()
         set_setting('branding_primary', primary_color)
@@ -1431,8 +1427,6 @@ def settings_page():
                 set_setting('branding_logo', os.path.join(UPLOAD_FOLDER, save_name))
         flash('Settings saved.')
         return redirect(url_for('settings_page'))
-    branding = get_setting('branding', '')
-    report_title = get_setting('report_title', '')
     primary_color = get_setting('branding_primary', '#1976d2')
     highlight_color = get_setting('branding_highlight', '#bbdefb')
     include_month_summary = get_setting('default_include_month_summary', '1') == '1'
@@ -1448,10 +1442,8 @@ def settings_page():
     months = calculate_report_data(datetime.now().year)['months']
     return render_template(
         'settings.html',
-        branding=branding,
         primary_color=primary_color,
         highlight_color=highlight_color,
-        report_title=report_title,
         include_month_summary=include_month_summary,
         include_month_details=include_month_details,
         include_year_overall=include_year_overall,

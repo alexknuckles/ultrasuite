@@ -13,7 +13,7 @@ This repository contains a Flask web application for aggregating and analyzing s
 - **SKU Mapping** – Map multiple alias SKUs to a canonical SKU and categorize them by type.
 - **Reports** – View monthly trends, last month details, and yearly comparisons with interactive charts. Reports can be exported as PDF files.
 - **Debug View** – Simple view for debugging transaction aggregates.
-- **Settings Page** – Configure branding text, upload a logo, and choose which PDF sections to include by default.
+- **Settings Page** – Configure a logo, color theme, and choose which PDF sections to include by default.
 
 Uploaded data is stored in a local SQLite database (`finance.db`), and charts are rendered using Matplotlib.
 

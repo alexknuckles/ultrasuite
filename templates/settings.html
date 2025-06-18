@@ -14,14 +14,6 @@
     </div>
     <div id="exportSettings" class="tab-pane is-hidden">
       <div class="field mb-4">
-        <label class="label">Branding text (optional)</label>
-        <input class="input" type="text" name="branding" value="{{ branding }}">
-      </div>
-      <div class="field mb-4">
-        <label class="label">Report title (optional)</label>
-        <input class="input" type="text" name="report_title" value="{{ report_title }}">
-      </div>
-      <div class="field mb-4">
         <label class="label">Branding logo</label>
         {% if logo_path %}
         <img src="{{ url_for('branding_logo') }}" alt="logo" style="max-height:3rem;" class="mb-2">
