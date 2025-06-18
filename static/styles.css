@@ -83,6 +83,7 @@ textarea {
 :root {
   --ultra-primary: #1976d2;
   --ultra-highlight: #bbdefb;
+  --ultra-tab-bg: var(--ultra-highlight);
   --ultra-background: #f8f9fa;
   --ultra-text: #363636;
   --ultra-font: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -94,6 +95,7 @@ textarea {
   --ultra-background: #0d1117;
   --ultra-text: #c9d1d9;
   --ultra-highlight: #161b22;
+  --ultra-tab-bg: #21262d;
 }
 
 a,
@@ -343,7 +345,7 @@ input.switch:checked::before {
 }
 
 .tab-buttons .mdc-button {
-  background-color: var(--ultra-highlight);
+  background-color: var(--ultra-tab-bg);
   color: var(--ultra-text);
   height: auto;
   white-space: normal;
