@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ultrasuite</title>
+  <title>{{ app_name }}</title>
   <link rel="icon" href="{{ url_for('favicon') }}">
   <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
@@ -14,8 +14,8 @@
   <div class="mdc-top-app-bar__row">
       <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start" role="toolbar">
           <a href="/" class="mdc-top-app-bar__title">
-            <img src="{{ url_for('logo') }}" alt="ultrasuite logo" style="height:1.75rem; margin-right:0.5rem; vertical-align:middle;">
-            ultrasuite
+            <img src="{{ url_for('logo') }}" alt="{{ app_name }} logo" style="height:1.75rem; margin-right:0.5rem; vertical-align:middle;">
+            {{ app_name }}
           </a>
           <button id="navToggle" class="nav-toggle" type="button" aria-label="Menu">☰</button>
           <div class="nav-links">
@@ -24,7 +24,6 @@
           <a class="mdc-button" href="/sku-map">SKU map</a>
           <a class="mdc-button" href="/sku-details">SKU details</a>
           <a class="mdc-button" href="/monthly-report">Reports</a>
-          <a class="mdc-button" href="/debug">Debug</a>
           <a class="mdc-button" href="/settings">Settings</a>
         </div>
       </section>
@@ -52,7 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
 (function(){
   const root = document.documentElement;
-  if (localStorage.getItem('ultra-dark') === '1') {
+  const stored = localStorage.getItem('ultra-dark');
+  const defaultDark = {{ 'true' if default_dark_mode else 'false' }};
+  if (stored === null) {
+    if (defaultDark) root.classList.add('dark-mode');
+    localStorage.setItem('ultra-dark', defaultDark ? '1' : '0');
+  } else if (stored === '1') {
     root.classList.add('dark-mode');
   }
 })();

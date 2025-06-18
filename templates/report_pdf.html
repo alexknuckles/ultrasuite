@@ -41,6 +41,11 @@
       color: {{ primary }};
       margin: 0;
     }
+    .branding-text {
+      font-size: 12pt;
+      color: {{ primary }};
+      margin-top: 0.5rem;
+    }
     h1, h2, h3 { color: {{ primary }}; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid {{ highlight }}; padding: 4px; }
@@ -63,9 +68,10 @@
     {% if branding_logo_url %}
     <img src="{{ branding_logo_url }}" alt="logo" class="logo">
     {% endif %}
-    <h1 class="cover-title">Monthly Report</h1>
+    <h1 class="cover-title">{{ report_title or 'Monthly Report' }}</h1>
     <div class="cover-underline"></div>
     <h2 class="cover-date">{{ datetime(last_month_year, last_month_num, 1).strftime('%B %Y') }}</h2>
+    {% if branding %}<p class="branding-text">{{ branding }}</p>{% endif %}
   </div>
   <div class="page-break"></div>
   {% if include_month_summary %}
