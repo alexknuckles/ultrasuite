@@ -31,8 +31,8 @@ app = Flask(__name__)
 app.secret_key = 'secret'
 
 # Height in pixels for the branding logo on exported PDFs
-# Restored to full size now that cover margins were reduced
-LOGO_SIZE = 240
+# Increase size now that margins are trimmed further
+LOGO_SIZE = 360
 
 # Available SKU type categories for reports
 CATEGORIES = [
