@@ -65,11 +65,10 @@ Omit `month` to use the last full month. Options accept `1`/`true` or can be lef
    ```bash
    pip install pyinstaller
    ```
-2. Run the provided script to build `dist/app.exe`:
+2. Run the provided script to build `dist/ultrasuite-server.exe` and `dist/ultrasuite-gui.exe`:
    ```powershell
    ./build-scripts/build_exe.ps1
-   ```
-   The executable launches `gui.py`, which embeds the web app in a desktop window.
+   ultrasuite-gui.exe launches `gui.py`, which embeds the web app in a desktop window. ultrasuite-server.exe runs the Flask server only.
 3. (Optional) Generate a Windows installer with [Inno Setup](https://jrsoftware.org/isinfo.php):
    ```powershell
    iscc build-scripts/installer.iss
