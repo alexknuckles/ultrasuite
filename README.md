@@ -1,6 +1,8 @@
 # ultrasuite
 
-<img src="./ultrasuite-logo.png" alt="ultrasuite logo" width="200">
+<p align="center">
+  <img src="./ultrasuite-logo.png" alt="ultrasuite logo" width="200">
+</p>
 
 Ultrasuite is a Flask application for aggregating Shopify and QuickBooks Online sales data. Upload transaction files, manage SKU aliases, and view comprehensive monthly or yearly reports.
 
