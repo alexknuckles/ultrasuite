@@ -20,13 +20,13 @@ jobs:
           pip install Flask pandas matplotlib openpyxl xhtml2pdf
       - name: Build executable
         shell: powershell
-        run: ./build_exe.ps1
+        run: ./build-scripts/build_exe.ps1
       - name: Install Inno Setup
         shell: powershell
         run: choco install innosetup --no-progress -y
       - name: Build installer
         shell: powershell
-        run: iscc installer.iss
+        run: iscc build-scripts/installer.iss
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
