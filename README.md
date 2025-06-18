@@ -56,6 +56,27 @@ Call `/export-report` with query parameters to download a PDF:
 
 Omit `month` to use the last full month. Options accept `1`/`true` or can be left out to disable a section.
 
+## Packaging an EXE Installer
+
+1. Ensure `PyInstaller` is installed:
+   ```bash
+   pip install pyinstaller
+   ```
+2. Run the provided script to build `dist/app.exe`:
+   ```powershell
+   ./build_exe.ps1
+   ```
+3. (Optional) Generate a Windows installer with [Inno Setup](https://jrsoftware.org/isinfo.php):
+   ```powershell
+   iscc installer.iss
+   ```
+
+
+
+## Automated Builds
+
+GitHub Actions runs when a tag starting with v is pushed. It executes `build_exe.ps1` and `iscc` to upload the executable and installer as artifacts.
+
 ## License
 
 This project is provided as-is for demonstration purposes.
