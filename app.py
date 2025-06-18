@@ -473,7 +473,7 @@ def calculate_report_data(year, month_param=None):
     shopify_only['month_num'] = shopify_only['created_at'].dt.month
 
     shopify_summary = shopify_only.groupby(['year', 'month_num'])['total'].sum().reset_index()
-    shopify_years = sorted(shopify_summary['year'].unique())
+    shopify_years = sorted(shopify_summary['year'].unique(), reverse=True)
     shopify_pivot = (
         shopify_summary.pivot(index='month_num', columns='year', values='total')
         .reindex(range(1, 13))
@@ -483,21 +483,27 @@ def calculate_report_data(year, month_param=None):
     shopify_rows = []
     for m in range(1, 13):
         month_name = months_order[m-1]
-        values = [float(shopify_pivot.at[m, y]) if y in shopify_pivot.columns else 0.0 for y in shopify_years]
+        raw_vals = [float(shopify_pivot.at[m, y]) if y in shopify_pivot.columns else 0.0 for y in shopify_years]
+        diffs = [None] + [raw_vals[i] - raw_vals[i+1] for i in range(len(raw_vals)-1)]
+        values = [{'val': raw_vals[i], 'diff': diffs[i]} for i in range(len(raw_vals))]
         shopify_rows.append({'month': month_name, 'values': values, 'avg': float(shopify_avg[m])})
 
-    shopify_totals = [float(shopify_pivot[y].sum()) if y in shopify_pivot.columns else 0.0 for y in shopify_years]
-    shopify_avg_total = float(sum(shopify_totals) / len(shopify_totals)) if shopify_totals else 0.0
+    raw_totals = [float(shopify_pivot[y].sum()) if y in shopify_pivot.columns else 0.0 for y in shopify_years]
+    total_diffs = [None] + [raw_totals[i] - raw_totals[i+1] for i in range(len(raw_totals)-1)]
+    shopify_totals = [{'val': raw_totals[i], 'diff': total_diffs[i]} for i in range(len(raw_totals))]
+    shopify_avg_total = float(sum(raw_totals) / len(raw_totals)) if raw_totals else 0.0
 
     # Shopify totals by quarter
     shopify_quarters = []
     for q, months in quarter_map.items():
-        row_vals = []
+        vals = []
         for y in shopify_years:
             val = shopify_summary[(shopify_summary['year'] == y) & shopify_summary['month_num'].isin(months)]['total'].sum()
-            row_vals.append(float(val))
-        avg_val = sum(row_vals) / len(row_vals) if row_vals else 0.0
-        shopify_quarters.append({'quarter': f'Q{q}', 'values': row_vals, 'avg': avg_val})
+            vals.append(float(val))
+        diffs = [None] + [vals[i] - vals[i+1] for i in range(len(vals)-1)]
+        avg_val = sum(vals) / len(vals) if vals else 0.0
+        values = [{'val': vals[i], 'diff': diffs[i]} for i in range(len(vals))]
+        shopify_quarters.append({'quarter': f'Q{q}', 'values': values, 'avg': avg_val})
 
 
 
@@ -743,6 +749,26 @@ def get_last_month_details(year, month=None):
     }
 
 
+def get_shopify_monthly():
+    """Return Shopify monthly totals across years."""
+    data = calculate_report_data(datetime.now().year)
+    return {
+        'years': data['shopify_years'],
+        'rows': data['shopify_rows'],
+        'totals': data['shopify_totals'],
+        'average_total': data['shopify_avg_total'],
+    }
+
+
+def get_shopify_quarterly():
+    """Return Shopify quarterly totals across years."""
+    data = calculate_report_data(datetime.now().year)
+    return {
+        'years': data['shopify_years'],
+        'rows': data['shopify_quarters'],
+    }
+
+
 @app.route('/monthly-report')
 def monthly_report():
     year = request.args.get('year', default=datetime.now().year, type=int)
@@ -766,12 +792,14 @@ def export_report():
         include_month_details = _check('include_month_details')
         include_year_overall = _check('include_year_overall')
         include_year_summary = _check('include_year_summary')
+        include_shopify = _check('include_shopify')
         data = calculate_report_data(year, month)
         data.update({
             'include_month_summary': include_month_summary,
             'include_month_details': include_month_details,
             'include_year_overall': include_year_overall,
             'include_year_summary': include_year_summary,
+            'include_shopify': include_shopify,
             'branding': get_setting('branding', ''),
             'report_title': get_setting('report_title', ''),
             'branding_logo_url': url_for('branding_logo', _external=True),
@@ -792,6 +820,7 @@ def export_report():
     include_month_details = get_setting('default_include_month_details', '1') == '1'
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
     include_year_summary = get_setting('default_include_year_summary', '1') == '1'
+    include_shopify = get_setting('default_include_shopify', '1') == '1'
     return render_template(
         'export_form.html',
         years=data['years'],
@@ -801,6 +830,7 @@ def export_report():
         include_month_details=include_month_details,
         include_year_overall=include_year_overall,
         include_year_summary=include_year_summary,
+        include_shopify=include_shopify,
     )
 
 
@@ -1242,10 +1272,12 @@ def settings_page():
         include_month_details = 'include_month_details' in request.form
         include_year_overall = 'include_year_overall' in request.form
         include_year_summary = 'include_year_summary' in request.form
+        include_shopify = 'include_shopify' in request.form
         set_setting('default_include_month_summary', '1' if include_month_summary else '0')
         set_setting('default_include_month_details', '1' if include_month_details else '0')
         set_setting('default_include_year_overall', '1' if include_year_overall else '0')
         set_setting('default_include_year_summary', '1' if include_year_summary else '0')
+        set_setting('default_include_shopify', '1' if include_shopify else '0')
         default_month = request.form.get('default_month', '')
         set_setting('default_export_month', default_month)
         logo_file = request.files.get('logo')
@@ -1267,6 +1299,7 @@ def settings_page():
     include_month_details = get_setting('default_include_month_details', '1') == '1'
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
     include_year_summary = get_setting('default_include_year_summary', '1') == '1'
+    include_shopify = get_setting('default_include_shopify', '1') == '1'
     logo_path = get_setting('branding_logo', '')
     month_default = get_setting('default_export_month', '')
     month_int = int(month_default) if str(month_default).isdigit() else None
@@ -1281,6 +1314,7 @@ def settings_page():
         include_month_details=include_month_details,
         include_year_overall=include_year_overall,
         include_year_summary=include_year_summary,
+        include_shopify=include_shopify,
         logo_path=logo_path,
         months=months,
         default_month=month_int,

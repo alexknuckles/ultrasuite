@@ -75,6 +75,12 @@
           <span>Yearly summary by type</span>
         </label>
       </div>
+      <div class="field mb-4">
+        <label class="switch-label">
+          <input type="checkbox" class="switch" name="include_shopify" {% if include_shopify %}checked{% endif %}>
+          <span>Shopify income tables</span>
+        </label>
+      </div>
     </div>
       <button type="submit" class="mdc-button mdc-button--raised">Save</button>
     </form>

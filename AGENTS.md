@@ -6,3 +6,5 @@
 - UI appearance may be modernized in templates and stylesheets
 - Define theme colors as CSS variables (`--ultra-primary`, `--ultra-highlight`)
   in `static/styles.css` and reference them throughout the UI
+- Ensure all new reports can be accessed programmatically and include
+  export/settings options

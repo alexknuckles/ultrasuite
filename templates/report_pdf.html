@@ -171,27 +171,32 @@
   </table>
   {% endif %}
 
+{% if include_shopify %}
   <h3 class="mt-5">Shopify income by month</h3>
   <table class="table is-fullwidth is-bordered mb-5">
     <thead>
       <tr>
         <th>Month</th>
-        {% for y in shopify_years %}<th>{{ y }} $</th>{% endfor %}
         <th>Average $</th>
+        {% for y in shopify_years %}<th>{{ y }} $</th>{% endfor %}
       </tr>
     </thead>
     <tbody>
     {% for row in shopify_rows %}
       <tr>
         <td>{{ row['month'] }}</td>
-        {% for val in row['values'] %}<td class="has-text-right">${{ "%.2f"|format(val) }}</td>{% endfor %}
         <td class="has-text-right">${{ "%.2f"|format(row['avg']) }}</td>
+        {% for val in row['values'] %}
+        <td class="has-text-right">{{ ("$%.2f"|format(val.val)) | trend(val.diff) }}</td>
+        {% endfor %}
       </tr>
     {% endfor %}
       <tr class="has-background-light has-text-weight-bold">
         <td>Total</td>
-        {% for t in shopify_totals %}<td class="has-text-right">${{ "%.2f"|format(t) }}</td>{% endfor %}
         <td class="has-text-right">${{ "%.2f"|format(shopify_avg_total) }}</td>
+        {% for t in shopify_totals %}
+        <td class="has-text-right">{{ ("$%.2f"|format(t.val)) | trend(t.diff) }}</td>
+        {% endfor %}
       </tr>
     </tbody>
   </table>
@@ -201,19 +206,22 @@
     <thead>
       <tr>
         <th>Quarter</th>
-        {% for y in shopify_years %}<th>{{ y }} $</th>{% endfor %}
         <th>Average $</th>
+        {% for y in shopify_years %}<th>{{ y }} $</th>{% endfor %}
       </tr>
     </thead>
     <tbody>
     {% for row in shopify_quarters %}
       <tr>
         <td>{{ row['quarter'] }}</td>
-        {% for val in row['values'] %}<td class="has-text-right">${{ "%.2f"|format(val) }}</td>{% endfor %}
         <td class="has-text-right">${{ "%.2f"|format(row['avg']) }}</td>
+        {% for val in row['values'] %}
+        <td class="has-text-right">{{ ("$%.2f"|format(val.val)) | trend(val.diff) }}</td>
+        {% endfor %}
       </tr>
     {% endfor %}
     </tbody>
   </table>
+{% endif %}
 </body>
 </html>
