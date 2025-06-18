@@ -23,84 +23,94 @@
       </div>
     </div>
     <div id="exportSettings" class="tab-pane is-hidden">
-      <div class="field mb-4">
-        <label class="label">Branding logo</label>
-        {% if logo_path %}
-        <img src="{{ url_for('branding_logo') }}" alt="logo" style="max-height:3rem;" class="mb-2">
-        {% endif %}
-        <input class="input" type="file" name="logo" accept="image/*">
-      </div>
-      <div class="field mb-4">
-        <label class="label">Report title</label>
-        <input class="input" type="text" name="report_title" value="{{ report_title }}">
-      </div>
-      <div class="field mb-4">
-        <label class="label">Branding text</label>
-        <input class="input" type="text" name="branding" value="{{ branding }}">
-      </div>
-      <div class="columns">
-        <div class="column field mb-4">
-          <label class="label">Primary color</label>
-          <input class="input" type="color" name="primary_color" value="{{ primary_color }}">
+      <div class="box mb-4">
+        <h3 class="title is-5 mb-3">Branding</h3>
+        <div class="field mb-4">
+          <label class="label">Branding logo</label>
+          {% if logo_path %}
+          <img src="{{ url_for('branding_logo') }}" alt="logo" style="max-height:3rem;" class="mb-2">
+          {% endif %}
+          <input class="input" type="file" name="logo" accept="image/*">
         </div>
-        <div class="column field mb-4">
-          <label class="label">Highlight color</label>
-          <input class="input" type="color" name="highlight_color" value="{{ highlight_color }}">
+        <div class="field mb-4">
+          <label class="label">Report title</label>
+          <input class="input" type="text" name="report_title" value="{{ report_title }}">
         </div>
-      </div>
-      <div class="field mb-4">
-        <label class="label">Default month for exports</label>
-        <div class="select">
-          <select name="default_month">
-            <option value="" {% if not default_month %}selected{% endif %}>Last full month</option>
-            {% for m in months %}
-            <option value="{{ m.num }}" {% if m.num == default_month %}selected{% endif %}>{{ m.name }}</option>
-            {% endfor %}
-          </select>
+        <div class="field mb-4">
+          <label class="label">Branding text</label>
+          <input class="input" type="text" name="branding" value="{{ branding }}">
+        </div>
+        <div class="columns">
+          <div class="column field mb-4">
+            <label class="label">Primary color</label>
+            <input class="input" type="color" name="primary_color" value="{{ primary_color }}">
+          </div>
+          <div class="column field mb-4">
+            <label class="label">Highlight color</label>
+            <input class="input" type="color" name="highlight_color" value="{{ highlight_color }}">
+          </div>
         </div>
       </div>
-      <h3 class="title is-5">Monthly reports</h3>
-      <div class="field mb-4">
-        <label class="switch-label">
-          <input type="checkbox" class="switch" name="include_month_summary" {% if include_month_summary %}checked{% endif %}>
-          <span>Last full month by sales type</span>
-        </label>
+      <div class="box mb-4">
+        <h3 class="title is-5 mb-3">Defaults</h3>
+        <div class="field mb-4">
+          <label class="label">Default month for exports</label>
+          <div class="select">
+            <select name="default_month">
+              <option value="" {% if not default_month %}selected{% endif %}>Last full month</option>
+              {% for m in months %}
+              <option value="{{ m.num }}" {% if m.num == default_month %}selected{% endif %}>{{ m.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
       </div>
-      <div class="field mb-4">
-        <label class="switch-label">
-          <input type="checkbox" class="switch" name="include_month_details" {% if include_month_details %}checked{% endif %}>
-          <span>Detailed by type</span>
-        </label>
-      </div>
-      <div id="detailTypesField" class="field mb-4" {% if not include_month_details %}style="display:none"{% endif %}>
-        <label class="label">Types for details</label>
-        <div>
-          {% for cat in categories %}
-          <label class="switch-label mr-2 mt-1">
-            <input type="checkbox" class="switch" name="detail_types" value="{{ cat }}" {% if cat in detail_types %}checked{% endif %}>
-            <span>{{ labels[cat] }}</span>
+      <div class="box mb-4">
+        <h3 class="title is-5 mb-3">Monthly reports</h3>
+        <div class="field mb-4">
+          <label class="switch-label">
+            <input type="checkbox" class="switch" name="include_month_summary" {% if include_month_summary %}checked{% endif %}>
+            <span>Last full month by sales type</span>
           </label>
-          {% endfor %}
+        </div>
+        <div class="field mb-4">
+          <label class="switch-label">
+            <input type="checkbox" class="switch" name="include_month_details" {% if include_month_details %}checked{% endif %}>
+            <span>Detailed by type</span>
+          </label>
+        </div>
+        <div id="detailTypesField" class="field mb-4" {% if not include_month_details %}style="display:none"{% endif %}>
+          <label class="label">Types for details</label>
+          <div>
+            {% for cat in categories %}
+            <label class="switch-label mr-2 mt-1">
+              <input type="checkbox" class="switch" name="detail_types" value="{{ cat }}" {% if cat in detail_types %}checked{% endif %}>
+              <span>{{ labels[cat] }}</span>
+            </label>
+            {% endfor %}
+          </div>
         </div>
       </div>
-      <h3 class="title is-5 mt-4">Yearly reports</h3>
-      <div class="field mb-4">
-        <label class="switch-label">
-          <input type="checkbox" class="switch" name="include_year_overall" {% if include_year_overall %}checked{% endif %}>
-          <span>Overall sales by month</span>
-        </label>
-      </div>
-      <div class="field mb-4">
-        <label class="switch-label">
-          <input type="checkbox" class="switch" name="include_year_summary" {% if include_year_summary %}checked{% endif %}>
-          <span>Yearly summary by type</span>
-        </label>
-      </div>
-      <div class="field mb-4">
-        <label class="switch-label">
-          <input type="checkbox" class="switch" name="include_shopify" {% if include_shopify %}checked{% endif %}>
-          <span>Shopify income tables</span>
-        </label>
+      <div class="box mb-4">
+        <h3 class="title is-5 mb-3">Yearly reports</h3>
+        <div class="field mb-4">
+          <label class="switch-label">
+            <input type="checkbox" class="switch" name="include_year_overall" {% if include_year_overall %}checked{% endif %}>
+            <span>Overall sales by month</span>
+          </label>
+        </div>
+        <div class="field mb-4">
+          <label class="switch-label">
+            <input type="checkbox" class="switch" name="include_year_summary" {% if include_year_summary %}checked{% endif %}>
+            <span>Yearly summary by type</span>
+          </label>
+        </div>
+        <div class="field mb-4">
+          <label class="switch-label">
+            <input type="checkbox" class="switch" name="include_shopify" {% if include_shopify %}checked{% endif %}>
+            <span>Shopify income tables</span>
+          </label>
+        </div>
       </div>
     </div>
       <button type="submit" class="mdc-button mdc-button--raised">Save</button>
