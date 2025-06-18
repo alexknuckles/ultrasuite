@@ -1,0 +1,9 @@
+# Ignore build artifacts and Python caches
+__pycache__/
+dist/
+build/
+installer/
+finance.db
+*.pyc
+*.log
+*.exe

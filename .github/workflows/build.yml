@@ -1,0 +1,36 @@
+name: Build EXE and Installer
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install Flask pandas matplotlib openpyxl xhtml2pdf
+      - name: Build executable
+        shell: powershell
+        run: ./build_exe.ps1
+      - name: Install Inno Setup
+        shell: powershell
+        run: choco install innosetup --no-progress -y
+      - name: Build installer
+        shell: powershell
+        run: iscc installer.iss
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ultrasuite
+          path: |
+            dist/app.exe
+            installer/ultrasuite-setup.exe
