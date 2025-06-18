@@ -18,15 +18,15 @@ if (Test-Path build) { Remove-Item build -Recurse -Force }
 
 # Build server executable
 pyinstaller --noconfirm --onefile --name ultrasuite-server `
-    --add-data "templates;templates" `
-    --add-data "static;static" `
+    --add-data "templates:templates" `
+    --add-data "static:static" `
     --collect-submodules reportlab.graphics.barcode `
     app.py
 
 # Build GUI executable
 pyinstaller --noconfirm --onefile --name ultrasuite-gui `
-    --add-data "templates;templates" `
-    --add-data "static;static" `
+    --add-data "templates:templates" `
+    --add-data "static:static" `
     --collect-submodules reportlab.graphics.barcode `
     gui.py
 
