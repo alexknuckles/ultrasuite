@@ -4,21 +4,21 @@
   <img src="static/ultrasuite-logo.png" alt="ultrasuite logo" width="200">
 </p>
 
-Ultrasuite is a Flask application for aggregating Shopify and QuickBooks Online sales data. Upload transaction files, manage SKU aliases, and view comprehensive monthly or yearly reports.
+Ultrasuite is a Flask application for aggregating sales data. Upload transaction files, manage SKU aliases, and view comprehensive monthly or yearly reports.
 
 ## Features
 
-- **Data Upload** – Import Shopify CSV files and QuickBooks Excel exports.
-- **Dashboard** – View last upload dates and a summary of SKU aliases.
+- **Data Upload** – Import CSV files and Excel exports.
+- **Dashboard** – View last upload dates and a summary of mapped SKUs.
 - **SKU Mapping** – Map alias SKUs to canonical SKUs and categorize them by type.
 - **Reports** – Interactive charts for monthly trends and yearly comparisons, with optional PDF export.
-- **Settings** – Choose a logo, color theme, and default report sections.
+- **Settings** – Customize reports.
 
-Data is stored locally in `finance.db` and charts are generated with Matplotlib.
+Data is stored locally and charts are generated with Matplotlib.
 
 Download the latest release from the [releases page](https://github.com/alexknuckles/ultrasuite/releases).
 
-## Building from Source
+## From Source
 
 1. Clone this repository or download the source archive.
 2. Install Python 3 along with the dependencies:
