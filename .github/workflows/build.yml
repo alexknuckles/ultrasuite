@@ -14,10 +14,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install Flask pandas matplotlib openpyxl xhtml2pdf
+        - name: Install dependencies
+          run: |
+            python -m pip install --upgrade pip
+            pip install Flask pandas matplotlib openpyxl xhtml2pdf pywebview
       - name: Build executable
         shell: powershell
         run: ./build-scripts/build_exe.ps1
