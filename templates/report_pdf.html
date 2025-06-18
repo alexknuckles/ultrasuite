@@ -11,7 +11,11 @@
     /* set explicit height so xhtml2pdf scales the image */
     {% set primary = primary_color or '#1976d2' %}
     {% set highlight = highlight_color or '#bbdefb' %}
-    .logo { height: {{ logo_size }}px; }
+    .logo {
+      height: {{ logo_size }}px;
+      display: block;
+      margin: 0 auto 0.25rem;
+    }
     .cover-page {
       background: linear-gradient(#ffffff, #f7f7f7);
       text-align: center;
@@ -22,7 +26,7 @@
       font-family: 'Helvetica Neue', Roboto, sans-serif;
       font-weight: bold;
       font-size: 36pt;
-      margin: 1rem 0 0.25rem;
+      margin: 0.5rem 0 0.25rem;
       color: {{ primary }};
     }
     .cover-underline {
