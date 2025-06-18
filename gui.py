@@ -1,3 +1,4 @@
+import os
 import threading
 
 import webview
@@ -13,5 +14,12 @@ if __name__ == "__main__":
     flask_thread = threading.Thread(target=start_server, daemon=True)
     flask_thread.start()
 
-    webview.create_window(app.name, "http://127.0.0.1:5000", width=1200, height=800)
+    icon_path = os.path.join(os.path.dirname(__file__), "static", "app-icon.ico")
+    webview.create_window(
+        "ultrasuite",
+        "http://127.0.0.1:5000",
+        width=1200,
+        height=800,
+        icon=icon_path,
+    )
     webview.start()
