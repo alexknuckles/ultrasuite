@@ -86,6 +86,8 @@
     {% endfor %}
     </tbody>
   </table>
+  <div class="page-break"></div>
+  <img src="data:image/png;base64,{{ last_month_chart }}" alt="Last Month Chart" style="width:100%;">
   {% if include_month_details and has_month_details or include_year_overall or include_year_summary %}
   <div class="page-break"></div>
   {% endif %}
@@ -143,6 +145,8 @@
     {% endfor %}
     </tbody>
   </table>
+  <div class="page-break"></div>
+  <img src="data:image/png;base64,{{ year_chart }}" alt="Year Chart" style="width:100%;">
   <div class="page-break"></div>
 
   <h3 class="mt-4">Quarterly income</h3>
