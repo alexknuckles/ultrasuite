@@ -117,6 +117,14 @@ def trend(value, compare=None):
 app.jinja_env.filters['trend'] = trend
 
 
+@app.context_processor
+def inject_globals():
+    return {
+        'app_name': get_setting('app_title', 'ultrasuite'),
+        'default_dark_mode': get_setting('dark_mode', '0') == '1',
+    }
+
+
 def fetch_resources(uri, rel):
     """Return local file path for xhtml2pdf resource URIs."""
     if uri.startswith('/static'):
@@ -131,7 +139,6 @@ def favicon():
         'favicon.ico',
         mimetype='image/vnd.microsoft.icon'
     )
-
 
 @app.route('/logo.png')
 def logo():
@@ -165,7 +172,6 @@ def dashboard():
         meta=meta_df.itertuples(),
         sku_stats=sku_df.itertuples(),
     )
-
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -385,7 +391,6 @@ def sku_map_page():
         merged=merged_groups,
         mapped=mapped_groups,
     )
-
 
 def calculate_report_data(year, month_param=None):
     conn = get_db()
@@ -1402,6 +1407,14 @@ def settings_page():
         highlight_color = request.form.get('highlight_color', '').strip()
         set_setting('branding_primary', primary_color)
         set_setting('branding_highlight', highlight_color)
+        app_title = request.form.get('app_title', '').strip()
+        report_title = request.form.get('report_title', '').strip()
+        branding = request.form.get('branding', '').strip()
+        dark_mode = 'dark_mode' in request.form
+        set_setting('app_title', app_title)
+        set_setting('report_title', report_title)
+        set_setting('branding', branding)
+        set_setting('dark_mode', '1' if dark_mode else '0')
         include_month_summary = 'include_month_summary' in request.form
         include_month_details = 'include_month_details' in request.form
         include_year_overall = 'include_year_overall' in request.form
@@ -1429,6 +1442,10 @@ def settings_page():
         return redirect(url_for('settings_page'))
     primary_color = get_setting('branding_primary', '#1976d2')
     highlight_color = get_setting('branding_highlight', '#bbdefb')
+    app_title = get_setting('app_title', 'ultrasuite')
+    report_title = get_setting('report_title', 'Monthly Report')
+    branding = get_setting('branding', '')
+    dark_mode = get_setting('dark_mode', '0') == '1'
     include_month_summary = get_setting('default_include_month_summary', '1') == '1'
     include_month_details = get_setting('default_include_month_details', '1') == '1'
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
@@ -1455,24 +1472,11 @@ def settings_page():
         logo_path=logo_path,
         months=months,
         default_month=month_int,
+        app_title=app_title,
+        report_title=report_title,
+        branding=branding,
+        dark_mode=dark_mode,
     )
-
-@app.route('/debug')
-def debug_summary():
-    conn = get_db()
-    df = pd.read_sql_query('SELECT * FROM shopify', conn)
-    conn.close()
-    df['created_at'] = (
-        pd.to_datetime(df['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
-        .dt.tz_localize(None)
-    )
-    df['total'] = pd.to_numeric(df['total'], errors='coerce').fillna(0)
-    df = df.dropna(subset=['created_at'])
-    df['month'] = df['created_at'].dt.strftime('%Y-%m')
-    summary = df.groupby('month').agg(count=('total','count'), total=('total','sum')).reset_index()
-    summary = summary.sort_values('month')
-    return render_template('debug.html', debug_data=summary.itertuples())
-
 
 if __name__ == '__main__':
     app.run(debug=True)
