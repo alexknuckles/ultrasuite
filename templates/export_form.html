@@ -5,7 +5,7 @@
     <p class="card-header-title">Export PDF</p>
   </header>
   <div class="card-content">
-    <form method="get" id="exportForm">
+    <form method="post" target="_blank">
       <div class="columns">
         <div class="column field mb-4">
           <label class="label">Select year:</label>
@@ -88,15 +88,6 @@ document.addEventListener('DOMContentLoaded', function(){
   if (cb){
     cb.addEventListener('change', toggle);
     toggle();
-  }
-  const form = document.getElementById('exportForm');
-  if(form && window.pywebview){
-    form.addEventListener('submit', function(e){
-      e.preventDefault();
-      const params = new URLSearchParams(new FormData(form)).toString();
-      const url = form.action + '?' + params;
-      window.pywebview.api.open_pdf_window(url);
-    });
   }
 });
 </script>
