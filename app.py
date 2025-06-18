@@ -2,6 +2,7 @@ import os
 
 from datetime import datetime, timedelta
 from io import BytesIO
+import base64
 from difflib import SequenceMatcher
 import itertools
 import re
@@ -784,6 +785,130 @@ def get_shopify_quarterly():
     }
 
 
+def generate_year_chart_base64(year):
+    """Return base64 PNG for the year-over-year monthly sales chart."""
+    conn = get_db()
+    shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)
+    qbo = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM qbo', conn)
+    conn.close()
+
+    all_data = pd.concat([shopify, qbo])
+    all_data["quantity"] = pd.to_numeric(all_data["quantity"], errors="coerce").fillna(0)
+    all_data["total"] = pd.to_numeric(all_data["total"], errors="coerce").fillna(0)
+    all_data['created_at'] = (
+        pd.to_datetime(all_data['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
+        .dt.tz_localize(None)
+    )
+    all_data = all_data.dropna(subset=['created_at'])
+    all_data['year'] = all_data['created_at'].dt.year
+    all_data['month'] = all_data['created_at'].dt.strftime('%b')
+
+    summary = all_data.groupby(['year', 'month'])['total'].sum().reset_index()
+    this_year = summary[summary['year'] == year].set_index('month')
+    last_year = summary[summary['year'] == year - 1].set_index('month')
+
+    months_order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    y1 = [this_year['total'].get(m, 0) for m in months_order]
+    y2 = [last_year['total'].get(m, 0) for m in months_order]
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(months_order, y1, label=str(year), marker='o')
+    ax.plot(months_order, y2, label=str(year-1), linestyle='--', marker='x')
+    ax.set_title('Monthly Sales Comparison')
+    ax.set_ylabel('Total Sales ($)')
+    ax.legend()
+    ax.grid(True)
+
+    output = BytesIO()
+    fig.tight_layout()
+    plt.savefig(output, format='png')
+    plt.close(fig)
+    output.seek(0)
+    return base64.b64encode(output.read()).decode('utf-8')
+
+
+def generate_last_month_chart_base64(year, month_param=None):
+    """Return base64 PNG for the last-month sales by type bar chart."""
+    conn = get_db()
+    shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)
+    qbo = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM qbo', conn)
+    mapping = pd.read_sql_query('SELECT alias, canonical_sku, type FROM sku_map', conn)
+    conn.close()
+
+    all_data = pd.concat([shopify, qbo], ignore_index=True)
+    all_data['total'] = pd.to_numeric(all_data['total'], errors='coerce').fillna(0)
+    all_data['created_at'] = (
+        pd.to_datetime(all_data['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
+        .dt.tz_localize(None)
+    )
+    all_data = all_data.dropna(subset=['created_at'])
+
+    alias_map = mapping.set_index('alias')
+
+    def map_row(alias, field):
+        if isinstance(alias, str):
+            key = alias.lower().strip()
+            if key in alias_map.index:
+                return alias_map.loc[key, field]
+            return key if field == 'canonical_sku' else 'unmapped'
+        return alias if field == 'canonical_sku' else 'unmapped'
+
+    all_data['type'] = all_data['sku'].apply(lambda x: map_row(x, 'type'))
+    all_data['year'] = all_data['created_at'].dt.year
+    all_data['month_num'] = all_data['created_at'].dt.month
+
+    now = datetime.now()
+    if month_param:
+        last_year = year
+        last_month = month_param
+    else:
+        if year == now.year:
+            if now.month == 1:
+                last_year = year - 1
+                last_month = 12
+            else:
+                last_year = year
+                last_month = now.month - 1
+        else:
+            last_year = year
+            last_month = 12
+
+    summary = (
+        all_data.groupby(['year', 'month_num', 'type'])['total']
+        .sum()
+        .reset_index()
+    )
+
+    cur = summary[(summary['year'] == last_year) & (summary['month_num'] == last_month)].set_index('type')
+    prev = summary[(summary['year'] == last_year - 1) & (summary['month_num'] == last_month)].set_index('type')
+
+    categories = CATEGORIES
+    labels = CATEGORY_LABELS
+
+    y1 = [cur['total'].get(cat, 0) for cat in categories]
+    y2 = [prev['total'].get(cat, 0) for cat in categories]
+    xlabels = [labels.get(cat, cat) for cat in categories]
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+    idx = range(len(categories))
+    width = 0.35
+    ax.bar([i - width / 2 for i in idx], y1, width=width, label=f'{last_year}-{last_month:02d}')
+    ax.bar([i + width / 2 for i in idx], y2, width=width, label=f'{last_year - 1}-{last_month:02d}')
+    ax.set_xticks(list(idx))
+    ax.set_xticklabels(xlabels, rotation=30, ha='right')
+    ax.set_ylabel('Total Sales ($)')
+    ax.set_title('Last Month Sales by Type')
+    ax.legend()
+    ax.grid(axis='y')
+
+    output = BytesIO()
+    fig.tight_layout()
+    plt.savefig(output, format='png')
+    plt.close(fig)
+    output.seek(0)
+    return base64.b64encode(output.read()).decode('utf-8')
+
+
 @app.route('/monthly-report')
 def monthly_report():
     year = request.args.get('year', default=datetime.now().year, type=int)
@@ -830,6 +955,8 @@ def export_report():
             'logo_size': LOGO_SIZE,
             'primary_color': get_setting('branding_primary', ''),
             'highlight_color': get_setting('branding_highlight', ''),
+            'year_chart': generate_year_chart_base64(year) if include_year_overall else '',
+            'last_month_chart': generate_last_month_chart_base64(year, month) if include_month_summary else '',
         })
         html = render_template('report_pdf.html', **data, datetime=datetime)
         output = BytesIO()
