@@ -62,7 +62,7 @@
           <span>Detailed by type</span>
         </label>
       </div>
-      <div class="field mb-4">
+      <div id="detailTypesField" class="field mb-4" {% if not include_month_details %}style="display:none"{% endif %}>
         <label class="label">Types for details</label>
         <div>
           {% for cat in categories %}
@@ -106,5 +106,14 @@
       document.getElementById(btn.dataset.target).classList.remove('is-hidden');
     });
   });
+  const detailsCb = document.querySelector('input[name="include_month_details"]');
+  const detailsField = document.getElementById('detailTypesField');
+  function toggleDetails(){
+    if (detailsField) detailsField.style.display = detailsCb && detailsCb.checked ? '' : 'none';
+  }
+  if (detailsCb){
+    detailsCb.addEventListener('change', toggleDetails);
+    toggleDetails();
+  }
 </script>
 {% endblock %}
