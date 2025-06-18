@@ -152,7 +152,7 @@ def branding_logo():
     """Serve the uploaded branding logo for reports, falling back to default."""
     custom = get_setting('branding_logo', '')
     if custom:
-        path = os.path.join(app.root_path, custom)
+        path = custom if os.path.isabs(custom) else os.path.join(app.root_path, custom)
         if os.path.exists(path):
             return send_file(path, mimetype='image/png')
     return send_file(os.path.join(app.root_path, 'ultrasuite-logo.png'), mimetype='image/png')

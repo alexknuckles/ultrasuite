@@ -1,10 +1,17 @@
 import os
 import sqlite3
 
-UPLOAD_FOLDER = 'uploads'
+import sys
+
+
+if getattr(sys, 'frozen', False):
+    base_dir = os.path.join(os.path.expanduser('~'), 'ultrasuite')
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+UPLOAD_FOLDER = os.path.join(base_dir, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'finance.db')
+DB_PATH = os.path.join(base_dir, 'finance.db')
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)

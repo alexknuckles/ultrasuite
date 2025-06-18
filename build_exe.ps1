@@ -14,6 +14,7 @@ if (Test-Path build) { Remove-Item build -Recurse -Force }
 pyinstaller --noconfirm --onefile `
     --add-data "templates;templates" `
     --add-data "static;static" `
+    --add-data "ultrasuite-logo.png;." `
     --collect-submodules reportlab.graphics.barcode `
     app.py
 
