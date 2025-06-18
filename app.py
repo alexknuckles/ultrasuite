@@ -144,7 +144,7 @@ def favicon():
 @app.route('/logo.png')
 def logo():
     """Serve the ultrasuite application logo."""
-    return send_file(os.path.join(app.root_path, 'ultrasuite-logo.png'), mimetype='image/png')
+    return send_file(os.path.join(app.root_path, 'static', 'ultrasuite-logo.png'), mimetype='image/png')
 
 
 @app.route('/branding-logo.png')
@@ -155,7 +155,7 @@ def branding_logo():
         path = custom if os.path.isabs(custom) else os.path.join(app.root_path, custom)
         if os.path.exists(path):
             return send_file(path, mimetype='image/png')
-    return send_file(os.path.join(app.root_path, 'ultrasuite-logo.png'), mimetype='image/png')
+    return send_file(os.path.join(app.root_path, 'static', 'ultrasuite-logo.png'), mimetype='image/png')
 
 
 @app.route('/')
