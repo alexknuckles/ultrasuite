@@ -23,6 +23,7 @@ pyinstaller --noconfirm --onefile --name ultrasuite-gui `
     --add-data "templates:templates" `
     --add-data "static:static" `
     --collect-submodules reportlab.graphics.barcode `
+    --noconsole --windowed `
     gui.py
 
 Write-Host "Executables created: dist/ultrasuite-server.exe and dist/ultrasuite-gui.exe"
