@@ -2,7 +2,8 @@
 AppName=ultrasuite
 AppVersion=0.1.0-pre
 DefaultDirName={pf}\ultrasuite
-OutputDir=installer
+; Place the final setup executable alongside the other build artifacts
+OutputDir=..\dist
 OutputBaseFilename=ultrasuite-setup
 Compression=lzma
 SolidCompression=yes
