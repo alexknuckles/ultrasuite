@@ -830,7 +830,7 @@ def export_report():
             'primary_color': get_setting('branding_primary', ''),
             'highlight_color': get_setting('branding_highlight', ''),
         })
-        html = render_template('report_pdf.html', **data)
+        html = render_template('report_pdf.html', **data, datetime=datetime)
         output = BytesIO()
         pisa.CreatePDF(html, dest=output, link_callback=fetch_resources)
         output.seek(0)

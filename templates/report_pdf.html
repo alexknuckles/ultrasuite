@@ -8,20 +8,35 @@
     body { margin: 0; color: #363636; font-size: 10pt; }
     .page-break { page-break-before: always; }
     table { page-break-inside: avoid; }
-      /* set explicit height so xhtml2pdf scales the image */
-      .logo { height: {{ logo_size }}px; }
-    .logo-wrap {
-      width: 100%;
-      text-align: center;
-      margin-bottom: 0.5rem;
-      border: none;
-    }
-    .logo-wrap td {
-      padding: 0;
-      border: none;
-    }
+    /* set explicit height so xhtml2pdf scales the image */
     {% set primary = primary_color or '#1976d2' %}
     {% set highlight = highlight_color or '#bbdefb' %}
+    .logo { height: {{ logo_size }}px; }
+    .cover-page {
+      background: linear-gradient(#ffffff, #f7f7f7);
+      text-align: center;
+      padding-top: 3cm;
+      padding-bottom: 2cm;
+    }
+    .cover-title {
+      font-family: 'Helvetica Neue', Roboto, sans-serif;
+      font-weight: bold;
+      font-size: 36pt;
+      margin: 1rem 0 0.25rem;
+      color: {{ primary }};
+    }
+    .cover-underline {
+      width: 40%;
+      height: 1px;
+      background-color: {{ primary }};
+      margin: 0 auto 1rem;
+    }
+    .cover-date {
+      font-family: 'Helvetica Neue', Roboto, sans-serif;
+      font-size: 18pt;
+      color: {{ primary }};
+      margin: 0;
+    }
     h1, h2, h3 { color: {{ primary }}; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid {{ highlight }}; padding: 4px; }
@@ -40,18 +55,14 @@
   </style>
 </head>
 <body>
-  <table class="logo-wrap" style="page-break-inside: avoid;">
-    <tr>
-      <td>
-        {% if branding_logo_url %}
-        <img src="{{ branding_logo_url }}" alt="logo" class="logo" style="height: {{ logo_size }}px;">
-        {% endif %}
-      </td>
-    </tr>
-    <tr>
-      <td><h1 style="margin:0;">{{ report_title or branding or 'Report' }}</h1></td>
-    </tr>
-  </table>
+  <div class="cover-page">
+    {% if branding_logo_url %}
+    <img src="{{ branding_logo_url }}" alt="logo" class="logo">
+    {% endif %}
+    <h1 class="cover-title">Monthly Report</h1>
+    <div class="cover-underline"></div>
+    <h2 class="cover-date">{{ datetime(last_month_year, last_month_num, 1).strftime('%B %Y') }}</h2>
+  </div>
   <div class="page-break"></div>
   {% if include_month_summary %}
   <h2>Last month sales by type ({{ last_month_label }})</h2>
