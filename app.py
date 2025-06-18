@@ -31,7 +31,7 @@ app = Flask(__name__)
 app.secret_key = 'secret'
 
 # Height in pixels for the branding logo on exported PDFs
-LOGO_SIZE = 80
+LOGO_SIZE = 120
 
 def format_dt(value):
     """Format ISO timestamp into a readable string like 'May 4th, 2025 - 5:30pm'."""
