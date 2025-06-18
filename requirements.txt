@@ -1,0 +1,6 @@
+Flask
+pandas
+matplotlib
+openpyxl
+xhtml2pdf
+pywebview

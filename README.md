@@ -20,7 +20,7 @@ Data is stored locally in `finance.db` and charts are generated with Matplotlib.
 
 1. Install Python 3 along with the dependencies:
    ```bash
-   pip install Flask pandas matplotlib openpyxl xhtml2pdf pywebview
+   pip install -r requirements.txt
    ```
 2. Start the application. To run the Flask server use `python app.py`, or launch
    the desktop version with `python gui.py`:
@@ -63,9 +63,9 @@ Omit `month` to use the last full month. Options accept `1`/`true` or can be lef
 
 ## Packaging an EXE Installer
 
-1. Ensure `PyInstaller` is installed:
+1. Ensure all dependencies and `PyInstaller` are installed:
    ```bash
-   pip install pyinstaller
+   pip install -r requirements.txt pyinstaller
    ```
 2. Run the provided script to build `dist/ultrasuite-server.exe` and `dist/ultrasuite-gui.exe`:
    ```powershell
