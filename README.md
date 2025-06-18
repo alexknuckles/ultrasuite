@@ -75,7 +75,7 @@ Omit `month` to use the last full month. Options accept `1`/`true` or can be lef
 
 ## Automated Builds
 
-GitHub Actions runs when a tag starting with v is pushed. It executes `build_exe.ps1` and `iscc` to upload the executable and installer as artifacts.
+GitHub Actions runs when a tag starting with v is pushed. It builds the executable and installer, then attaches both files to the new GitHub release as separate assets.
 
 ## License
 
