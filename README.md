@@ -55,6 +55,8 @@ be used from other Python code:
 - `get_last_month_summary(year, month=None)` – last full month totals by type.
 - `get_last_month_details(year, month=None)` – detailed SKU breakdown for the
   last full month.
+- `get_shopify_monthly()` – Shopify income by month across all years.
+- `get_shopify_quarterly()` – Shopify income by quarter across all years.
 
 ### Programmatic PDF Export
 
