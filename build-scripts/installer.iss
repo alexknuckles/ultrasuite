@@ -12,7 +12,7 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
 Name: "desktopurl"; Description: "Create a desktop shortcut to the ultrasuite page"; Flags: unchecked
 
 [Files]
-Source: "dist\\app.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\\dist\\app.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\ultrasuite"; Filename: "{app}\app.exe"
