@@ -11,7 +11,7 @@ Ultrasuite is a Flask application for aggregating Shopify and QuickBooks Online 
 - **Data Upload** – Import Shopify CSV files and QuickBooks Excel exports.
 - **Dashboard** – View last upload dates and a summary of SKU aliases.
 - **SKU Mapping** – Map alias SKUs to canonical SKUs and categorize them by type.
-- **Reports** – Interactive charts for monthly trends and yearly comparisons, with optional PDF export.
+- **Reports** – Interactive charts for monthly trends and yearly comparisons, with optional PDF export that opens inside the app.
 - **Settings** – Choose a logo, color theme, and default report sections.
 
 Data is stored locally in `finance.db` and charts are generated with Matplotlib.
@@ -27,6 +27,7 @@ Data is stored locally in `finance.db` and charts are generated with Matplotlib.
    python gui.py
    ```
    The legacy command `python app.py` still runs the server only.
+   PDF exports will open in a separate pywebview window when running this way.
 3. Open `http://localhost:5000` in your browser if you prefer using a web browser.
 
 All data stays on your machine; no external services are required.
