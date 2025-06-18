@@ -88,5 +88,26 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  if(window.pywebview && window.pywebview.api){
+    document.querySelectorAll('a.export-link').forEach(function(link){
+      link.addEventListener('click', function(e){
+        e.preventDefault();
+        window.pywebview.api.save_pdf(link.getAttribute('href'));
+      });
+    });
+    var form = document.getElementById('exportForm');
+    if(form){
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        var params = new URLSearchParams(new FormData(form)).toString();
+        var url = form.action + '?' + params;
+        window.pywebview.api.save_pdf(url);
+      });
+    }
+  }
+});
+</script>
 </body>
 </html>
