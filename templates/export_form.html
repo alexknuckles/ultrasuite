@@ -42,7 +42,7 @@
           <span>Detailed by type</span>
         </label>
       </div>
-      <div class="field mb-4">
+      <div id="detailTypesField" class="field mb-4" {% if not include_month_details %}style="display:none"{% endif %}>
         <label class="label">Types for details</label>
         <div>
           {% for cat in categories %}
@@ -78,4 +78,17 @@
     </form>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const cb = document.querySelector('input[name="include_month_details"]');
+  const field = document.getElementById('detailTypesField');
+  function toggle(){
+    if (field) field.style.display = cb && cb.checked ? '' : 'none';
+  }
+  if (cb){
+    cb.addEventListener('change', toggle);
+    toggle();
+  }
+});
+</script>
 {% endblock %}
