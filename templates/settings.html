@@ -15,12 +15,6 @@
         <label class="label">Application title</label>
         <input class="input" type="text" name="app_title" value="{{ app_title }}">
       </div>
-      <div class="field mb-4">
-        <label class="switch-label">
-          <input type="checkbox" class="switch" name="dark_mode" {% if dark_mode %}checked{% endif %}>
-          <span>Use dark theme by default</span>
-        </label>
-      </div>
     </div>
     <div id="exportSettings" class="tab-pane is-hidden">
       <div class="box mb-4">
@@ -134,17 +128,6 @@
   if (detailsCb){
     detailsCb.addEventListener('change', toggleDetails);
     toggleDetails();
-  }
-  const darkCb = document.querySelector('input[name="dark_mode"]');
-  if (darkCb){
-    darkCb.addEventListener('change', () => {
-      const dark = darkCb.checked;
-      const root = document.documentElement;
-      root.classList.toggle('dark-mode', dark);
-      localStorage.setItem('ultra-dark', dark ? '1' : '0');
-      const toggle = document.getElementById('themeToggle');
-      if (toggle) toggle.textContent = dark ? '☀️' : '🌙';
-    });
   }
 </script>
 {% endblock %}

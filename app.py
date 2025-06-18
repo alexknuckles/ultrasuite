@@ -1415,11 +1415,9 @@ def settings_page():
         app_title = request.form.get('app_title', '').strip()
         report_title = request.form.get('report_title', '').strip()
         branding = request.form.get('branding', '').strip()
-        dark_mode = 'dark_mode' in request.form
         set_setting('app_title', app_title)
         set_setting('report_title', report_title)
         set_setting('branding', branding)
-        set_setting('dark_mode', '1' if dark_mode else '0')
         include_month_summary = 'include_month_summary' in request.form
         include_month_details = 'include_month_details' in request.form
         include_year_overall = 'include_year_overall' in request.form
@@ -1450,7 +1448,6 @@ def settings_page():
     app_title = get_setting('app_title', 'ultrasuite')
     report_title = get_setting('report_title', 'Monthly Report')
     branding = get_setting('branding', '')
-    dark_mode = get_setting('dark_mode', '0') == '1'
     include_month_summary = get_setting('default_include_month_summary', '1') == '1'
     include_month_details = get_setting('default_include_month_details', '1') == '1'
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
@@ -1480,7 +1477,6 @@ def settings_page():
         app_title=app_title,
         report_title=report_title,
         branding=branding,
-        dark_mode=dark_mode,
     )
 
 if __name__ == '__main__':
