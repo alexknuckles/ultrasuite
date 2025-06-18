@@ -135,5 +135,16 @@
     detailsCb.addEventListener('change', toggleDetails);
     toggleDetails();
   }
+  const darkCb = document.querySelector('input[name="dark_mode"]');
+  if (darkCb){
+    darkCb.addEventListener('change', () => {
+      const dark = darkCb.checked;
+      const root = document.documentElement;
+      root.classList.toggle('dark-mode', dark);
+      localStorage.setItem('ultra-dark', dark ? '1' : '0');
+      const toggle = document.getElementById('themeToggle');
+      if (toggle) toggle.textContent = dark ? '☀️' : '🌙';
+    });
+  }
 </script>
 {% endblock %}
