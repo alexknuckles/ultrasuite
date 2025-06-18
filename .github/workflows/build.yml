@@ -32,7 +32,8 @@ jobs:
         with:
           name: ultrasuite
           path: |
-            dist/app.exe
+            dist/ultrasuite-server.exe
+            dist/ultrasuite-gui.exe
             installer/ultrasuite-setup.exe
 
       - name: Create release
@@ -40,7 +41,8 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            dist/app.exe
+            dist/ultrasuite-server.exe
+            dist/ultrasuite-gui.exe
             installer/ultrasuite-setup.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
