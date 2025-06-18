@@ -34,6 +34,7 @@ All data stays on your machine; no external services are required.
 
 - `app.py` – main Flask application.
 - `templates/` – Jinja2 templates for all pages.
+- `build-scripts/` – PowerShell and Inno Setup scripts for Windows builds.
 
 ## Programmatic Reports
 
@@ -64,11 +65,11 @@ Omit `month` to use the last full month. Options accept `1`/`true` or can be lef
    ```
 2. Run the provided script to build `dist/app.exe`:
    ```powershell
-   ./build_exe.ps1
+   ./build-scripts/build_exe.ps1
    ```
 3. (Optional) Generate a Windows installer with [Inno Setup](https://jrsoftware.org/isinfo.php):
    ```powershell
-   iscc installer.iss
+   iscc build-scripts/installer.iss
    ```
 
 
