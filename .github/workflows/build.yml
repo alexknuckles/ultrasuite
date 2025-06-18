@@ -44,5 +44,3 @@ jobs:
             dist/ultrasuite-server.exe
             dist/ultrasuite-gui.exe
             dist/ultrasuite-setup.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
