@@ -31,7 +31,30 @@ app = Flask(__name__)
 app.secret_key = 'secret'
 
 # Height in pixels for the branding logo on exported PDFs
-LOGO_SIZE = 120
+LOGO_SIZE = 240
+
+# Available SKU type categories for reports
+CATEGORIES = [
+    'machine',
+    'detergent_filter_kits',
+    'detergent',
+    'filters',
+    'parts',
+    'service',
+    'shopify',
+    'shipping',
+]
+
+CATEGORY_LABELS = {
+    'machine': 'Machines',
+    'detergent_filter_kits': 'Detergent & Filter Kits',
+    'detergent': 'Detergents',
+    'filters': 'Filters',
+    'parts': 'Parts',
+    'service': 'Service',
+    'shopify': 'Shopify',
+    'shipping': 'Shipping',
+}
 
 def format_dt(value):
     """Format ISO timestamp into a readable string like 'May 4th, 2025 - 5:30pm'."""
@@ -449,17 +472,8 @@ def calculate_report_data(year, month_param=None):
         (all_data["year"] == year)
         & (all_data["month_num"] <= cutoff_month)
     ]
-    categories = ['machine', 'detergent_filter_kits', 'detergent', 'filters', 'parts', 'service', 'shopify', 'shipping']
-    labels = {
-        'machine': 'Machines',
-        'detergent_filter_kits': 'Detergent & Filter Kits',
-        'detergent': 'Detergents',
-        'filters': 'Filters',
-        'parts': 'Parts',
-        'service': 'Service',
-        'shopify': 'Shopify',
-        'shipping': 'Shipping',
-    }
+    categories = CATEGORIES
+    labels = CATEGORY_LABELS
 
     # Shopify-only monthly totals across all years
     shopify_only = shopify.copy()
@@ -793,13 +807,22 @@ def export_report():
         include_year_overall = _check('include_year_overall')
         include_year_summary = _check('include_year_summary')
         include_shopify = _check('include_shopify')
+        detail_types = values.getlist('detail_types')
+        if len(detail_types) == 1:
+            detail_types = [t.strip() for t in detail_types[0].split(',') if t.strip()]
+        if not detail_types:
+            detail_types = CATEGORIES
         data = calculate_report_data(year, month)
+        selected = [t for t in detail_types if t in CATEGORIES]
+        data['sku_details'] = {t: data['sku_details'].get(t, []) for t in selected}
+        data['has_month_details'] = any(len(v) > 0 for v in data['sku_details'].values())
         data.update({
             'include_month_summary': include_month_summary,
             'include_month_details': include_month_details,
             'include_year_overall': include_year_overall,
             'include_year_summary': include_year_summary,
             'include_shopify': include_shopify,
+            'detail_types': selected,
             'branding': get_setting('branding', ''),
             'report_title': get_setting('report_title', ''),
             'branding_logo_url': url_for('branding_logo', _external=True),
@@ -821,6 +844,8 @@ def export_report():
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
     include_year_summary = get_setting('default_include_year_summary', '1') == '1'
     include_shopify = get_setting('default_include_shopify', '1') == '1'
+    types_default = get_setting('default_detail_types', ','.join(CATEGORIES))
+    detail_types = [t for t in types_default.split(',') if t]
     return render_template(
         'export_form.html',
         years=data['years'],
@@ -831,6 +856,9 @@ def export_report():
         include_year_overall=include_year_overall,
         include_year_summary=include_year_summary,
         include_shopify=include_shopify,
+        detail_types=detail_types,
+        categories=CATEGORIES,
+        labels=CATEGORY_LABELS,
     )
 
 
@@ -1098,26 +1126,8 @@ def last_month_chart():
         .reset_index()
     )
 
-    categories = [
-        'machine',
-        'detergent_filter_kits',
-        'detergent',
-        'filters',
-        'parts',
-        'service',
-        'shopify',
-        'shipping',
-    ]
-    labels = {
-        'machine': 'Machines',
-        'detergent_filter_kits': 'Detergent & Filter Kits',
-        'detergent': 'Detergents',
-        'filters': 'Filters',
-        'parts': 'Parts',
-        'service': 'Service',
-        'shopify': 'Shopify',
-        'shipping': 'Shipping',
-    }
+    categories = CATEGORIES
+    labels = CATEGORY_LABELS
 
     cur = summary[(summary['year'] == last_year) & (summary['month_num'] == last_month)].set_index('type')
     prev = summary[(summary['year'] == last_year - 1) & (summary['month_num'] == last_month)].set_index('type')
@@ -1273,6 +1283,8 @@ def settings_page():
         include_year_overall = 'include_year_overall' in request.form
         include_year_summary = 'include_year_summary' in request.form
         include_shopify = 'include_shopify' in request.form
+        detail_types = request.form.getlist('detail_types')
+        set_setting('default_detail_types', ','.join(detail_types))
         set_setting('default_include_month_summary', '1' if include_month_summary else '0')
         set_setting('default_include_month_details', '1' if include_month_details else '0')
         set_setting('default_include_year_overall', '1' if include_year_overall else '0')
@@ -1300,6 +1312,8 @@ def settings_page():
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
     include_year_summary = get_setting('default_include_year_summary', '1') == '1'
     include_shopify = get_setting('default_include_shopify', '1') == '1'
+    types_default = get_setting('default_detail_types', ','.join(CATEGORIES))
+    detail_types = [t for t in types_default.split(',') if t]
     logo_path = get_setting('branding_logo', '')
     month_default = get_setting('default_export_month', '')
     month_int = int(month_default) if str(month_default).isdigit() else None
@@ -1315,6 +1329,9 @@ def settings_page():
         include_year_overall=include_year_overall,
         include_year_summary=include_year_summary,
         include_shopify=include_shopify,
+        detail_types=detail_types,
+        categories=CATEGORIES,
+        labels=CATEGORY_LABELS,
         logo_path=logo_path,
         months=months,
         default_month=month_int,
