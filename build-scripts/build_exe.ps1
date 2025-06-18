@@ -1,11 +1,6 @@
 # Exit on errors
 $ErrorActionPreference = "Stop"
 
-# Install PyInstaller if missing
-if (-not (Get-Command pyinstaller -ErrorAction SilentlyContinue)) {
-    pip install pyinstaller | Out-Null
-}
-
 # Ensure pywebview is available so the GUI executable includes it
 pip show pywebview > $null 2>&1
 if ($LASTEXITCODE -ne 0) {
