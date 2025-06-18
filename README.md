@@ -16,20 +16,23 @@ Ultrasuite is a Flask application for aggregating Shopify and QuickBooks Online 
 
 Data is stored locally in `finance.db` and charts are generated with Matplotlib.
 
-## Getting Started
+Download the latest release from the [releases page](https://github.com/example/ultrasuite/releases/latest).
 
-1. Install Python 3 along with the dependencies:
+## Building from Source
+
+1. Clone this repository or download the source archive.
+2. Install Python 3 along with the dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-2. Start the application. To run the Flask server use `python app.py`, or launch
+3. Start the application. Run the Flask server with `python app.py` or launch
    the desktop version with `python gui.py`:
    ```bash
    python app.py  # runs the Flask server
    # or
    python gui.py  # opens the app in a pywebview window
    ```
-3. Open `http://localhost:5000` in your browser if you prefer using a web browser.
+4. Open `http://localhost:5000` in your browser if you prefer using a web browser.
 
 All data stays on your machine; no external services are required.
 
@@ -61,28 +64,6 @@ Call `/export-report` with query parameters to download a PDF:
 
 Omit `month` to use the last full month. Options accept `1`/`true` or can be left out to disable a section.
 
-## Packaging an EXE Installer
-
-1. Ensure all dependencies and `PyInstaller` are installed:
-   ```bash
-   pip install -r requirements.txt pyinstaller
-   ```
-2. Run the provided script to build `dist/ultrasuite-server.exe` and `dist/ultrasuite-gui.exe`:
-   ```powershell
-   ./build-scripts/build_exe.ps1
-   ultrasuite-gui.exe launches `gui.py`, which embeds the web app in a desktop window. ultrasuite-server.exe runs the Flask server only.
-3. (Optional) Generate a Windows installer with [Inno Setup](https://jrsoftware.org/isinfo.php):
-   ```powershell
-   iscc build-scripts/installer.iss
-   ```
-   The resulting `ultrasuite-setup.exe` will be created in the `dist` directory.
-
-
-
-## Automated Builds
-
-GitHub Actions runs when a tag starting with v is pushed. It builds the executable and installer, then attaches both files to the new GitHub release as separate assets.
-
 ## License
 
-This project is provided as-is for demonstration purposes.
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
