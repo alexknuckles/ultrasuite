@@ -20,19 +20,21 @@ Data is stored locally in `finance.db` and charts are generated with Matplotlib.
 
 1. Install Python 3 along with the dependencies:
    ```bash
-   pip install Flask pandas matplotlib openpyxl xhtml2pdf
+   pip install Flask pandas matplotlib openpyxl xhtml2pdf pywebview
    ```
 2. Start the application:
    ```bash
-   python app.py
+   python gui.py
    ```
-3. Open `http://localhost:5000` in your browser.
+   The legacy command `python app.py` still runs the server only.
+3. Open `http://localhost:5000` in your browser if you prefer using a web browser.
 
 All data stays on your machine; no external services are required.
 
 ## Project Layout
 
 - `app.py` – main Flask application.
+- `gui.py` – launches the app in a pywebview window.
 - `templates/` – Jinja2 templates for all pages.
 - `build-scripts/` – PowerShell and Inno Setup scripts for Windows builds.
 
@@ -67,6 +69,7 @@ Omit `month` to use the last full month. Options accept `1`/`true` or can be lef
    ```powershell
    ./build-scripts/build_exe.ps1
    ```
+   The executable launches `gui.py`, which embeds the web app in a desktop window.
 3. (Optional) Generate a Windows installer with [Inno Setup](https://jrsoftware.org/isinfo.php):
    ```powershell
    iscc build-scripts/installer.iss
