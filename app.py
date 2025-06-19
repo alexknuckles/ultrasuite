@@ -314,8 +314,14 @@ def upload():
                     conn.close()
                     return redirect(request.url)
 
-                last_txn = pd.to_datetime(cleaned['created_at'], errors='coerce').max()
-                first_txn = pd.to_datetime(cleaned['created_at'], errors='coerce').min()
+                created = pd.to_datetime(
+                    cleaned['created_at'].astype(str),
+                    errors='coerce',
+                    format='mixed',
+                    utc=True,
+                ).dt.tz_localize(None)
+                last_txn = created.max()
+                first_txn = created.min()
                 conn.execute(
                     'REPLACE INTO meta (source, last_updated, last_transaction, first_transaction) VALUES (?, ?, ?, ?)',
                     (
