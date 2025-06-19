@@ -1002,6 +1002,7 @@ def monthly_report():
     data = calculate_report_data(year, month_param)
     default_month = get_setting('default_export_month', '')
     month_int = int(default_month) if str(default_month).isdigit() else None
+    exp_types = [t for t in get_setting('default_detail_types', ','.join(CATEGORIES)).split(',') if t]
     data.update({
         'exp_selected_month': month_int,
         'exp_include_month_summary': get_setting('default_include_month_summary', '1') == '1',
@@ -1009,7 +1010,8 @@ def monthly_report():
         'exp_include_year_overall': get_setting('default_include_year_overall', '1') == '1',
         'exp_include_year_summary': get_setting('default_include_year_summary', '1') == '1',
         'exp_include_shopify': get_setting('default_include_shopify', '1') == '1',
-        'exp_detail_types': [t for t in get_setting('default_detail_types', ','.join(CATEGORIES)).split(',') if t],
+        'exp_detail_types': exp_types,
+        'exp_all_types': len(exp_types) == len(CATEGORIES),
         'categories': CATEGORIES,
     })
     return render_template('report.html', **data)
@@ -1539,6 +1541,7 @@ def settings_page():
     include_shopify = get_setting('default_include_shopify', '1') == '1'
     types_default = get_setting('default_detail_types', ','.join(CATEGORIES))
     detail_types = [t for t in types_default.split(',') if t]
+    detail_types_all = len(detail_types) == len(CATEGORIES)
     logo_path = get_setting('branding_logo', '')
     month_default = get_setting('default_export_month', '')
     month_int = int(month_default) if str(month_default).isdigit() else None
@@ -1553,6 +1556,7 @@ def settings_page():
         include_year_summary=include_year_summary,
         include_shopify=include_shopify,
         detail_types=detail_types,
+        detail_types_all=detail_types_all,
         categories=CATEGORIES,
         labels=CATEGORY_LABELS,
         logo_path=logo_path,
