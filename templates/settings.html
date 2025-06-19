@@ -114,35 +114,48 @@
         </div>
       </div>
     </div>
-      <button type="submit" class="mdc-button mdc-button--raised">Save</button>
+      <button id="saveSettingsBtn" type="submit" class="mdc-button mdc-button--raised">Save</button>
     </form>
     <div id="skuSettings" class="tab-pane is-hidden">
       <div class="box mb-4">
         <h3 class="title is-5 mb-3">Export SKU map</h3>
-        <a class="mdc-button mdc-button--raised" href="{{ url_for('export_sku_map') }}">Download CSV</a>
+        <a class="mdc-button mdc-button--raised" href="{{ url_for('export_sku_map') }}">Export</a>
       </div>
       <div class="box mb-4">
         <h3 class="title is-5 mb-3">Import SKU map</h3>
-        <form method="post" enctype="multipart/form-data" action="{{ url_for('import_sku_map') }}">
-          <div class="field mb-4">
-            <label class="label">SKU map file</label>
-            <input class="input" type="file" name="sku_file" accept=".csv,.xls,.xlsx" required>
-          </div>
-          <button type="submit" class="mdc-button mdc-button--raised">Import</button>
+        <form id="importSkuForm" method="post" enctype="multipart/form-data" action="{{ url_for('import_sku_map') }}">
+          <input id="skuFileInput" class="is-hidden" type="file" name="sku_file" accept=".csv,.xls,.xlsx" required>
+          <button id="importSkuBtn" type="button" class="mdc-button mdc-button--raised">Import</button>
         </form>
       </div>
     </div>
   </div>
 </div>
 <script>
+  const saveBtn = document.getElementById('saveSettingsBtn');
+  if(saveBtn){
+    const active = document.querySelector('#settingsTabs .is-active');
+    if(active && active.dataset.target === 'skuSettings') saveBtn.style.display = 'none';
+  }
   document.querySelectorAll('#settingsTabs button').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#settingsTabs button').forEach(b => b.classList.remove('is-active'));
       btn.classList.add('is-active');
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
       document.getElementById(btn.dataset.target).classList.remove('is-hidden');
+      if(saveBtn){
+        saveBtn.style.display = btn.dataset.target === 'skuSettings' ? 'none' : '';
+      }
     });
   });
+  const importBtn = document.getElementById('importSkuBtn');
+  const importInput = document.getElementById('skuFileInput');
+  if(importBtn && importInput){
+    importBtn.addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', () => {
+      if(importInput.files.length) document.getElementById('importSkuForm').submit();
+    });
+  }
   const detailsCb = document.querySelector('input[name="include_month_details"]');
   const detailsField = document.getElementById('detailTypesField');
   const allCb = document.getElementById('detailAll');
