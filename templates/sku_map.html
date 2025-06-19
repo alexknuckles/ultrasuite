@@ -115,7 +115,7 @@
         <div class="card-content">
           <div class="field is-flex is-align-items-center mb-2">
             <label class="label mb-0 mr-1">Parent SKU</label>
-            <div class="select is-small">
+            <div class="select">
               <select class="parent-select">
                 <option value="{{ entry.canonical }}" selected>{{ entry.canonical }}</option>
                 {% for a in entry.aliases.split(',') if a.strip() %}
@@ -159,7 +159,7 @@
         <div class="card-content">
           <div class="field is-flex is-align-items-center mb-2">
             <label class="label mb-0 mr-1">Parent SKU</label>
-            <div class="select is-small">
+            <div class="select">
               <select class="parent-select">
                 <option value="{{ entry.canonical }}" selected>{{ entry.canonical }}</option>
                 {% for a in entry.aliases.split(',') if a.strip() %}

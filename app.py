@@ -458,10 +458,43 @@ def sku_map_page():
         conn.close()
         return redirect(url_for('sku_map_page'))
 
-    rows = conn.execute('SELECT alias, canonical_sku, type, source FROM sku_map').fetchall()
+    mapping_df = pd.read_sql_query(
+        'SELECT alias, canonical_sku, type, source FROM sku_map',
+        conn,
+    )
+    shopify = pd.read_sql_query('SELECT created_at, sku FROM shopify', conn)
+    qbo = pd.read_sql_query('SELECT created_at, sku FROM qbo', conn)
     conn.close()
+
+    all_txn = pd.concat([shopify, qbo], ignore_index=True)
+    all_txn['created_at'] = (
+        pd.to_datetime(
+            all_txn['created_at'].astype(str),
+            errors='coerce',
+            format='mixed',
+            utc=True,
+        )
+        .dt.tz_localize(None)
+    )
+    all_txn = all_txn.dropna(subset=['created_at'])
+
+    alias_map = mapping_df.copy()
+    alias_map['alias'] = alias_map['alias'].str.lower()
+    alias_map = alias_map.set_index('alias')['canonical_sku']
+
+    def canonical(alias):
+        if isinstance(alias, str):
+            key = alias.lower().strip()
+            if key in alias_map.index:
+                return alias_map.loc[key]
+            return key
+        return alias
+
+    all_txn['canonical'] = all_txn['sku'].apply(canonical)
+    last_dates = all_txn.groupby('canonical')['created_at'].max().to_dict()
+
     grouped = {}
-    for r in rows:
+    for r in mapping_df.itertuples():
         entry = grouped.setdefault(r['canonical_sku'], {
             'canonical': r['canonical_sku'],
             'aliases': [],
@@ -478,13 +511,19 @@ def sku_map_page():
         aliases_sorted = sorted(g['aliases'])
         g['alias_count'] = len(aliases_sorted)
         g['aliases'] = ', '.join(aliases_sorted)
+        g['change_date'] = last_dates.get(g['canonical'])
         grouped_list.append(g)
 
-    merged_groups = [
-        g for g in grouped_list
-        if g['alias_count'] > 0 and g['type'] != 'unmapped'
-    ]
-    mapped_groups = [g for g in grouped_list if g['type'] != 'unmapped']
+    merged_groups = sorted(
+        (g for g in grouped_list if g['alias_count'] > 0 and g['type'] != 'unmapped'),
+        key=lambda x: x.get('change_date') or datetime.min,
+        reverse=True,
+    )
+    mapped_groups = sorted(
+        (g for g in grouped_list if g['type'] != 'unmapped'),
+        key=lambda x: x.get('change_date') or datetime.min,
+        reverse=True,
+    )
 
     # generate merge suggestions
     canonicals = sorted(grouped.keys())
