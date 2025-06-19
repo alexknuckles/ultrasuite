@@ -11,7 +11,7 @@
   <div class="card-content report-content">
     <h2 class="title is-4">Reports</h2>
     <div class="has-text-right mb-2">
-      <a href="{{ url_for('export_report') }}" class="mdc-button">🖨️ Export PDF</a>
+      <button type="button" id="exportBtn" class="mdc-button">🖨️ Export PDF</button>
     </div>
     <nav class="buttons tab-buttons mb-4" id="reportTabs">
       <button type="button" class="mdc-button mdc-button--raised is-active" data-target="by-month">By month</button>
@@ -242,8 +242,84 @@
     </div> <!-- by-year -->
 
     <div class="has-text-right mt-4">
-      <a href="{{ url_for('export_report') }}" class="mdc-button">🖨️ Export PDF</a>
+      <button type="button" id="exportBtnBottom" class="mdc-button">🖨️ Export PDF</button>
     </div>
+  </div>
+</div>
+<div id="exportModal" class="export-modal is-hidden">
+  <div class="export-modal-content">
+    <form id="exportForm" method="post" target="_blank" action="{{ url_for('export_report') }}">
+      <div class="columns">
+        <div class="column field mb-4">
+          <label class="label">Select year:</label>
+          <div class="select">
+            <select name="year">
+            {% for y in years %}
+              <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="column field mb-4">
+          <label class="label">Select month:</label>
+          <div class="select">
+            <select name="month">
+              <option value="" {% if not exp_selected_month %}selected{% endif %}>Last full month</option>
+              {% for m in months %}
+              <option value="{{ m.num }}" {% if m.num == exp_selected_month %}selected{% endif %}>{{ m.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+      <h3 class="title is-5">Monthly reports</h3>
+      <div class="field mb-4">
+        <label class="switch-label">
+          <input type="checkbox" class="switch" name="include_month_summary" {% if exp_include_month_summary %}checked{% endif %}>
+          <span>Last full month by sales type</span>
+        </label>
+      </div>
+      <div class="field mb-4">
+        <label class="switch-label">
+          <input type="checkbox" class="switch" name="include_month_details" {% if exp_include_month_details %}checked{% endif %}>
+          <span>Detailed by type</span>
+        </label>
+      </div>
+      <div id="exportDetailTypes" class="field mb-4" {% if not exp_include_month_details %}style="display:none"{% endif %}>
+        <label class="label">Types for details</label>
+        <div>
+          {% for cat in categories %}
+          <label class="switch-label mr-2 mt-1">
+            <input type="checkbox" class="switch" name="detail_types" value="{{ cat }}" {% if cat in exp_detail_types %}checked{% endif %}>
+            <span>{{ labels[cat] }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      <h3 class="title is-5 mt-4">Yearly reports</h3>
+      <div class="field mb-4">
+        <label class="switch-label">
+          <input type="checkbox" class="switch" name="include_year_overall" {% if exp_include_year_overall %}checked{% endif %}>
+          <span>Overall sales by month</span>
+        </label>
+      </div>
+      <div class="field mb-4">
+        <label class="switch-label">
+          <input type="checkbox" class="switch" name="include_year_summary" {% if exp_include_year_summary %}checked{% endif %}>
+          <span>Yearly summary by type</span>
+        </label>
+      </div>
+      <div class="field mb-4">
+        <label class="switch-label">
+          <input type="checkbox" class="switch" name="include_shopify" {% if exp_include_shopify %}checked{% endif %}>
+          <span>Shopify income tables</span>
+        </label>
+      </div>
+      <div class="field is-flex is-justify-content-space-between">
+        <button type="button" id="saveExportSettings" class="mdc-button mdc-button--raised mr-2">Save Settings</button>
+        <button type="submit" class="mdc-button mdc-button--raised">Export</button>
+      </div>
+    </form>
   </div>
 </div>
 <script>
@@ -277,6 +353,33 @@
     }
     var monthWrap = document.getElementById('monthSelectWrapper');
     if(monthWrap){ monthWrap.style.display = ''; }
+
+    var exportBtn = document.getElementById('exportBtn');
+    var exportBtnBottom = document.getElementById('exportBtnBottom');
+    var modal = document.getElementById('exportModal');
+    var form = document.getElementById('exportForm');
+    var saveBtn = document.getElementById('saveExportSettings');
+    var detailsCb = form.querySelector('input[name="include_month_details"]');
+    var detailsField = document.getElementById('exportDetailTypes');
+
+    function showModal(){ modal.classList.remove('is-hidden'); }
+    function hideModal(){ modal.classList.add('is-hidden'); }
+    if(exportBtn) exportBtn.addEventListener('click', showModal);
+    if(exportBtnBottom) exportBtnBottom.addEventListener('click', showModal);
+    if(modal) modal.addEventListener('click', function(e){ if(e.target === modal) hideModal(); });
+
+    function toggleDetails(){ if(detailsField) detailsField.style.display = detailsCb && detailsCb.checked ? '' : 'none'; }
+    if(detailsCb){ detailsCb.addEventListener('change', toggleDetails); toggleDetails(); }
+
+    if(saveBtn){
+      saveBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        fetch('{{ url_for('save_export_settings') }}', {
+          method: 'POST',
+          body: new FormData(form)
+        }).then(function(resp){ if(resp.ok){ alert('Settings saved'); } });
+      });
+    }
   });
 </script>
 {% endblock %}
