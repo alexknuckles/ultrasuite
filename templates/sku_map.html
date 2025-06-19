@@ -4,17 +4,17 @@
   <div class="card-content">
     <h2 class="title is-4 mb-4">SKU alias mapping</h2>
     <nav class="buttons tab-buttons mb-4" id="mapTabs">
-      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="map">Unmapped ({{ grouped|length }})</button>
+      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="unmapped">Unmapped ({{ grouped|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="mapped">Mapped ({{ mapped|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged ({{ merged|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="sug">Suggestions ({{ suggestions|length }})</button>
     </nav>
-    <section id="map" class="tab-pane">
+    <section id="unmapped" class="tab-pane">
       <input type="text" id="searchBox" class="input mb-4" placeholder="Search SKUs and aliases">
       <form method="POST">
         <input type="hidden" id="merge_target" name="merge_target" value="">
         {% for entry in grouped %}
-        <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}">
+        <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
           <div class="card-content">
             <div class="field is-flex is-align-items-center mb-2">
               <label class="label mb-0 mr-1">SKU</label>
@@ -111,7 +111,7 @@
     </section>
     <section id="mapped" class="tab-pane is-hidden">
       {% for entry in mapped %}
-      <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}">
+      <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
         <div class="card-content">
           <div class="field is-flex is-align-items-center mb-2">
             <label class="label mb-0 mr-1">Parent SKU</label>
@@ -128,7 +128,19 @@
             <div class="column is-narrow">
               <div class="field is-flex is-align-items-center">
                 <label class="label mb-0 mr-1">Type</label>
-                <strong>{{ entry.type }}</strong>
+                <div class="select is-disabled">
+                  <select disabled>
+                    <option value="unmapped" {% if entry.type == 'unmapped' %}selected{% endif %}>Unmapped</option>
+                    <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
+                    <option value="detergent_filter_kits" {% if entry.type == 'detergent_filter_kits' %}selected{% endif %}>Detergent & Filter Kits</option>
+                    <option value="detergent" {% if entry.type == 'detergent' %}selected{% endif %}>Detergents</option>
+                    <option value="filters" {% if entry.type == 'filters' %}selected{% endif %}>Filters</option>
+                    <option value="parts" {% if entry.type == 'parts' %}selected{% endif %}>Parts</option>
+                    <option value="service" {% if entry.type == 'service' %}selected{% endif %}>Service</option>
+                    <option value="shopify" {% if entry.type == 'shopify' %}selected{% endif %}>Shopify</option>
+                    <option value="shipping" {% if entry.type == 'shipping' %}selected{% endif %}>Shipping</option>
+                  </select>
+                </div>
               </div>
             </div>
             <div class="column is-narrow">
@@ -155,7 +167,7 @@
     </section>
     <section id="merged" class="tab-pane is-hidden">
       {% for entry in merged %}
-      <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}">
+      <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
         <div class="card-content">
           <div class="field is-flex is-align-items-center mb-2">
             <label class="label mb-0 mr-1">Parent SKU</label>
@@ -172,7 +184,19 @@
             <div class="column is-narrow">
               <div class="field is-flex is-align-items-center">
                 <label class="label mb-0 mr-1">Type</label>
-                <strong>{{ entry.type }}</strong>
+                <div class="select is-disabled">
+                  <select disabled>
+                    <option value="unmapped" {% if entry.type == 'unmapped' %}selected{% endif %}>Unmapped</option>
+                    <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
+                    <option value="detergent_filter_kits" {% if entry.type == 'detergent_filter_kits' %}selected{% endif %}>Detergent & Filter Kits</option>
+                    <option value="detergent" {% if entry.type == 'detergent' %}selected{% endif %}>Detergents</option>
+                    <option value="filters" {% if entry.type == 'filters' %}selected{% endif %}>Filters</option>
+                    <option value="parts" {% if entry.type == 'parts' %}selected{% endif %}>Parts</option>
+                    <option value="service" {% if entry.type == 'service' %}selected{% endif %}>Service</option>
+                    <option value="shopify" {% if entry.type == 'shopify' %}selected{% endif %}>Shopify</option>
+                    <option value="shipping" {% if entry.type == 'shipping' %}selected{% endif %}>Shipping</option>
+                  </select>
+                </div>
               </div>
             </div>
             <div class="column is-narrow">
@@ -251,13 +275,31 @@
   if (search) {
     search.addEventListener('input', () => {
       const term = search.value.toLowerCase();
-      document.querySelectorAll('#map .sku-card').forEach(card => {
+      document.querySelectorAll('#unmapped .search-clone').forEach(c => c.remove());
+      document.querySelectorAll('#unmapped .sku-card:not(.search-clone)').forEach(card => {
         const can = card.querySelector('input[name^="canonical_"]');
         const alias = card.querySelector('input[name^="aliases_"]');
         if (can && !can.name.endsWith('_new')) {
           let text = can.value.toLowerCase();
           if (alias) text += ' ' + alias.value.toLowerCase();
           card.style.display = text.includes(term) ? '' : 'none';
+        }
+      });
+      if (!term) return;
+      document.querySelectorAll('#mapped .sku-card, #merged .sku-card').forEach(card => {
+        let text = (card.dataset.canonical || '') + ' ' + (card.dataset.aliases || '');
+        text = text.toLowerCase();
+        if (text.includes(term)) {
+          const canonical = card.dataset.canonical;
+          const strongs = card.querySelectorAll('.sku-row strong');
+          const type = strongs[0]?.textContent.trim() || 'unmapped';
+          const source = strongs[1]?.textContent.trim() || '';
+          const aliases = Array.from(card.querySelectorAll('.alias-badges .tag')).map(t => t.dataset.alias).filter(Boolean);
+          const clone = createDisplayCard(canonical, type, aliases, source);
+          clone.classList.add('search-clone');
+          document.getElementById('unmapped').appendChild(clone);
+          clone.querySelectorAll('.alias-badges .delete').forEach(setupAliasDelete);
+          clone.querySelectorAll('.parent-select').forEach(setupParentSelect);
         }
       });
     });
@@ -282,6 +324,7 @@
   function initAliasInput(input){
     const container = input.nextElementSibling;
     const field = input.closest('.alias-field');
+    const card = input.closest('.sku-card');
     function render(){
       container.innerHTML = '';
       let aliases = Array.from(new Set(input.value.split(',').map(a => a.trim()).filter(Boolean)));
@@ -304,6 +347,7 @@
         container.appendChild(tag);
       });
       if (field) field.style.display = aliases.length ? '' : 'none';
+      if (card) card.dataset.aliases = aliases.join(', ');
     }
     input.addEventListener('blur', render);
     input.addEventListener('change', render);
@@ -358,16 +402,17 @@
   }
 
   document.querySelectorAll('.sku-card').forEach(initCard);
-  document.querySelectorAll('#map select[name^="type_"]').forEach(setupTypeSelect);
+  document.querySelectorAll('#unmapped select[name^="type_"]').forEach(setupTypeSelect);
 
   let nextIdx = Math.max(0, ...Array.from(document.querySelectorAll('input[name^="canonical_"]')).map(i => parseInt(i.name.split('_')[1])||0)) + 1;
 
-  const typeOptions = Array.from(document.querySelector('#map select[name^="type_"]').options).map(o => `<option value="${o.value}">${o.textContent}</option>`).join('');
+  const typeOptions = Array.from(document.querySelector('#unmapped select[name^="type_"]').options).map(o => `<option value="${o.value}">${o.textContent}</option>`).join('');
 
   function createMapCard(idx, canonical, type, source=''){
     const div = document.createElement('div');
     div.className = 'mdc-card sku-card';
     div.dataset.canonical = canonical;
+    div.dataset.aliases = '';
     div.innerHTML = `
       <div class="card-content">
         <div class="field is-flex is-align-items-center mb-2">
@@ -410,14 +455,14 @@
   }
 
   function addMapCard(canonical, type){
-    if (document.querySelector(`#map .sku-card[data-canonical="${canonical}"]`)) return;
-    const form = document.querySelector('#map form');
+    if (document.querySelector(`#unmapped .sku-card[data-canonical="${canonical}"]`)) return;
+    const form = document.querySelector('#unmapped form');
     const hr = form.querySelector('hr.my-4');
     const card = createMapCard(nextIdx++, canonical, type);
     form.insertBefore(card, hr);
     initCard(card);
     updateTargets();
-    updateCount('map');
+    updateCount('unmapped');
   }
 
   function updateCount(sec){
@@ -450,7 +495,19 @@
           <div class="column is-narrow">
             <div class="field is-flex is-align-items-center">
               <label class="label mb-0 mr-1">Type</label>
-              <strong>${type}</strong>
+              <div class="select is-disabled">
+                <select disabled>
+                  <option value="unmapped" ${type==='unmapped'?'selected':''}>Unmapped</option>
+                  <option value="machine" ${type==='machine'?'selected':''}>Machine</option>
+                  <option value="detergent_filter_kits" ${type==='detergent_filter_kits'?'selected':''}>Detergent & Filter Kits</option>
+                  <option value="detergent" ${type==='detergent'?'selected':''}>Detergents</option>
+                  <option value="filters" ${type==='filters'?'selected':''}>Filters</option>
+                  <option value="parts" ${type==='parts'?'selected':''}>Parts</option>
+                  <option value="service" ${type==='service'?'selected':''}>Service</option>
+                  <option value="shopify" ${type==='shopify'?'selected':''}>Shopify</option>
+                  <option value="shipping" ${type==='shipping'?'selected':''}>Shipping</option>
+                </select>
+              </div>
             </div>
           </div>
           <div class="column is-narrow">
@@ -487,7 +544,7 @@
     addDisplayCard('mapped', canonical, type, aliases, src);
     if (aliases.length > 0) addDisplayCard('merged', canonical, type, aliases, src);
     card.remove();
-    updateCount('map');
+    updateCount('unmapped');
   }
 
   function aliasDeleteHandler(e){
@@ -499,7 +556,7 @@
     const canonical = card ? card.dataset.canonical : '';
     if (tag) tag.remove();
     if (!alias || !canonical) return;
-    const mapCard = document.querySelector(`#map .sku-card[data-canonical="${canonical}"]`);
+    const mapCard = document.querySelector(`#unmapped .sku-card[data-canonical="${canonical}"]`);
     if (mapCard) {
       const input = mapCard.querySelector('.alias-input');
       if (input) {
@@ -521,6 +578,9 @@
       updateCount(sec);
     } else {
       refreshParentSelect(card);
+      if (container) {
+        card.dataset.aliases = Array.from(container.querySelectorAll('.tag')).map(t => t.dataset.alias).join(', ');
+      }
     }
   }
 
@@ -609,10 +669,10 @@
     const typeVal = card.querySelector('.sku-row strong')?.textContent.trim() || 'unmapped';
     const aliasList = Array.from(card.querySelectorAll('.alias-badges .tag')).map(t => t.dataset.alias).filter(Boolean);
     aliasList.unshift(oldParent);
-    let mapCard = document.querySelector(`#map .sku-card[data-canonical="${newParent}"]`);
+    let mapCard = document.querySelector(`#unmapped .sku-card[data-canonical="${newParent}"]`);
     if (!mapCard) {
       addMapCard(newParent, typeVal);
-      mapCard = document.querySelector(`#map .sku-card[data-canonical="${newParent}"]`);
+      mapCard = document.querySelector(`#unmapped .sku-card[data-canonical="${newParent}"]`);
     }
     const input = mapCard.querySelector('.alias-input');
     if (input) {
@@ -620,7 +680,7 @@
       input.dispatchEvent(new Event('change'));
     }
 
-    const oldMap = document.querySelector(`#map .sku-card[data-canonical="${oldParent}"]`);
+    const oldMap = document.querySelector(`#unmapped .sku-card[data-canonical="${oldParent}"]`);
     if (oldMap) {
       const oldInput = oldMap.querySelector('.alias-input');
       if (oldInput) {
