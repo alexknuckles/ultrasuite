@@ -1374,8 +1374,8 @@ def report_chart():
     return send_file(output, mimetype='image/png')
 
 
-@app.route('/sku-details')
-def sku_details_page():
+@app.route('/transactions')
+def transactions_page():
     """Show transactions and totals for a SKU across uploads."""
     sku = request.args.get('sku', '').lower().strip()
     source = request.args.get('source', 'both').lower()
@@ -1396,7 +1396,6 @@ def sku_details_page():
         conn,
     )
     mapping = pd.read_sql_query('SELECT alias, canonical_sku, type FROM sku_map', conn)
-    conn.close()
 
     alias_map = mapping.set_index('alias')
     sku_options = sorted(
@@ -1521,8 +1520,11 @@ def sku_details_page():
     else:
         df_all = pd.DataFrame(columns=shopify.columns.tolist() + ['source_title'])
 
+    duplicates = _find_duplicates(conn)
+    conn.close()
+
     return render_template(
-        'sku_details.html',
+        'transactions.html',
         sku=sku,
         rows=df_all.itertuples(),
         summary=summary,
@@ -1538,6 +1540,7 @@ def sku_details_page():
         period_type=period_type,
         period_year=period_year_val,
         period_month=period_month_val,
+        duplicates=duplicates,
     )
 
 
@@ -1733,14 +1736,6 @@ def sku_transactions(sku, source):
         total_qty=total_qty,
         total_amount=total_amount,
     )
-
-
-@app.route('/duplicates')
-def duplicates_page():
-    conn = get_db()
-    rows = _find_duplicates(conn)
-    conn.close()
-    return render_template('duplicates.html', duplicates=rows)
 
 
 @app.route('/resolve-duplicate', methods=['POST'])
