@@ -7,25 +7,71 @@
   </header>
   <div class="card-content">
     <form method="post" enctype="multipart/form-data">
-      <div class="field mb-4">
-        <label class="label">Data file</label>
-        <div class="control">
-          <input type="file" class="input" name="data_file" required>
-        </div>
-      </div>
-      <div class="field mb-4">
-        <label class="label">Source</label>
-        <div class="control">
-          <div class="select">
-            <select name="source" required>
-              <option value="shopify">Shopify CSV</option>
-              <option value="qbo">QuickBooks Excel</option>
-            </select>
+      <div id="fileFields">
+        <div class="file-group" data-index="0">
+          <div class="field mb-4">
+            <label class="label">Data file</label>
+            <div class="control">
+              <input type="file" class="input" name="data_file_0" required>
+            </div>
+          </div>
+          <div class="field mb-4">
+            <label class="label">Source</label>
+            <div class="control">
+              <div class="select">
+                <select name="source_0" required>
+                  <option value="shopify">Shopify CSV</option>
+                  <option value="qbo">QuickBooks Excel</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+      <button id="addFileBtn" type="button" class="mdc-button mb-4">Add another file</button>
       <button type="submit" class="mdc-button mdc-button--raised">Upload</button>
     </form>
+    <div class="mt-4">
+      <form id="importSkuForm" method="post" enctype="multipart/form-data" action="{{ url_for('import_sku_map') }}">
+        <input id="skuFileInput" class="is-hidden" type="file" name="sku_file" accept=".csv,.xls,.xlsx" required hidden>
+        <button id="importSkuBtn" type="button" class="mdc-button mdc-button--raised">Import SKU map</button>
+      </form>
+    </div>
   </div>
 </div>
+<script>
+(function(){
+  const fields = document.getElementById('fileFields');
+  const addBtn = document.getElementById('addFileBtn');
+  if(addBtn && fields){
+    let idx = 1;
+    addBtn.addEventListener('click', () => {
+      const tmpl = fields.querySelector('.file-group');
+      if(!tmpl) return;
+      const clone = tmpl.cloneNode(true);
+      clone.dataset.index = idx;
+      const input = clone.querySelector('input[type="file"]');
+      const select = clone.querySelector('select');
+      if(input){
+        input.name = `data_file_${idx}`;
+        input.value = '';
+      }
+      if(select){
+        select.name = `source_${idx}`;
+        select.selectedIndex = 0;
+      }
+      fields.appendChild(clone);
+      idx += 1;
+    });
+  }
+  const importBtn = document.getElementById('importSkuBtn');
+  const importInput = document.getElementById('skuFileInput');
+  if(importBtn && importInput){
+    importBtn.addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', () => {
+      if(importInput.files.length) document.getElementById('importSkuForm').submit();
+    });
+  }
+})();
+</script>
 {% endblock %}
