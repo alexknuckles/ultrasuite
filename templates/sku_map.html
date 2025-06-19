@@ -3,19 +3,18 @@
 <div class="mdc-card page-card">
   <div class="card-content">
     <h2 class="title is-4 mb-4">SKU alias mapping</h2>
+    <div class="field mb-4">
+      <input type="text" id="searchBox" class="input" placeholder="Search SKUs and aliases">
+    </div>
     <nav class="buttons tab-buttons mb-4" id="mapTabs">
-      <button type="button" class="mdc-button mdc-button--raised" data-target="search">Search</button>
       <button type="button" class="mdc-button mdc-button--raised is-active" data-target="unmapped">Unmapped ({{ grouped|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="mapped">Mapped ({{ mapped|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged ({{ merged|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="sug">Suggestions ({{ suggestions|length }})</button>
     </nav>
-    <section id="search" class="tab-pane is-hidden">
-      <input type="text" id="searchBox" class="input mb-4" placeholder="Search SKUs and aliases">
-    </section>
     <section id="unmapped" class="tab-pane">
       <form method="POST">
-        <input type="hidden" id="merge_target" name="merge_target" value="">
+        <input type="hidden" id="merge_target" class="merge-target" name="merge_target" value="">
         {% for entry in grouped %}
         <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
           <div class="card-content">
@@ -112,11 +111,13 @@
       </form>
     </section>
     <section id="mapped" class="tab-pane is-hidden">
-      {% for entry in mapped %}
-      <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
-        <div class="card-content">
-          <div class="field is-flex is-align-items-center mb-2">
-            <label class="label mb-0 mr-1">{% if entry.alias_count > 0 %}Parent SKU{% else %}SKU{% endif %}</label>
+      <form method="POST">
+        <input type="hidden" name="merge_target" value="" class="merge-target">
+        {% for entry in mapped %}
+        <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
+          <div class="card-content">
+            <div class="field is-flex is-align-items-center mb-2">
+              <label class="label mb-0 mr-1">{% if entry.alias_count > 0 %}Parent SKU{% else %}SKU{% endif %}</label>
             {% if entry.aliases.strip() %}
             <div class="select">
               <select class="parent-select">
@@ -131,6 +132,14 @@
             {% endif %}
           </div>
           <div class="columns is-vcentered sku-row">
+            <div class="column is-narrow merge-col">
+              <input id="merge_m{{ loop.index0 }}" class="switch merge-check" type="checkbox" name="select_m{{ loop.index0 }}" value="{{ entry.canonical }}">
+              <label for="merge_m{{ loop.index0 }}">Merge</label>
+              <span class="target-wrap is-hidden">
+                <input id="target_m{{ loop.index0 }}" class="switch target-check" type="checkbox" data-value="{{ entry.canonical }}">
+                <label for="target_m{{ loop.index0 }}">Parent</label>
+              </span>
+            </div>
             <div class="column is-narrow">
               <div class="field is-flex is-align-items-center">
                 <label class="label mb-0 mr-1">Type</label>
@@ -168,8 +177,12 @@
             </div>
           </div>
         </div>
-      </div>
-      {% endfor %}
+        </div>
+        {% endfor %}
+        <div class="buttons mb-5 mt-4">
+          <button class="mdc-button mdc-button--raised" type="submit" name="merge" value="1">Merge selected</button>
+        </div>
+      </form>
     </section>
     <section id="merged" class="tab-pane is-hidden">
       {% for entry in merged %}
@@ -268,22 +281,12 @@
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
     document.getElementById(active.dataset.target).classList.remove('is-hidden');
   }
-  function isSearchActive(){
-    const active = document.querySelector('#mapTabs button.is-active');
-    return active && active.dataset.target === 'search';
-  }
-
   document.querySelectorAll('#mapTabs button').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#mapTabs button').forEach(b => b.classList.remove('is-active'));
       btn.classList.add('is-active');
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
-      if (btn.dataset.target === 'search') {
-        const searchPane = document.getElementById('search');
-        if (searchPane) searchPane.classList.remove('is-hidden');
-      } else {
-        document.getElementById(btn.dataset.target).classList.remove('is-hidden');
-      }
+      document.getElementById(btn.dataset.target).classList.remove('is-hidden');
       document.querySelectorAll('#mapped .parent-select, #merged .parent-select').forEach(sel => {
         const card = sel.closest('.sku-card');
         refreshParentSelect(card);
@@ -293,23 +296,16 @@
   });
 
   const search = document.getElementById('searchBox');
+  function isFiltering(){
+    return search && search.value.trim() !== '';
+  }
   function filterSearch(){
-    if (!search || !isSearchActive()) {
-      document.querySelectorAll('.sku-card').forEach(card => { card.style.display = ''; });
-      return;
-    }
+    if (!search) return;
     const term = search.value.toLowerCase().trim();
-    ['unmapped','mapped','merged','sug'].forEach(sec => {
-      const section = document.getElementById(sec);
-      if (!section) return;
-      let any = false;
-      section.querySelectorAll('.sku-card').forEach(card => {
-        const text = (card.dataset.canonical || '') + ' ' + (card.dataset.aliases || '');
-        const show = term && text.toLowerCase().includes(term);
-        card.style.display = show ? '' : 'none';
-        if (show) any = true;
-      });
-      section.classList.toggle('is-hidden', !any);
+    document.querySelectorAll('.sku-card').forEach(card => {
+      const text = (card.dataset.canonical || '') + ' ' + (card.dataset.aliases || '');
+      const show = !term || text.toLowerCase().includes(term);
+      card.style.display = show ? '' : 'none';
     });
   }
   if (search) {
@@ -329,8 +325,9 @@
         wrap.classList.toggle('is-hidden', !show);
       }
     });
-    const hidden = document.getElementById('merge_target');
-    if (hidden) hidden.value = current ? current.dataset.value : '';
+    document.querySelectorAll('input.merge-target').forEach(hidden => {
+      hidden.value = current ? current.dataset.value : '';
+    });
   }
 
   function initAliasInput(input){
@@ -504,6 +501,14 @@
           ${parent}
         </div>
         <div class="columns is-vcentered sku-row">
+          <div class="column is-narrow merge-col">
+            <input id="merge_${nextIdx}" class="switch merge-check" type="checkbox" name="select_${nextIdx}" value="${canonical}">
+            <label for="merge_${nextIdx}">Merge</label>
+            <span class="target-wrap is-hidden">
+              <input id="target_${nextIdx}" class="switch target-check" type="checkbox" data-value="${canonical}">
+              <label for="target_${nextIdx}">Parent</label>
+            </span>
+          </div>
           <div class="column is-narrow">
             <div class="field is-flex is-align-items-center">
               <label class="label mb-0 mr-1">Type</label>
@@ -545,6 +550,8 @@
     card.querySelectorAll('.alias-badges .delete').forEach(setupAliasDelete);
     card.querySelectorAll('.parent-select').forEach(setupParentSelect);
     card.querySelectorAll('.type-select').forEach(setupDisplayTypeSelect);
+    initCard(card);
+    nextIdx++;
     updateCount(sec);
     return card;
   }
@@ -705,7 +712,7 @@
       }
       other.dataset.canonical = newParent;
       refreshParentSelect(other);
-      if (!isSearchActive()) moveCardToTop(other);
+      if (!isFiltering()) moveCardToTop(other);
     });
 
     const typeVal = card.querySelector('.sku-row strong')?.textContent.trim() || 'unmapped';
@@ -739,7 +746,7 @@
       body: JSON.stringify({alias: oldParent, parent: newParent})
     });
 
-    if (!isSearchActive()) moveCardToTop(card);
+    if (!isFiltering()) moveCardToTop(card);
     filterSearch();
   }
 
