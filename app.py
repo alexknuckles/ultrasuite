@@ -417,23 +417,25 @@ def _find_duplicates(conn):
             pd.to_datetime(df['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
             .dt.tz_localize(None)
         )
+        df['date'] = df['created_at'].dt.date
     shopify = shopify.dropna(subset=['created_at'])
     qbo = qbo.dropna(subset=['created_at'])
 
     merged = pd.merge(
         shopify,
         qbo,
-        on=['created_at', 'canonical', 'quantity', 'total'],
+        on=['date', 'canonical', 'quantity', 'total'],
         suffixes=('_s', '_q'),
     )
 
     rows = []
     for r in merged.itertuples(index=False):
+        ts = min(r.created_at_s, r.created_at_q)
         rows.append(
             {
                 'shopify_id': r.id_s,
                 'qbo_id': r.id_q,
-                'created_at': r.created_at,
+                'created_at': ts.isoformat(sep=' ', timespec='seconds'),
                 'sku': r.canonical,
                 'shopify_desc': r.description_s,
                 'qbo_desc': r.description_q,
