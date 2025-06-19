@@ -3,20 +3,25 @@
 {% block content %}
 <div class="mdc-card page-card">
   <header class="card-header">
-    <p class="card-header-title">Upload Shopify and QuickBooks Online files</p>
+    <p class="card-header-title">Upload sales data</p>
   </header>
   <div class="card-content">
     <form method="post" enctype="multipart/form-data">
       <div class="field mb-4">
-        <label class="label">Shopify CSV file</label>
+        <label class="label">Data file</label>
         <div class="control">
-          <input type="file" class="input" name="shopify">
+          <input type="file" class="input" name="data_file" required>
         </div>
       </div>
       <div class="field mb-4">
-        <label class="label">QuickBooks Excel file</label>
+        <label class="label">Source</label>
         <div class="control">
-          <input type="file" class="input" name="qbo">
+          <div class="select">
+            <select name="source" required>
+              <option value="shopify">Shopify CSV</option>
+              <option value="qbo">QuickBooks Excel</option>
+            </select>
+          </div>
         </div>
       </div>
       <button type="submit" class="mdc-button mdc-button--raised">Upload</button>
