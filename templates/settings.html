@@ -76,12 +76,18 @@
         <div id="detailTypesField" class="field mb-4" {% if not include_month_details %}style="display:none"{% endif %}>
           <label class="label">Types for details</label>
           <div>
-            {% for cat in categories %}
             <label class="switch-label mr-2 mt-1">
-              <input type="checkbox" class="switch" name="detail_types" value="{{ cat }}" {% if cat in detail_types %}checked{% endif %}>
-              <span>{{ labels[cat] }}</span>
+              <input type="checkbox" class="switch" id="detailAll" {% if detail_types_all %}checked{% endif %}>
+              <span>All</span>
             </label>
-            {% endfor %}
+            <div id="detailTypeOptions" style="{% if detail_types_all %}display:none{% endif %}">
+              {% for cat in categories %}
+              <label class="switch-label mr-2 mt-1">
+                <input type="checkbox" class="switch detail-type" name="detail_types" value="{{ cat }}" {% if cat in detail_types %}checked{% endif %}>
+                <span>{{ labels[cat] }}</span>
+              </label>
+              {% endfor %}
+            </div>
           </div>
         </div>
       </div>
@@ -122,12 +128,27 @@
   });
   const detailsCb = document.querySelector('input[name="include_month_details"]');
   const detailsField = document.getElementById('detailTypesField');
+  const allCb = document.getElementById('detailAll');
+  const typeWrap = document.getElementById('detailTypeOptions');
   function toggleDetails(){
     if (detailsField) detailsField.style.display = detailsCb && detailsCb.checked ? '' : 'none';
+  }
+  function toggleAll(){
+    if(!allCb || !typeWrap) return;
+    if(allCb.checked){
+      typeWrap.style.display = 'none';
+      typeWrap.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+    } else {
+      typeWrap.style.display = '';
+    }
   }
   if (detailsCb){
     detailsCb.addEventListener('change', toggleDetails);
     toggleDetails();
+  }
+  if(allCb){
+    allCb.addEventListener('change', toggleAll);
+    toggleAll();
   }
 </script>
 {% endblock %}

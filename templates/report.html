@@ -288,12 +288,18 @@
       <div id="exportDetailTypes" class="field mb-4" {% if not exp_include_month_details %}style="display:none"{% endif %}>
         <label class="label">Types for details</label>
         <div>
-          {% for cat in categories %}
           <label class="switch-label mr-2 mt-1">
-            <input type="checkbox" class="switch" name="detail_types" value="{{ cat }}" {% if cat in exp_detail_types %}checked{% endif %}>
-            <span>{{ labels[cat] }}</span>
+            <input type="checkbox" class="switch" id="exportAll" {% if exp_all_types %}checked{% endif %}>
+            <span>All</span>
           </label>
-          {% endfor %}
+          <div id="exportTypeOptions" style="{% if exp_all_types %}display:none{% endif %}">
+            {% for cat in categories %}
+            <label class="switch-label mr-2 mt-1">
+              <input type="checkbox" class="switch detail-type" name="detail_types" value="{{ cat }}" {% if cat in exp_detail_types %}checked{% endif %}>
+              <span>{{ labels[cat] }}</span>
+            </label>
+            {% endfor %}
+          </div>
         </div>
       </div>
       <h3 class="title is-5 mt-4">Yearly reports</h3>
@@ -361,6 +367,8 @@
     var saveBtn = document.getElementById('saveExportSettings');
     var detailsCb = form.querySelector('input[name="include_month_details"]');
     var detailsField = document.getElementById('exportDetailTypes');
+    var allCb = document.getElementById('exportAll');
+    var typeWrap = document.getElementById('exportTypeOptions');
 
     function showModal(){ modal.classList.remove('is-hidden'); }
     function hideModal(){ modal.classList.add('is-hidden'); }
@@ -369,7 +377,17 @@
     if(modal) modal.addEventListener('click', function(e){ if(e.target === modal) hideModal(); });
 
     function toggleDetails(){ if(detailsField) detailsField.style.display = detailsCb && detailsCb.checked ? '' : 'none'; }
+    function toggleAll(){
+      if(!allCb || !typeWrap) return;
+      if(allCb.checked){
+        typeWrap.style.display = 'none';
+        typeWrap.querySelectorAll('input[type="checkbox"]').forEach(function(cb){ cb.checked = true; });
+      } else {
+        typeWrap.style.display = '';
+      }
+    }
     if(detailsCb){ detailsCb.addEventListener('change', toggleDetails); toggleDetails(); }
+    if(allCb){ allCb.addEventListener('change', toggleAll); toggleAll(); }
 
     if(saveBtn){
       saveBtn.addEventListener('click', function(e){
