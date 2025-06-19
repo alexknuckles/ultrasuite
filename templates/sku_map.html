@@ -269,6 +269,11 @@
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
     document.getElementById(active.dataset.target).classList.remove('is-hidden');
   }
+  function isSearchActive(){
+    const active = document.querySelector('#mapTabs button.is-active');
+    return active && active.dataset.target === 'search';
+  }
+
   document.querySelectorAll('#mapTabs button').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#mapTabs button').forEach(b => b.classList.remove('is-active'));
@@ -292,7 +297,11 @@
 
   const search = document.getElementById('searchBox');
   function filterSearch(){
-    const term = search ? search.value.toLowerCase() : '';
+    if (!search || !isSearchActive()) {
+      document.querySelectorAll('.sku-card').forEach(card => { card.style.display = ''; });
+      return;
+    }
+    const term = search.value.toLowerCase();
     document.querySelectorAll('.sku-card').forEach(card => {
       const text = (card.dataset.canonical || '') + ' ' + (card.dataset.aliases || '');
       card.style.display = !term || text.toLowerCase().includes(term) ? '' : 'none';
@@ -536,6 +545,7 @@
   }
 
   function moveToMapped(card, type){
+    if (isSearchActive()) return;
     const canonical = card.dataset.canonical;
     const src = card.querySelector('.sku-row strong')?.textContent.trim() || '';
     const input = card.querySelector('.alias-input');
@@ -575,16 +585,18 @@
       }
       const typeSel = mapCard.querySelector('select[name^="type_"]');
       const typeVal = typeSel ? typeSel.value : 'unmapped';
-      addMapCard(alias, typeVal);
+      if (!isSearchActive()) addMapCard(alias, typeVal);
     }
     const container = card ? card.querySelector('.alias-badges') : null;
     const field = container ? container.closest('.alias-field') : null;
     if (container && container.children.length === 0) {
       if (field) field.style.display = 'none';
-      card.remove();
-      const sec = btn.closest('#merged') ? 'merged' : 'mapped';
-      updateCount(sec);
-      filterSearch();
+      if (!isSearchActive()) {
+        card.remove();
+        const sec = btn.closest('#merged') ? 'merged' : 'mapped';
+        updateCount(sec);
+        filterSearch();
+      }
     } else {
       refreshParentSelect(card);
       if (container) {
@@ -625,6 +637,7 @@
   }
 
   function moveToUnmapped(card){
+    if (isSearchActive()) return;
     const canonical = card.dataset.canonical;
     const aliases = Array.from(card.querySelectorAll('.alias-badges .tag')).map(t => t.dataset.alias).filter(Boolean);
     addMapCard(canonical, 'unmapped');
@@ -646,6 +659,18 @@
   function changeParent(card, newParent){
     const oldParent = card.dataset.canonical;
     if (newParent === oldParent) return;
+
+    if (isSearchActive()) {
+      card.dataset.canonical = newParent;
+      refreshParentSelect(card);
+      fetch('/update-parent', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({alias: oldParent, parent: newParent})
+      });
+      filterSearch();
+      return;
+    }
 
     const container = card.querySelector('.alias-badges');
     const field = container ? container.closest('.alias-field') : null;
@@ -691,31 +716,33 @@
       }
       other.dataset.canonical = newParent;
       refreshParentSelect(other);
-      moveCardToTop(other);
+      if (!isSearchActive()) moveCardToTop(other);
     });
 
     const typeVal = card.querySelector('.sku-row strong')?.textContent.trim() || 'unmapped';
     const aliasList = Array.from(card.querySelectorAll('.alias-badges .tag')).map(t => t.dataset.alias).filter(Boolean);
     aliasList.unshift(oldParent);
-    let mapCard = document.querySelector(`#unmapped .sku-card[data-canonical="${newParent}"]`);
-    if (!mapCard) {
-      addMapCard(newParent, typeVal);
-      mapCard = document.querySelector(`#unmapped .sku-card[data-canonical="${newParent}"]`);
-    }
-    const input = mapCard.querySelector('.alias-input');
-    if (input) {
-      input.value = Array.from(new Set(aliasList)).join(', ');
-      input.dispatchEvent(new Event('change'));
-    }
+    if (!isSearchActive()) {
+      let mapCard = document.querySelector(`#unmapped .sku-card[data-canonical="${newParent}"]`);
+      if (!mapCard) {
+        addMapCard(newParent, typeVal);
+        mapCard = document.querySelector(`#unmapped .sku-card[data-canonical="${newParent}"]`);
+      }
+      const input = mapCard.querySelector('.alias-input');
+      if (input) {
+        input.value = Array.from(new Set(aliasList)).join(', ');
+        input.dispatchEvent(new Event('change'));
+      }
 
-    const oldMap = document.querySelector(`#unmapped .sku-card[data-canonical="${oldParent}"]`);
-    if (oldMap) {
-      const oldInput = oldMap.querySelector('.alias-input');
-      if (oldInput) {
-        let aliases = oldInput.value.split(',').map(a => a.trim()).filter(Boolean);
-        aliases = aliases.filter(a => a !== newParent);
-        oldInput.value = aliases.join(', ');
-        oldInput.dispatchEvent(new Event('change'));
+      const oldMap = document.querySelector(`#unmapped .sku-card[data-canonical="${oldParent}"]`);
+      if (oldMap) {
+        const oldInput = oldMap.querySelector('.alias-input');
+        if (oldInput) {
+          let aliases = oldInput.value.split(',').map(a => a.trim()).filter(Boolean);
+          aliases = aliases.filter(a => a !== newParent);
+          oldInput.value = aliases.join(', ');
+          oldInput.dispatchEvent(new Event('change'));
+        }
       }
     }
 
@@ -725,7 +752,7 @@
       body: JSON.stringify({alias: oldParent, parent: newParent})
     });
 
-    moveCardToTop(card);
+    if (!isSearchActive()) moveCardToTop(card);
     filterSearch();
   }
 
@@ -743,10 +770,12 @@
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({canonical, type: newType})
     });
-    if(newType === 'unmapped' && !card.closest('#unmapped')){
-      moveToUnmapped(card);
-    } else if(newType !== 'unmapped' && card.closest('#unmapped')){
-      moveToMapped(card, newType);
+    if(!isSearchActive()){
+      if(newType === 'unmapped' && !card.closest('#unmapped')){
+        moveToUnmapped(card);
+      } else if(newType !== 'unmapped' && card.closest('#unmapped')){
+        moveToMapped(card, newType);
+      }
     }
     filterSearch();
   }
