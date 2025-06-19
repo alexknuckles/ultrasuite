@@ -1913,7 +1913,7 @@ def resolve_duplicate():
 
 @app.route('/unmatch-duplicate', methods=['POST'])
 def unmatch_duplicate():
-    """Reopen a resolved duplicate so it shows again in the review list."""
+    """Reopen a resolved duplicate and mark it as ignored."""
     sid = request.form.get('shopify_id', type=int)
     qid = request.form.get('qbo_id', type=int)
     if sid is None or qid is None:
@@ -1954,7 +1954,7 @@ def unmatch_duplicate():
                 ),
             )
     conn.execute(
-        'UPDATE duplicate_log SET action="unmatched", ignored=0 '
+        'UPDATE duplicate_log SET action="unmatched", ignored=1 '
         'WHERE shopify_id=? AND qbo_id=?',
         (sid, qid),
     )
