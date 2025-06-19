@@ -469,6 +469,61 @@ def sku_map_page():
         mapped=mapped_groups,
     )
 
+
+@app.route('/export-sku-map')
+def export_sku_map():
+    """Download the SKU mapping as a CSV file."""
+    conn = get_db()
+    df = pd.read_sql_query(
+        'SELECT alias, canonical_sku, type FROM sku_map',
+        conn,
+    )
+    conn.close()
+    output = BytesIO()
+    output.write(df.to_csv(index=False).encode('utf-8'))
+    output.seek(0)
+    return send_file(
+        output,
+        mimetype='text/csv',
+        download_name='sku_map.csv',
+        as_attachment=True,
+    )
+
+
+@app.route('/import-sku-map', methods=['POST'])
+def import_sku_map():
+    """Import SKU mapping from an uploaded CSV or Excel file."""
+    file = request.files.get('sku_file')
+    if not file or not file.filename:
+        flash('No SKU map file provided.')
+        return redirect(url_for('settings_page'))
+    try:
+        if file.filename.lower().endswith(('.xls', '.xlsx')):
+            df = pd.read_excel(file)
+        else:
+            df = pd.read_csv(file)
+    except Exception:
+        flash('Unable to parse SKU map file.')
+        return redirect(url_for('settings_page'))
+    required = {'alias', 'canonical_sku', 'type'}
+    if not required.issubset(df.columns):
+        flash('SKU map file must contain alias, canonical_sku and type columns.')
+        return redirect(url_for('settings_page'))
+    conn = get_db()
+    conn.execute('DELETE FROM sku_map')
+    for row in df[['alias', 'canonical_sku', 'type']].itertuples(index=False):
+        alias = str(row.alias).lower().strip()
+        canonical = str(row.canonical_sku).lower().strip() or alias
+        type_val = str(row.type).lower().strip() or 'unmapped'
+        conn.execute(
+            'INSERT INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
+            (alias, canonical, type_val),
+        )
+    conn.commit()
+    conn.close()
+    flash('SKU map imported.')
+    return redirect(url_for('settings_page'))
+
 def calculate_report_data(year, month_param=None):
     conn = get_db()
     shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)
@@ -1546,13 +1601,6 @@ def settings_page():
     month_default = get_setting('default_export_month', '')
     month_int = int(month_default) if str(month_default).isdigit() else None
     months = calculate_report_data(datetime.now().year)['months']
-    conn = get_db()
-    sku_df = pd.read_sql_query(
-        'SELECT type, COUNT(DISTINCT canonical_sku) as sku_count '
-        'FROM sku_map GROUP BY type',
-        conn,
-    )
-    conn.close()
     return render_template(
         'settings.html',
         primary_color=primary_color,
@@ -1572,7 +1620,6 @@ def settings_page():
         app_title=app_title,
         report_title=report_title,
         branding=branding,
-        sku_stats=sku_df.itertuples(),
     )
 
 if __name__ == '__main__':
