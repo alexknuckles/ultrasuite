@@ -503,6 +503,12 @@
       input.value = Array.from(new Set(aliasList)).join(', ');
       input.dispatchEvent(new Event('change'));
     }
+
+    fetch('/update-parent', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({old_parent: oldParent, new_parent: newParent})
+    });
   }
 
   function setupParentSelect(select){

@@ -558,6 +558,38 @@ def import_sku_map():
     flash('SKU map imported.')
     return redirect(url_for('settings_page'))
 
+@app.route('/update-parent', methods=['POST'])
+def update_parent():
+    """Merge an existing parent SKU into a new canonical parent."""
+    old_parent = request.form.get('old_parent', '').lower().strip()
+    new_parent = request.form.get('new_parent', '').lower().strip()
+    if not old_parent or not new_parent:
+        return jsonify(success=False), 400
+    if old_parent == new_parent:
+        return jsonify(success=True)
+
+    conn = get_db()
+    type_row = conn.execute(
+        'SELECT type FROM sku_map WHERE canonical_sku=? LIMIT 1',
+        (new_parent,),
+    ).fetchone()
+    target_type = type_row['type'] if type_row else 'unmapped'
+    rows = conn.execute(
+        'SELECT alias, source FROM sku_map WHERE canonical_sku=?',
+        (old_parent,),
+    ).fetchall()
+    for r in rows:
+        conn.execute(
+            'REPLACE INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
+            (r['alias'], new_parent, target_type, r['source']),
+        )
+    if old_parent != new_parent:
+        conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (old_parent,))
+    conn.execute('UPDATE sku_map SET type=? WHERE canonical_sku=?', (target_type, new_parent))
+    conn.commit()
+    conn.close()
+    return jsonify(success=True)
+
 def calculate_report_data(year, month_param=None):
     conn = get_db()
     shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)
