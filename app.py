@@ -558,6 +558,35 @@ def import_sku_map():
     flash('SKU map imported.')
     return redirect(url_for('settings_page'))
 
+
+@app.route('/update-parent', methods=['POST'])
+def update_parent():
+    """Change the canonical SKU for an existing entry."""
+    data = request.get_json(force=True)
+    old_parent = (data.get('alias') or '').lower().strip()
+    new_parent = (data.get('parent') or '').lower().strip()
+    if not old_parent or not new_parent:
+        return jsonify({'status': 'error'}), 400
+    conn = get_db()
+    rows = conn.execute(
+        'SELECT alias, type, source FROM sku_map WHERE canonical_sku=?',
+        (old_parent,),
+    ).fetchall()
+    if not rows:
+        conn.close()
+        return jsonify({'status': 'error'}), 404
+    group_type = rows[0]['type']
+    for r in rows:
+        conn.execute(
+            'REPLACE INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
+            (r['alias'], new_parent, group_type, r['source']),
+        )
+    if old_parent != new_parent:
+        conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (old_parent,))
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'ok'})
+
 def calculate_report_data(year, month_param=None):
     conn = get_db()
     shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)

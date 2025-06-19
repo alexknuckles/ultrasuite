@@ -503,6 +503,23 @@
       input.value = Array.from(new Set(aliasList)).join(', ');
       input.dispatchEvent(new Event('change'));
     }
+
+    const oldMap = document.querySelector(`#map .sku-card[data-canonical="${oldParent}"]`);
+    if (oldMap) {
+      const oldInput = oldMap.querySelector('.alias-input');
+      if (oldInput) {
+        let aliases = oldInput.value.split(',').map(a => a.trim()).filter(Boolean);
+        aliases = aliases.filter(a => a !== newParent);
+        oldInput.value = aliases.join(', ');
+        oldInput.dispatchEvent(new Event('change'));
+      }
+    }
+
+    fetch('/update-parent', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({alias: oldParent, parent: newParent})
+    });
   }
 
   function setupParentSelect(select){
