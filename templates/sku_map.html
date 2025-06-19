@@ -339,6 +339,7 @@
       });
     });
     card.querySelectorAll('.alias-input').forEach(initAliasInput);
+    card.querySelectorAll('select[name^="type_"]').forEach(setupTypeSelect);
     card.addEventListener('click', e => {
       if (e.target.closest('.target-wrap') || e.target.closest('select')) return;
       if (e.target.closest('.merge-check')) return;
@@ -348,7 +349,16 @@
     });
   }
 
+  function setupTypeSelect(sel){
+    sel.addEventListener('change', () => {
+      const card = sel.closest('.sku-card');
+      if (!card) return;
+      if (sel.value !== 'unmapped') moveToMapped(card, sel.value);
+    });
+  }
+
   document.querySelectorAll('.sku-card').forEach(initCard);
+  document.querySelectorAll('#map select[name^="type_"]').forEach(setupTypeSelect);
 
   let nextIdx = Math.max(0, ...Array.from(document.querySelectorAll('input[name^="canonical_"]')).map(i => parseInt(i.name.split('_')[1])||0)) + 1;
 
@@ -407,6 +417,77 @@
     form.insertBefore(card, hr);
     initCard(card);
     updateTargets();
+    updateCount('map');
+  }
+
+  function updateCount(sec){
+    const tabBtn = document.querySelector(`#mapTabs button[data-target="${sec}"]`);
+    if (tabBtn) {
+      const count = document.querySelectorAll(`#${sec} .sku-card`).length;
+      tabBtn.textContent = sec.charAt(0).toUpperCase() + sec.slice(1) + ` (${count})`;
+    }
+  }
+
+  function createDisplayCard(canonical, type, aliases, source=''){
+    const div = document.createElement('div');
+    div.className = 'mdc-card sku-card';
+    div.dataset.canonical = canonical;
+    const opts = aliases.map(a => `<option value="${a}">${a}</option>`).join('');
+    const tags = aliases.map(a => `<span class="tag is-info is-light" data-alias="${a}">${a}<button type="button" class="delete is-small ml-1">×</button></span>`).join('');
+    const show = aliases.length ? '' : 'style="display:none"';
+    div.innerHTML = `
+      <div class="card-content">
+        <div class="field is-flex is-align-items-center mb-2">
+          <label class="label mb-0 mr-1">Parent SKU</label>
+          <div class="select">
+            <select class="parent-select">
+              <option value="${canonical}" selected>${canonical}</option>
+              ${opts}
+            </select>
+          </div>
+        </div>
+        <div class="columns is-vcentered sku-row">
+          <div class="column is-narrow">
+            <div class="field is-flex is-align-items-center">
+              <label class="label mb-0 mr-1">Type</label>
+              <strong>${type}</strong>
+            </div>
+          </div>
+          <div class="column is-narrow">
+            <div class="field is-flex is-align-items-center">
+              <label class="label mb-0 mr-1">Source</label>
+              <strong>${source}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="field alias-field" ${show}>
+          <label class="label">Aliases</label>
+          <div class="alias-badges mb-1">${tags}</div>
+        </div>
+      </div>`;
+    return div;
+  }
+
+  function addDisplayCard(sec, canonical, type, aliases, source=''){
+    if (document.querySelector(`#${sec} .sku-card[data-canonical="${canonical}"]`)) return;
+    const section = document.getElementById(sec);
+    const card = createDisplayCard(canonical, type, aliases, source);
+    section.prepend(card);
+    card.querySelectorAll('.alias-badges .delete').forEach(setupAliasDelete);
+    card.querySelectorAll('.parent-select').forEach(setupParentSelect);
+    updateCount(sec);
+    return card;
+  }
+
+  function moveToMapped(card, type){
+    const canonical = card.dataset.canonical;
+    const src = card.querySelector('.sku-row strong')?.textContent.trim() || '';
+    const input = card.querySelector('.alias-input');
+    const aliases = input ? input.value.split(',').map(a => a.trim()).filter(Boolean) : [];
+    addDisplayCard('mapped', canonical, type, aliases, src);
+    if (aliases.length > 0) addDisplayCard('merged', canonical, type, aliases, src);
+    card.remove();
+    updateCount('map');
   }
 
   function aliasDeleteHandler(e){
@@ -437,11 +518,7 @@
       if (field) field.style.display = 'none';
       card.remove();
       const sec = btn.closest('#merged') ? 'merged' : 'mapped';
-      const tabBtn = document.querySelector(`#mapTabs button[data-target="${sec}"]`);
-      if (tabBtn) {
-        const count = document.querySelectorAll(`#${sec} .sku-card`).length;
-        tabBtn.textContent = sec.charAt(0).toUpperCase() + sec.slice(1) + ` (${count})`;
-      }
+      updateCount(sec);
     } else {
       refreshParentSelect(card);
     }
