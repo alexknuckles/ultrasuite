@@ -171,8 +171,8 @@
         <tr>
           <th>Date</th>
           <th>SKU</th>
-          <th>Shopify Description</th>
-          <th>QBO Description</th>
+          <th>Shopify SKU</th>
+          <th>QBO SKU</th>
           <th>Qty</th>
           <th>Total</th>
           <th>Action</th>
@@ -183,13 +183,13 @@
         <tr id="dup-{{ d.shopify_id }}-{{ d.qbo_id }}">
           <td>{{ d.created_at|format_dt }}</td>
           <td>{{ d.sku }}</td>
-          <td>{{ d.shopify_desc }}</td>
-          <td>{{ d.qbo_desc }}</td>
+          <td>{{ d.shopify_sku }}</td>
+          <td>{{ d.qbo_sku }}</td>
           <td>{{ d.quantity }}</td>
           <td>${{ "%.2f"|format(d.total) }}</td>
           <td>
             {% if d.unmatched %}
-            <span class="tag is-warning is-light mr-2">Unmatched</span>
+            <span class="tag is-warning is-light mr-2">Manually Unmatched</span>
             {% endif %}
             <button data-action="shopify" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Shopify</button>
             <button data-action="qbo" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep QBO</button>
