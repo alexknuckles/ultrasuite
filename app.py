@@ -284,37 +284,48 @@ def dashboard():
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
-        data_file = request.files.get('data_file')
-        source = request.form.get('source', '').lower()
-        if not data_file or not source:
+        pairs = []
+        for key in request.files:
+            if key.startswith('data_file_'):
+                idx = key.split('_')[-1]
+                file = request.files.get(key)
+                source = request.form.get(f'source_{idx}', '').lower()
+                pairs.append((file, source))
+        if not pairs:
             flash('Please provide a file and select its source.')
             return redirect(request.url)
 
         conn = get_db()
         try:
-            if source == 'shopify':
-                cleaned = _parse_shopify(data_file)
-                cleaned.to_sql('shopify', conn, if_exists='replace', index=False)
-            elif source == 'qbo':
-                cleaned = _parse_qbo(data_file)
-                cleaned.to_sql('qbo', conn, if_exists='replace', index=False)
-            else:
-                flash('Unknown source selected.')
-                conn.close()
-                return redirect(request.url)
+            for data_file, source in pairs:
+                if not data_file or not source:
+                    flash('Please provide a file and select its source.')
+                    conn.close()
+                    return redirect(request.url)
 
-            last_txn = pd.to_datetime(cleaned['created_at'], errors='coerce').max()
-            first_txn = pd.to_datetime(cleaned['created_at'], errors='coerce').min()
-            conn.execute(
-                'REPLACE INTO meta (source, last_updated, last_transaction, first_transaction) VALUES (?, ?, ?, ?)',
-                (
-                    source,
-                    datetime.now().isoformat(),
-                    last_txn.isoformat() if pd.notna(last_txn) else None,
-                    first_txn.isoformat() if pd.notna(first_txn) else None,
+                if source == 'shopify':
+                    cleaned = _parse_shopify(data_file)
+                    cleaned.to_sql('shopify', conn, if_exists='replace', index=False)
+                elif source == 'qbo':
+                    cleaned = _parse_qbo(data_file)
+                    cleaned.to_sql('qbo', conn, if_exists='replace', index=False)
+                else:
+                    flash('Unknown source selected.')
+                    conn.close()
+                    return redirect(request.url)
+
+                last_txn = pd.to_datetime(cleaned['created_at'], errors='coerce').max()
+                first_txn = pd.to_datetime(cleaned['created_at'], errors='coerce').min()
+                conn.execute(
+                    'REPLACE INTO meta (source, last_updated, last_transaction, first_transaction) VALUES (?, ?, ?, ?)',
+                    (
+                        source,
+                        datetime.now().isoformat(),
+                        last_txn.isoformat() if pd.notna(last_txn) else None,
+                        first_txn.isoformat() if pd.notna(first_txn) else None,
+                    )
                 )
-            )
-            _update_sku_map(conn, cleaned['sku'], source)
+                _update_sku_map(conn, cleaned['sku'], source)
             action = get_setting('duplicate_action', 'review')
             if action in {'shopify', 'qbo', 'both'}:
                 _resolve_duplicates(conn, action)
@@ -751,7 +762,7 @@ def import_sku_map():
     conn.commit()
     conn.close()
     flash('SKU map imported.')
-    return redirect(url_for('settings_page'))
+    return redirect(request.referrer or url_for('settings_page'))
 
 
 @app.route('/update-parent', methods=['POST'])
