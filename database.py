@@ -51,7 +51,9 @@ def init_db():
         "quantity REAL, "
         "total REAL, "
         "shopify_desc TEXT, "
-        "qbo_desc TEXT"
+        "qbo_desc TEXT, "
+        "created_at TEXT, "
+        "ignored INTEGER DEFAULT 0"
         ")"
     )
     conn.commit()
@@ -106,9 +108,18 @@ def migrate_duplicate_log():
         "quantity REAL, "
         "total REAL, "
         "shopify_desc TEXT, "
-        "qbo_desc TEXT"
+        "qbo_desc TEXT, "
+        "created_at TEXT, "
+        "ignored INTEGER DEFAULT 0"
         ")"
     )
+    cols = [row['name'] for row in conn.execute('PRAGMA table_info(duplicate_log)').fetchall()]
+    if 'created_at' not in cols:
+        conn.execute('ALTER TABLE duplicate_log ADD COLUMN created_at TEXT')
+        conn.commit()
+    if 'ignored' not in cols:
+        conn.execute('ALTER TABLE duplicate_log ADD COLUMN ignored INTEGER DEFAULT 0')
+        conn.commit()
     conn.commit()
     conn.close()
 

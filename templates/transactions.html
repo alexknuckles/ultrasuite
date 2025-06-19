@@ -164,7 +164,6 @@
     <p class="card-header-title">Duplicate Transactions</p>
   </header>
   <div class="card-content">
-    <p class="mb-2">Default behavior: {{ dup_action|capitalize }}</p>
     {% if duplicates %}
     <div class="table-responsive">
     <table class="table is-fullwidth is-striped is-narrow">
@@ -216,24 +215,34 @@
       <thead>
         <tr>
           <th>Resolved At</th>
+          <th>Date</th>
           <th>Action</th>
           <th>SKU</th>
           <th>Shopify Description</th>
           <th>QBO Description</th>
           <th>Qty</th>
           <th>Total</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
         {% for d in resolved_duplicates %}
         <tr>
           <td>{{ d.resolved_at|format_dt }}</td>
+          <td>{{ d.created_at|format_dt }}</td>
           <td>{{ d.action|capitalize }}</td>
           <td>{{ d.sku }}</td>
           <td>{{ d.shopify_desc }}</td>
           <td>{{ d.qbo_desc }}</td>
           <td>{{ d.quantity }}</td>
           <td>${{ "%.2f"|format(d.total) }}</td>
+          <td>
+            {% if d.ignored %}
+            <span>Unmatched</span>
+            {% else %}
+            <button data-unmatch data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button">Unmatch</button>
+            {% endif %}
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -396,6 +405,22 @@ document.querySelectorAll('button[data-action]').forEach(btn => {
       if(res.success){
         const row = document.getElementById(`dup-${sid}-${qid}`);
         if(row) row.remove();
+      }
+    });
+  });
+});
+
+document.querySelectorAll('button[data-unmatch]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const sid = btn.dataset.sid;
+    const qid = btn.dataset.qid;
+    fetch('{{ url_for('unmatch_duplicate') }}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: `shopify_id=${sid}&qbo_id=${qid}`
+    }).then(r => r.json()).then(res => {
+      if(res.success){
+        btn.outerHTML = '<span>Unmatched</span>';
       }
     });
   });
