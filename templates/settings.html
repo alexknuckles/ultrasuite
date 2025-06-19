@@ -124,7 +124,7 @@
       <div class="box mb-4">
         <h3 class="title is-5 mb-3">Import SKU map</h3>
         <form id="importSkuForm" method="post" enctype="multipart/form-data" action="{{ url_for('import_sku_map') }}">
-          <input id="skuFileInput" class="is-hidden" type="file" name="sku_file" accept=".csv,.xls,.xlsx" required>
+          <input id="skuFileInput" class="is-hidden" type="file" name="sku_file" accept=".csv,.xls,.xlsx" required hidden>
           <button id="importSkuBtn" type="button" class="mdc-button mdc-button--raised">Import</button>
         </form>
       </div>
