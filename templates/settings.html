@@ -8,6 +8,7 @@
     <nav class="buttons tab-buttons mb-4" id="settingsTabs">
       <button type="button" class="mdc-button mdc-button--raised is-active" data-target="generalSettings">General</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="exportSettings">Export</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="duplicateSettings">Duplicates</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="skuSettings">SKUs</button>
     </nav>
     <form method="post" enctype="multipart/form-data">
@@ -191,7 +192,23 @@
         </div>
       </div>
     </div>
-      <button id="saveSettingsBtn" type="submit" class="mdc-button mdc-button--raised">Save</button>
+    <div id="duplicateSettings" class="tab-pane is-hidden">
+      <div class="box mb-4">
+        <h3 class="title is-5 mb-3">Duplicate handling</h3>
+        <div class="field mb-4">
+          <label class="label">Default action</label>
+          <div class="select">
+            <select name="dup_action">
+              <option value="review" {% if dup_action == 'review' %}selected{% endif %}>Review manually</option>
+              <option value="shopify" {% if dup_action == 'shopify' %}selected{% endif %}>Keep Shopify</option>
+              <option value="qbo" {% if dup_action == 'qbo' %}selected{% endif %}>Keep QBO</option>
+              <option value="both" {% if dup_action == 'both' %}selected{% endif %}>Keep both</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button id="saveSettingsBtn" type="submit" class="mdc-button mdc-button--raised">Save</button>
     </form>
     <div id="skuSettings" class="tab-pane is-hidden">
       <div class="box mb-4">

@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="mdc-card page-card">
+  <header class="card-header">
+    <p class="card-header-title">Duplicate Transactions</p>
+  </header>
+  <div class="card-content">
+    {% if duplicates %}
+    <div class="table-responsive">
+    <table class="table is-fullwidth is-striped is-narrow">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>SKU</th>
+          <th>Shopify Description</th>
+          <th>QBO Description</th>
+          <th>Qty</th>
+          <th>Total</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in duplicates %}
+        <tr id="dup-{{ d.shopify_id }}-{{ d.qbo_id }}">
+          <td>{{ d.created_at|format_dt }}</td>
+          <td>{{ d.sku }}</td>
+          <td>{{ d.shopify_desc }}</td>
+          <td>{{ d.qbo_desc }}</td>
+          <td>{{ d.quantity }}</td>
+          <td>${{ "%.2f"|format(d.total) }}</td>
+          <td>
+            <button data-action="shopify" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Shopify</button>
+            <button data-action="qbo" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep QBO</button>
+            <button data-action="both" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Both</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p>No duplicates found.</p>
+    {% endif %}
+  </div>
+</div>
+<script>
+document.querySelectorAll('button[data-action]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const sid = btn.dataset.sid;
+    const qid = btn.dataset.qid;
+    const action = btn.dataset.action;
+    fetch('{{ url_for('resolve_duplicate') }}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: `shopify_id=${sid}&qbo_id=${qid}&action=${action}`
+    }).then(r => r.json()).then(res => {
+      if(res.success){
+        const row = document.getElementById(`dup-${sid}-${qid}`);
+        if(row) row.remove();
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

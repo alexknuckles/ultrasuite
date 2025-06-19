@@ -315,6 +315,9 @@ def upload():
                 )
             )
             _update_sku_map(conn, cleaned['sku'], source)
+            action = get_setting('duplicate_action', 'review')
+            if action in {'shopify', 'qbo', 'both'}:
+                _resolve_duplicates(conn, action)
             conn.commit()
             flash('File uploaded and data updated.')
             conn.close()
@@ -370,6 +373,35 @@ def _suggest_merges(canonicals, threshold=0.95):
             suggestions.append((a, b, ratio))
     suggestions.sort(key=lambda x: -x[2])
     return suggestions
+
+def _resolve_duplicates(conn, action):
+    """Resolve duplicate transactions between Shopify and QBO."""
+    query = (
+        "SELECT s.rowid AS sid, q.rowid AS qid FROM shopify s "
+        "JOIN qbo q ON s.created_at=q.created_at AND s.sku=q.sku "
+        "AND CAST(s.quantity AS TEXT)=CAST(q.quantity AS TEXT) "
+        "AND CAST(s.total AS TEXT)=CAST(q.total AS TEXT)"
+    )
+    pairs = conn.execute(query).fetchall()
+    for p in pairs:
+        if action == 'shopify':
+            conn.execute('DELETE FROM qbo WHERE rowid=?', (p['qid'],))
+        elif action == 'qbo':
+            conn.execute('DELETE FROM shopify WHERE rowid=?', (p['sid'],))
+        elif action == 'both':
+            continue
+
+def _find_duplicates(conn):
+    query = (
+        "SELECT s.rowid AS shopify_id, q.rowid AS qbo_id, s.created_at, s.sku, "
+        "s.description AS shopify_desc, q.description AS qbo_desc, "
+        "COALESCE(s.quantity, q.quantity) AS quantity, "
+        "COALESCE(s.total, q.total) AS total FROM shopify s "
+        "JOIN qbo q ON s.created_at=q.created_at AND s.sku=q.sku "
+        "AND CAST(s.quantity AS TEXT)=CAST(q.quantity AS TEXT) "
+        "AND CAST(s.total AS TEXT)=CAST(q.total AS TEXT)"
+    )
+    return conn.execute(query).fetchall()
 
 @app.route('/sku-map', methods=['GET', 'POST'])
 def sku_map_page():
@@ -1658,6 +1690,28 @@ def sku_transactions(sku, source):
     )
 
 
+@app.route('/duplicates')
+def duplicates_page():
+    conn = get_db()
+    rows = _find_duplicates(conn)
+    conn.close()
+    return render_template('duplicates.html', duplicates=rows)
+
+
+@app.route('/resolve-duplicate', methods=['POST'])
+def resolve_duplicate():
+    action = request.form.get('action', 'both')
+    sid = request.form.get('shopify_id', type=int)
+    qid = request.form.get('qbo_id', type=int)
+    if sid is None or qid is None:
+        return jsonify(success=False), 400
+    conn = get_db()
+    _resolve_duplicates(conn, action if action in {'shopify', 'qbo', 'both'} else 'both')
+    conn.commit()
+    conn.close()
+    return jsonify(success=True)
+
+
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings_page():
@@ -1697,6 +1751,7 @@ def settings_page():
         include_year_overall = 'include_year_overall' in request.form
         include_year_summary = 'include_year_summary' in request.form
         include_shopify = 'include_shopify' in request.form
+        dup_action = request.form.get('dup_action', 'review')
         detail_types = request.form.getlist('detail_types')
         set_setting('default_detail_types', ','.join(detail_types))
         set_setting('default_include_month_summary', '1' if include_month_summary else '0')
@@ -1706,6 +1761,7 @@ def settings_page():
         set_setting('default_include_shopify', '1' if include_shopify else '0')
         default_month = request.form.get('default_month', '')
         set_setting('default_export_month', default_month)
+        set_setting('duplicate_action', dup_action)
         logo_file = request.files.get('logo')
         if logo_file and logo_file.filename:
             filename = secure_filename(logo_file.filename)
@@ -1745,6 +1801,7 @@ def settings_page():
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
     include_year_summary = get_setting('default_include_year_summary', '1') == '1'
     include_shopify = get_setting('default_include_shopify', '1') == '1'
+    dup_action = get_setting('duplicate_action', 'review')
     types_default = get_setting('default_detail_types', ','.join(CATEGORIES))
     detail_types = [t for t in types_default.split(',') if t]
     detail_types_all = len(detail_types) == len(CATEGORIES)
@@ -1782,6 +1839,7 @@ def settings_page():
         dark_background=dark_background,
         dark_text=dark_text,
         dark_default=dark_default,
+        dup_action=dup_action,
     )
 
 if __name__ == '__main__':
