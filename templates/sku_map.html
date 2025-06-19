@@ -240,6 +240,10 @@
       btn.classList.add('is-active');
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
       document.getElementById(btn.dataset.target).classList.remove('is-hidden');
+      document.querySelectorAll('#mapped .parent-select, #merged .parent-select').forEach(sel => {
+        const card = sel.closest('.sku-card');
+        refreshParentSelect(card);
+      });
     });
   });
 
