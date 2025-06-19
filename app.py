@@ -473,10 +473,21 @@ def _find_duplicates(conn, sku=None, start=None, end=None):
         suffixes=('_s', '_q'),
     )
 
-    ignored_df = pd.read_sql_query('SELECT shopify_id, qbo_id FROM duplicate_log WHERE ignored=1', conn)
+    ignored_df = pd.read_sql_query(
+        'SELECT shopify_id, qbo_id FROM duplicate_log WHERE ignored=1', conn
+    )
     if not ignored_df.empty:
         ignored_pairs = set(map(tuple, ignored_df.values))
-        merged = merged[[ (r.id_s, r.id_q) not in ignored_pairs for r in merged.itertuples(index=False) ]]
+        merged = merged[[
+            (r.id_s, r.id_q) not in ignored_pairs
+            for r in merged.itertuples(index=False)
+        ]]
+
+    unmatched_df = pd.read_sql_query(
+        "SELECT shopify_id, qbo_id FROM duplicate_log WHERE action='unmatched'",
+        conn,
+    )
+    unmatched_pairs = set(map(tuple, unmatched_df.values)) if not unmatched_df.empty else set()
 
     rows = []
     for r in merged.itertuples(index=False):
@@ -493,6 +504,7 @@ def _find_duplicates(conn, sku=None, start=None, end=None):
                 'qbo_desc': r.description_q,
                 'quantity': r.quantity,
                 'total': r.total,
+                'unmatched': (r.id_s, r.id_q) in unmatched_pairs,
             }
         )
     return rows
@@ -1610,10 +1622,10 @@ def transactions_page():
     query = (
         'SELECT resolved_at, created_at, shopify_created_at, qbo_created_at, sku, '
         'shopify_desc, qbo_desc, quantity, total, action, shopify_id, qbo_id, ignored '
-        'FROM duplicate_log'
+        'FROM duplicate_log WHERE action!="unmatched" AND ignored=0'
     )
     if clauses:
-        query += ' WHERE ' + ' AND '.join(clauses)
+        query += ' AND ' + ' AND '.join(clauses)
     query += ' ORDER BY resolved_at DESC LIMIT 20'
     resolved_dups = pd.read_sql_query(query, conn, params=params).to_dict('records')
     dup_action = get_setting('duplicate_action', 'review')
@@ -1852,14 +1864,15 @@ def resolve_duplicate():
 
 @app.route('/unmatch-duplicate', methods=['POST'])
 def unmatch_duplicate():
-    """Mark a previously resolved duplicate so it is ignored going forward."""
+    """Reopen a resolved duplicate so it shows again in the review list."""
     sid = request.form.get('shopify_id', type=int)
     qid = request.form.get('qbo_id', type=int)
     if sid is None or qid is None:
         return jsonify(success=False), 400
     conn = get_db()
     conn.execute(
-        'UPDATE duplicate_log SET ignored=1 WHERE shopify_id=? AND qbo_id=?',
+        'UPDATE duplicate_log SET action="unmatched", ignored=0 '
+        'WHERE shopify_id=? AND qbo_id=?',
         (sid, qid),
     )
     conn.commit()

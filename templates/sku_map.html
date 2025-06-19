@@ -280,38 +280,16 @@
   });
 
   const search = document.getElementById('searchBox');
-  if (search) {
-    search.addEventListener('input', () => {
-      const term = search.value.toLowerCase();
-      document.querySelectorAll('#unmapped .search-clone').forEach(c => c.remove());
-      document.querySelectorAll('#unmapped .sku-card:not(.search-clone)').forEach(card => {
-        const can = card.querySelector('input[name^="canonical_"]');
-        const alias = card.querySelector('input[name^="aliases_"]');
-        if (can && !can.name.endsWith('_new')) {
-          let text = can.value.toLowerCase();
-          if (alias) text += ' ' + alias.value.toLowerCase();
-          card.style.display = text.includes(term) ? '' : 'none';
-        }
-      });
-      if (!term) return;
-      document.querySelectorAll('#mapped .sku-card, #merged .sku-card').forEach(card => {
-        let text = (card.dataset.canonical || '') + ' ' + (card.dataset.aliases || '');
-        text = text.toLowerCase();
-        if (text.includes(term)) {
-          const canonical = card.dataset.canonical;
-          const typeSel = card.querySelector('.type-select');
-          const type = typeSel ? typeSel.value : 'unmapped';
-          const source = card.querySelector('.sku-row strong')?.textContent.trim() || '';
-          const aliases = Array.from(card.querySelectorAll('.alias-badges .tag')).map(t => t.dataset.alias).filter(Boolean);
-          const clone = createDisplayCard(canonical, type, aliases, source);
-          clone.classList.add('search-clone');
-          document.getElementById('unmapped').appendChild(clone);
-          clone.querySelectorAll('.alias-badges .delete').forEach(setupAliasDelete);
-          clone.querySelectorAll('.parent-select').forEach(setupParentSelect);
-          clone.querySelectorAll('.type-select').forEach(setupDisplayTypeSelect);
-        }
-      });
+  function filterSearch(){
+    const term = search ? search.value.toLowerCase() : '';
+    document.querySelectorAll('.sku-card').forEach(card => {
+      const text = (card.dataset.canonical || '') + ' ' + (card.dataset.aliases || '');
+      card.style.display = !term || text.toLowerCase().includes(term) ? '' : 'none';
     });
+  }
+  if (search) {
+    search.addEventListener('input', filterSearch);
+    filterSearch();
   }
 
   function updateTargets(){
@@ -472,6 +450,7 @@
     initCard(card);
     updateTargets();
     updateCount('unmapped');
+    filterSearch();
   }
 
   function updateCount(sec){
@@ -551,7 +530,7 @@
     const aliases = input ? input.value.split(',').map(a => a.trim()).filter(Boolean) : [];
     addDisplayCard('mapped', canonical, type, aliases, src);
     if (aliases.length > 0) addDisplayCard('merged', canonical, type, aliases, src);
-    const selected = card.classList.contains('search-clone') || card.querySelector('.merge-check')?.checked;
+    const selected = card.querySelector('.merge-check')?.checked;
     if (!selected) {
       card.remove();
       updateCount('unmapped');
@@ -559,6 +538,9 @@
       const sel = card.querySelector('select[name^="type_"]');
       if (sel) sel.value = type;
     }
+    updateCount('mapped');
+    updateCount('merged');
+    filterSearch();
   }
 
   function aliasDeleteHandler(e){
@@ -587,14 +569,10 @@
     const field = container ? container.closest('.alias-field') : null;
     if (container && container.children.length === 0) {
       if (field) field.style.display = 'none';
-      if (!card.classList.contains('search-clone')) {
-        card.remove();
-        const sec = btn.closest('#merged') ? 'merged' : 'mapped';
-        updateCount(sec);
-      } else {
-        card.dataset.aliases = '';
-        refreshParentSelect(card);
-      }
+      card.remove();
+      const sec = btn.closest('#merged') ? 'merged' : 'mapped';
+      updateCount(sec);
+      filterSearch();
     } else {
       refreshParentSelect(card);
       if (container) {
@@ -632,6 +610,25 @@
     } else if (card.closest('#merged')) {
       mergedSection.prepend(card);
     }
+  }
+
+  function moveToUnmapped(card){
+    const canonical = card.dataset.canonical;
+    const aliases = Array.from(card.querySelectorAll('.alias-badges .tag')).map(t => t.dataset.alias).filter(Boolean);
+    addMapCard(canonical, 'unmapped');
+    const mapCard = document.querySelector(`#unmapped .sku-card[data-canonical="${canonical}"]`);
+    if (mapCard) {
+      const input = mapCard.querySelector('.alias-input');
+      if (input) {
+        input.value = aliases.join(', ');
+        input.dispatchEvent(new Event('change'));
+      }
+    }
+    document.querySelectorAll(`#mapped .sku-card[data-canonical="${canonical}"], #merged .sku-card[data-canonical="${canonical}"]`).forEach(el => el.remove());
+    updateCount('mapped');
+    updateCount('merged');
+    updateCount('unmapped');
+    filterSearch();
   }
 
   function changeParent(card, newParent){
@@ -717,6 +714,7 @@
     });
 
     moveCardToTop(card);
+    filterSearch();
   }
 
   function changeType(card, newType){
@@ -733,6 +731,12 @@
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({canonical, type: newType})
     });
+    if(newType === 'unmapped' && !card.closest('#unmapped')){
+      moveToUnmapped(card);
+    } else if(newType !== 'unmapped' && card.closest('#unmapped')){
+      moveToMapped(card, newType);
+    }
+    filterSearch();
   }
 
   function setupParentSelect(select){

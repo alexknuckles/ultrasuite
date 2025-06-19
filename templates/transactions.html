@@ -188,6 +188,9 @@
           <td>{{ d.quantity }}</td>
           <td>${{ "%.2f"|format(d.total) }}</td>
           <td>
+            {% if d.unmatched %}
+            <span class="tag is-warning is-light mr-2">Unmatched</span>
+            {% endif %}
             <button data-action="shopify" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Shopify</button>
             <button data-action="qbo" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep QBO</button>
             <button data-action="both" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Both</button>
@@ -422,7 +425,9 @@ document.querySelectorAll('button[data-unmatch]').forEach(btn => {
       body: `shopify_id=${sid}&qbo_id=${qid}`
     }).then(r => r.json()).then(res => {
       if(res.success){
-        btn.outerHTML = '<span>Unmatched</span>';
+        const row = btn.closest('tr');
+        if(row) row.remove();
+        location.reload();
       }
     });
   });
