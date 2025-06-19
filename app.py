@@ -376,32 +376,72 @@ def _suggest_merges(canonicals, threshold=0.95):
 
 def _resolve_duplicates(conn, action):
     """Resolve duplicate transactions between Shopify and QBO."""
-    query = (
-        "SELECT s.rowid AS sid, q.rowid AS qid FROM shopify s "
-        "JOIN qbo q ON s.created_at=q.created_at AND s.sku=q.sku "
-        "AND CAST(s.quantity AS TEXT)=CAST(q.quantity AS TEXT) "
-        "AND CAST(s.total AS TEXT)=CAST(q.total AS TEXT)"
-    )
-    pairs = conn.execute(query).fetchall()
+    pairs = _find_duplicates(conn)
     for p in pairs:
         if action == 'shopify':
-            conn.execute('DELETE FROM qbo WHERE rowid=?', (p['qid'],))
+            conn.execute('DELETE FROM qbo WHERE rowid=?', (p['qbo_id'],))
         elif action == 'qbo':
-            conn.execute('DELETE FROM shopify WHERE rowid=?', (p['sid'],))
+            conn.execute('DELETE FROM shopify WHERE rowid=?', (p['shopify_id'],))
         elif action == 'both':
             continue
 
 def _find_duplicates(conn):
-    query = (
-        "SELECT s.rowid AS shopify_id, q.rowid AS qbo_id, s.created_at, s.sku, "
-        "s.description AS shopify_desc, q.description AS qbo_desc, "
-        "COALESCE(s.quantity, q.quantity) AS quantity, "
-        "COALESCE(s.total, q.total) AS total FROM shopify s "
-        "JOIN qbo q ON s.created_at=q.created_at AND s.sku=q.sku "
-        "AND CAST(s.quantity AS TEXT)=CAST(q.quantity AS TEXT) "
-        "AND CAST(s.total AS TEXT)=CAST(q.total AS TEXT)"
+    """Return possible duplicate transactions between Shopify and QBO."""
+    shopify = pd.read_sql_query(
+        'SELECT rowid AS id, created_at, sku, description, quantity, total FROM shopify',
+        conn,
     )
-    return conn.execute(query).fetchall()
+    qbo = pd.read_sql_query(
+        'SELECT rowid AS id, created_at, sku, description, quantity, total FROM qbo',
+        conn,
+    )
+    mapping = pd.read_sql_query('SELECT alias, canonical_sku FROM sku_map', conn)
+
+    alias_map = mapping.copy()
+    alias_map['alias'] = alias_map['alias'].str.lower()
+    alias_map = alias_map.set_index('alias')['canonical_sku']
+
+    def canonical(alias):
+        if isinstance(alias, str):
+            key = alias.lower().strip()
+            if key in alias_map.index:
+                return alias_map.loc[key]
+            return key
+        return alias
+
+    for df in (shopify, qbo):
+        df['canonical'] = df['sku'].apply(canonical)
+        df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce')
+        df['total'] = pd.to_numeric(df['total'], errors='coerce')
+        df['created_at'] = (
+            pd.to_datetime(df['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
+            .dt.tz_localize(None)
+        )
+    shopify = shopify.dropna(subset=['created_at'])
+    qbo = qbo.dropna(subset=['created_at'])
+
+    merged = pd.merge(
+        shopify,
+        qbo,
+        on=['created_at', 'canonical', 'quantity', 'total'],
+        suffixes=('_s', '_q'),
+    )
+
+    rows = []
+    for r in merged.itertuples(index=False):
+        rows.append(
+            {
+                'shopify_id': r.id_s,
+                'qbo_id': r.id_q,
+                'created_at': r.created_at,
+                'sku': r.canonical,
+                'shopify_desc': r.description_s,
+                'qbo_desc': r.description_q,
+                'quantity': r.quantity,
+                'total': r.total,
+            }
+        )
+    return rows
 
 @app.route('/sku-map', methods=['GET', 'POST'])
 def sku_map_page():
