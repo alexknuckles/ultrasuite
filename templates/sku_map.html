@@ -494,6 +494,30 @@
     card.dataset.canonical = newParent;
     refreshParentSelect(card);
 
+    document.querySelectorAll(`#mapped .sku-card[data-canonical="${oldParent}"], #merged .sku-card[data-canonical="${oldParent}"]`).forEach(other => {
+      if (other === card) return;
+      const cont = other.querySelector('.alias-badges');
+      const fld = cont ? cont.closest('.alias-field') : null;
+      const selTag = other.querySelector(`.alias-badges [data-alias="${newParent}"]`);
+      if (selTag) selTag.remove();
+      if (cont) {
+        const tag = document.createElement('span');
+        tag.className = 'tag is-info is-light';
+        tag.dataset.alias = oldParent;
+        tag.textContent = oldParent;
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'delete is-small ml-1';
+        delBtn.textContent = '×';
+        tag.appendChild(delBtn);
+        cont.prepend(tag);
+        setupAliasDelete(delBtn);
+        if (fld) fld.style.display = '';
+      }
+      other.dataset.canonical = newParent;
+      refreshParentSelect(other);
+    });
+
     const typeVal = card.querySelector('.sku-row strong')?.textContent.trim() || 'unmapped';
     const aliasList = Array.from(card.querySelectorAll('.alias-badges .tag')).map(t => t.dataset.alias).filter(Boolean);
     aliasList.unshift(oldParent);
