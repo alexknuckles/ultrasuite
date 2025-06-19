@@ -277,9 +277,15 @@ def upload():
                 return redirect(request.url)
 
             last_txn = pd.to_datetime(cleaned['created_at'], errors='coerce').max()
+            first_txn = pd.to_datetime(cleaned['created_at'], errors='coerce').min()
             conn.execute(
-                'REPLACE INTO meta (source, last_updated, last_transaction) VALUES (?, ?, ?)',
-                (source, datetime.now().isoformat(), last_txn.isoformat() if pd.notna(last_txn) else None)
+                'REPLACE INTO meta (source, last_updated, last_transaction, first_transaction) VALUES (?, ?, ?, ?)',
+                (
+                    source,
+                    datetime.now().isoformat(),
+                    last_txn.isoformat() if pd.notna(last_txn) else None,
+                    first_txn.isoformat() if pd.notna(first_txn) else None,
+                )
             )
             _update_sku_map(conn, cleaned['sku'])
             conn.commit()
