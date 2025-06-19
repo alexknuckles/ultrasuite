@@ -1925,10 +1925,11 @@ def unmatch_duplicate():
         'WHERE shopify_id=? AND qbo_id=? ORDER BY resolved_at DESC LIMIT 1',
         (sid, qid),
     ).fetchone()
+    new_sid, new_qid = sid, qid
     if row:
         price = row['total'] / row['quantity'] if row['quantity'] else 0
         if row['action'] == 'shopify':
-            conn.execute(
+            cur = conn.execute(
                 'INSERT INTO qbo(created_at, sku, description, quantity, price, total) '
                 'VALUES(?,?,?,?,?,?)',
                 (
@@ -1940,8 +1941,9 @@ def unmatch_duplicate():
                     row['total'],
                 ),
             )
+            new_qid = cur.lastrowid
         elif row['action'] == 'qbo':
-            conn.execute(
+            cur = conn.execute(
                 'INSERT INTO shopify(created_at, sku, description, quantity, price, total) '
                 'VALUES(?,?,?,?,?,?)',
                 (
@@ -1953,10 +1955,11 @@ def unmatch_duplicate():
                     row['total'],
                 ),
             )
+            new_sid = cur.lastrowid
     conn.execute(
-        'UPDATE duplicate_log SET action="unmatched", ignored=1 '
+        'UPDATE duplicate_log SET action="unmatched", ignored=1, shopify_id=?, qbo_id=? '
         'WHERE shopify_id=? AND qbo_id=?',
-        (sid, qid),
+        (new_sid, new_qid, sid, qid),
     )
     conn.commit()
     conn.close()
