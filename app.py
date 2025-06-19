@@ -716,6 +716,24 @@ def update_parent():
     conn.close()
     return jsonify({'status': 'ok'})
 
+
+@app.route('/update-type', methods=['POST'])
+def update_type():
+    """Change the type for an existing canonical SKU."""
+    data = request.get_json(force=True)
+    canonical = (data.get('canonical') or '').lower().strip()
+    new_type = (data.get('type') or 'unmapped').lower().strip()
+    if not canonical:
+        return jsonify({'status': 'error'}), 400
+    conn = get_db()
+    conn.execute(
+        'UPDATE sku_map SET type=?, changed_at=? WHERE canonical_sku=?',
+        (new_type, datetime.now(timezone.utc).isoformat(), canonical),
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'ok'})
+
 def calculate_report_data(year, month_param=None):
     conn = get_db()
     shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)

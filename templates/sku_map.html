@@ -128,8 +128,8 @@
             <div class="column is-narrow">
               <div class="field is-flex is-align-items-center">
                 <label class="label mb-0 mr-1">Type</label>
-                <div class="select is-disabled">
-                  <select disabled>
+                <div class="select">
+                  <select class="type-select">
                     <option value="unmapped" {% if entry.type == 'unmapped' %}selected{% endif %}>Unmapped</option>
                     <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
                     <option value="detergent_filter_kits" {% if entry.type == 'detergent_filter_kits' %}selected{% endif %}>Detergent & Filter Kits</option>
@@ -184,8 +184,8 @@
             <div class="column is-narrow">
               <div class="field is-flex is-align-items-center">
                 <label class="label mb-0 mr-1">Type</label>
-                <div class="select is-disabled">
-                  <select disabled>
+                <div class="select">
+                  <select class="type-select">
                     <option value="unmapped" {% if entry.type == 'unmapped' %}selected{% endif %}>Unmapped</option>
                     <option value="machine" {% if entry.type == 'machine' %}selected{% endif %}>Machine</option>
                     <option value="detergent_filter_kits" {% if entry.type == 'detergent_filter_kits' %}selected{% endif %}>Detergent & Filter Kits</option>
@@ -300,6 +300,7 @@
           document.getElementById('unmapped').appendChild(clone);
           clone.querySelectorAll('.alias-badges .delete').forEach(setupAliasDelete);
           clone.querySelectorAll('.parent-select').forEach(setupParentSelect);
+          clone.querySelectorAll('.type-select').forEach(setupDisplayTypeSelect);
         }
       });
     });
@@ -495,8 +496,8 @@
           <div class="column is-narrow">
             <div class="field is-flex is-align-items-center">
               <label class="label mb-0 mr-1">Type</label>
-              <div class="select is-disabled">
-                <select disabled>
+              <div class="select">
+                <select class="type-select">
                   <option value="unmapped" ${type==='unmapped'?'selected':''}>Unmapped</option>
                   <option value="machine" ${type==='machine'?'selected':''}>Machine</option>
                   <option value="detergent_filter_kits" ${type==='detergent_filter_kits'?'selected':''}>Detergent & Filter Kits</option>
@@ -532,6 +533,7 @@
     section.prepend(card);
     card.querySelectorAll('.alias-badges .delete').forEach(setupAliasDelete);
     card.querySelectorAll('.parent-select').forEach(setupParentSelect);
+    card.querySelectorAll('.type-select').forEach(setupDisplayTypeSelect);
     updateCount(sec);
     return card;
   }
@@ -543,8 +545,14 @@
     const aliases = input ? input.value.split(',').map(a => a.trim()).filter(Boolean) : [];
     addDisplayCard('mapped', canonical, type, aliases, src);
     if (aliases.length > 0) addDisplayCard('merged', canonical, type, aliases, src);
-    card.remove();
-    updateCount('unmapped');
+    const selected = card.classList.contains('search-clone') || card.querySelector('.merge-check')?.checked;
+    if (!selected) {
+      card.remove();
+      updateCount('unmapped');
+    } else {
+      const sel = card.querySelector('select[name^="type_"]');
+      if (sel) sel.value = type;
+    }
   }
 
   function aliasDeleteHandler(e){
@@ -700,6 +708,15 @@
     moveCardToTop(card);
   }
 
+  function changeType(card, newType){
+    const canonical = card.dataset.canonical;
+    fetch('/update-type', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({canonical, type: newType})
+    });
+  }
+
   function setupParentSelect(select){
     const card = select.closest('.sku-card');
     refreshParentSelect(card);
@@ -708,7 +725,15 @@
     });
   }
 
+  function setupDisplayTypeSelect(select){
+    const card = select.closest('.sku-card');
+    select.addEventListener('change', () => {
+      changeType(card, select.value);
+    });
+  }
+
   document.querySelectorAll('#mapped .parent-select, #merged .parent-select').forEach(setupParentSelect);
+  document.querySelectorAll('#mapped .type-select, #merged .type-select').forEach(setupDisplayTypeSelect);
 
   updateTargets();
 })();
