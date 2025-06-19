@@ -524,12 +524,7 @@ def _find_duplicates(conn, sku=None, start=None, end=None):
     ignored_df = pd.read_sql_query(
         'SELECT shopify_id, qbo_id FROM duplicate_log WHERE ignored=1', conn
     )
-    if not ignored_df.empty:
-        ignored_pairs = set(map(tuple, ignored_df.values))
-        merged = merged[[
-            (r.id_s, r.id_q) not in ignored_pairs
-            for r in merged.itertuples(index=False)
-        ]]
+    ignored_pairs = set(map(tuple, ignored_df.values)) if not ignored_df.empty else set()
 
     unmatched_df = pd.read_sql_query(
         "SELECT shopify_id, qbo_id FROM duplicate_log WHERE action='unmatched'",
@@ -555,6 +550,10 @@ def _find_duplicates(conn, sku=None, start=None, end=None):
                 'quantity': r.quantity,
                 'total': r.total,
                 'unmatched': (r.id_s, r.id_q) in unmatched_pairs,
+                'ignored': (
+                    (r.id_s, r.id_q) in ignored_pairs
+                    or (r.id_s, r.id_q) in unmatched_pairs
+                ),
             }
         )
     return rows
@@ -1959,6 +1958,52 @@ def unmatch_duplicate():
         'WHERE shopify_id=? AND qbo_id=?',
         (sid, qid),
     )
+    conn.commit()
+    conn.close()
+    return jsonify(success=True)
+
+
+@app.route('/ignore-duplicate', methods=['POST'])
+def ignore_duplicate():
+    """Mark a duplicate pair as ignored."""
+    sid = request.form.get('shopify_id', type=int)
+    qid = request.form.get('qbo_id', type=int)
+    if sid is None or qid is None:
+        return jsonify(success=False), 400
+    conn = get_db()
+    cur = conn.execute(
+        'UPDATE duplicate_log SET ignored=1 WHERE shopify_id=? AND qbo_id=?',
+        (sid, qid),
+    )
+    if cur.rowcount == 0:
+        pairs = _find_duplicates(conn)
+        row = next((p for p in pairs if p['shopify_id'] == sid and p['qbo_id'] == qid), None)
+        if row:
+            conn.execute(
+                "INSERT INTO duplicate_log(resolved_at, shopify_id, qbo_id, action, sku, shopify_sku, qbo_sku, quantity, total, shopify_desc, qbo_desc, created_at, shopify_created_at, qbo_created_at, ignored) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)",
+                (
+                    datetime.now(timezone.utc).isoformat(),
+                    sid,
+                    qid,
+                    'both',
+                    row['sku'],
+                    row.get('shopify_sku'),
+                    row.get('qbo_sku'),
+                    row['quantity'],
+                    row['total'],
+                    row['shopify_desc'],
+                    row['qbo_desc'],
+                    row['created_at'],
+                    row['shopify_created_at'],
+                    row['qbo_created_at'],
+                ),
+            )
+        else:
+            conn.execute(
+                'INSERT INTO duplicate_log(resolved_at, shopify_id, qbo_id, action, ignored) VALUES (?,?,?,?,1)',
+                (datetime.now(timezone.utc).isoformat(), sid, qid, 'both'),
+            )
     conn.commit()
     conn.close()
     return jsonify(success=True)
