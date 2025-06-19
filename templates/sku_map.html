@@ -274,11 +274,19 @@
       document.querySelectorAll('#mapTabs button').forEach(b => b.classList.remove('is-active'));
       btn.classList.add('is-active');
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
-      document.getElementById(btn.dataset.target).classList.remove('is-hidden');
+      if (btn.dataset.target === 'search') {
+        ['search','unmapped','mapped','merged','sug'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.remove('is-hidden');
+        });
+      } else {
+        document.getElementById(btn.dataset.target).classList.remove('is-hidden');
+      }
       document.querySelectorAll('#mapped .parent-select, #merged .parent-select').forEach(sel => {
         const card = sel.closest('.sku-card');
         refreshParentSelect(card);
       });
+      filterSearch();
     });
   });
 
