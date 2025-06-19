@@ -81,19 +81,22 @@ def _parse_qbo(file_storage):
     expected = {"transaction_date", "product_service"}
     if set(df.columns[:2]).intersection(expected) != expected:
         # Set proper headers if they appear exactly as expected from QBO
-        df.columns = [
-            "deleted_code",
-            "transaction_date",
-            "transaction_type",
-            "transaction_number",
-            "customer_name",
-            "line_description",
-            "quantity",
-            "sales_price",
-            "amount",
-            "balance",
-            "product_service",
-        ]
+        try:
+            df.columns = [
+                "deleted_code",
+                "transaction_date",
+                "transaction_type",
+                "transaction_number",
+                "customer_name",
+                "line_description",
+                "quantity",
+                "sales_price",
+                "amount",
+                "balance",
+                "product_service",
+            ]
+        except ValueError as exc:
+            raise ValueError("Invalid QuickBooks data") from exc
     df = df[df.get("transaction_date").notna()]
     cleaned = df[[
         "transaction_date",
@@ -283,6 +286,10 @@ def upload():
             flash('File uploaded and data updated.')
             conn.close()
             return redirect(url_for('dashboard'))
+        except ValueError:
+            flash('Failed to process file: Invalid data')
+            conn.close()
+            return render_template('upload.html')
         except Exception as exc:
             flash(f'Failed to process file: {exc}')
             conn.close()
