@@ -22,7 +22,12 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
     c.execute(
-        "CREATE TABLE IF NOT EXISTS meta (source TEXT PRIMARY KEY, last_updated TEXT, last_transaction TEXT)"
+        "CREATE TABLE IF NOT EXISTS meta ("
+        "source TEXT PRIMARY KEY, "
+        "last_updated TEXT, "
+        "last_transaction TEXT, "
+        "first_transaction TEXT"
+        ")"
     )
     c.execute(
         "CREATE TABLE IF NOT EXISTS shopify (created_at TEXT, sku TEXT, description TEXT, quantity REAL, price REAL, total REAL)"
@@ -51,6 +56,9 @@ def migrate_meta():
     cols = [row['name'] for row in conn.execute('PRAGMA table_info(meta)').fetchall()]
     if 'last_transaction' not in cols:
         conn.execute('ALTER TABLE meta ADD COLUMN last_transaction TEXT')
+        conn.commit()
+    if 'first_transaction' not in cols:
+        conn.execute('ALTER TABLE meta ADD COLUMN first_transaction TEXT')
         conn.commit()
     conn.close()
 
