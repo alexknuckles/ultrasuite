@@ -422,15 +422,19 @@ def _resolve_duplicates(conn, action):
     """Resolve duplicate transactions between Shopify and QBO."""
     pairs = _find_duplicates(conn)
     for p in pairs:
+        if p.get('unmatched'):
+            continue
         conn.execute(
-            "INSERT INTO duplicate_log(resolved_at, shopify_id, qbo_id, action, sku, quantity, total, shopify_desc, qbo_desc, created_at, shopify_created_at, qbo_created_at, ignored) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0)",
+            "INSERT INTO duplicate_log(resolved_at, shopify_id, qbo_id, action, sku, shopify_sku, qbo_sku, quantity, total, shopify_desc, qbo_desc, created_at, shopify_created_at, qbo_created_at, ignored) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,0)",
             (
                 datetime.now(timezone.utc).isoformat(),
                 p['shopify_id'],
                 p['qbo_id'],
                 action,
                 p['sku'],
+                p.get('shopify_sku'),
+                p.get('qbo_sku'),
                 p['quantity'],
                 p['total'],
                 p['shopify_desc'],
@@ -544,6 +548,8 @@ def _find_duplicates(conn, sku=None, start=None, end=None):
                 'shopify_created_at': r.created_at_s.isoformat(sep=' ', timespec='seconds'),
                 'qbo_created_at': r.created_at_q.isoformat(sep=' ', timespec='seconds'),
                 'sku': r.canonical,
+                'shopify_sku': r.sku_s,
+                'qbo_sku': r.sku_q,
                 'shopify_desc': r.description_s,
                 'qbo_desc': r.description_q,
                 'quantity': r.quantity,
@@ -1665,7 +1671,7 @@ def transactions_page():
         params.append(end_dt.isoformat(sep=' ', timespec='seconds'))
     query = (
         'SELECT resolved_at, created_at, shopify_created_at, qbo_created_at, sku, '
-        'shopify_desc, qbo_desc, quantity, total, action, shopify_id, qbo_id, ignored '
+        'shopify_sku, qbo_sku, shopify_desc, qbo_desc, quantity, total, action, shopify_id, qbo_id, ignored '
         'FROM duplicate_log WHERE action!="unmatched" AND ignored=0'
     )
     if clauses:

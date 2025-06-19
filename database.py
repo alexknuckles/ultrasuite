@@ -48,6 +48,8 @@ def init_db():
         "qbo_id INTEGER, "
         "action TEXT, "
         "sku TEXT, "
+        "shopify_sku TEXT, "
+        "qbo_sku TEXT, "
         "quantity REAL, "
         "total REAL, "
         "shopify_desc TEXT, "
@@ -107,6 +109,8 @@ def migrate_duplicate_log():
         "qbo_id INTEGER, "
         "action TEXT, "
         "sku TEXT, "
+        "shopify_sku TEXT, "
+        "qbo_sku TEXT, "
         "quantity REAL, "
         "total REAL, "
         "shopify_desc TEXT, "
@@ -124,6 +128,12 @@ def migrate_duplicate_log():
         conn.commit()
     if 'qbo_created_at' not in cols:
         conn.execute('ALTER TABLE duplicate_log ADD COLUMN qbo_created_at TEXT')
+        conn.commit()
+    if 'shopify_sku' not in cols:
+        conn.execute('ALTER TABLE duplicate_log ADD COLUMN shopify_sku TEXT')
+        conn.commit()
+    if 'qbo_sku' not in cols:
+        conn.execute('ALTER TABLE duplicate_log ADD COLUMN qbo_sku TEXT')
         conn.commit()
     if 'ignored' not in cols:
         conn.execute('ALTER TABLE duplicate_log ADD COLUMN ignored INTEGER DEFAULT 0')
