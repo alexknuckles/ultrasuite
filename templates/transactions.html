@@ -164,6 +164,7 @@
     <p class="card-header-title">Duplicate Transactions</p>
   </header>
   <div class="card-content">
+    <p class="mb-2">Default behavior: {{ dup_action|capitalize }}</p>
     {% if duplicates %}
     <div class="table-responsive">
     <table class="table is-fullwidth is-striped is-narrow">
@@ -203,6 +204,44 @@
   </div>
   </div>
   {% endif %}
+
+{% if resolved_duplicates %}
+<div class="mdc-card page-card mt-5">
+  <header class="card-header">
+    <p class="card-header-title">Previously Resolved Duplicates</p>
+  </header>
+  <div class="card-content">
+    <div class="table-responsive">
+    <table class="table is-fullwidth is-striped is-narrow">
+      <thead>
+        <tr>
+          <th>Resolved At</th>
+          <th>Action</th>
+          <th>SKU</th>
+          <th>Shopify Description</th>
+          <th>QBO Description</th>
+          <th>Qty</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in resolved_duplicates %}
+        <tr>
+          <td>{{ d.resolved_at|format_dt }}</td>
+          <td>{{ d.action|capitalize }}</td>
+          <td>{{ d.sku }}</td>
+          <td>{{ d.shopify_desc }}</td>
+          <td>{{ d.qbo_desc }}</td>
+          <td>{{ d.quantity }}</td>
+          <td>${{ "%.2f"|format(d.total) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+{% endif %}
 
   <script>
   document.addEventListener('DOMContentLoaded', function(){

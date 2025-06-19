@@ -41,6 +41,19 @@ def init_db():
     c.execute(
         "CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)"
     )
+    c.execute(
+        "CREATE TABLE IF NOT EXISTS duplicate_log ("
+        "resolved_at TEXT, "
+        "shopify_id INTEGER, "
+        "qbo_id INTEGER, "
+        "action TEXT, "
+        "sku TEXT, "
+        "quantity REAL, "
+        "total REAL, "
+        "shopify_desc TEXT, "
+        "qbo_desc TEXT"
+        ")"
+    )
     conn.commit()
     conn.close()
 
@@ -80,6 +93,25 @@ def migrate_sku_changed():
         conn.commit()
     conn.close()
 
+def migrate_duplicate_log():
+    """Ensure duplicate_log table exists."""
+    conn = get_db()
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS duplicate_log ("
+        "resolved_at TEXT, "
+        "shopify_id INTEGER, "
+        "qbo_id INTEGER, "
+        "action TEXT, "
+        "sku TEXT, "
+        "quantity REAL, "
+        "total REAL, "
+        "shopify_desc TEXT, "
+        "qbo_desc TEXT"
+        ")"
+    )
+    conn.commit()
+    conn.close()
+
 def get_setting(key, default=""):
     conn = get_db()
     row = conn.execute('SELECT value FROM settings WHERE key=?', (key,)).fetchone()
@@ -97,3 +129,4 @@ migrate_types()
 migrate_meta()
 migrate_sku_source()
 migrate_sku_changed()
+migrate_duplicate_log()

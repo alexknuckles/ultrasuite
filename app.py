@@ -378,6 +378,21 @@ def _resolve_duplicates(conn, action):
     """Resolve duplicate transactions between Shopify and QBO."""
     pairs = _find_duplicates(conn)
     for p in pairs:
+        conn.execute(
+            "INSERT INTO duplicate_log(resolved_at, shopify_id, qbo_id, action, sku, quantity, total, shopify_desc, qbo_desc) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            (
+                datetime.now(timezone.utc).isoformat(),
+                p['shopify_id'],
+                p['qbo_id'],
+                action,
+                p['sku'],
+                p['quantity'],
+                p['total'],
+                p['shopify_desc'],
+                p['qbo_desc'],
+            ),
+        )
         if action == 'shopify':
             conn.execute('DELETE FROM qbo WHERE rowid=?', (p['qbo_id'],))
         elif action == 'qbo':
@@ -1541,6 +1556,12 @@ def transactions_page():
         df_all = pd.DataFrame(columns=shopify.columns.tolist() + ['source_title'])
 
     duplicates = _find_duplicates(conn)
+    resolved_dups = pd.read_sql_query(
+        'SELECT resolved_at, sku, shopify_desc, qbo_desc, quantity, total, action '
+        'FROM duplicate_log ORDER BY resolved_at DESC LIMIT 20',
+        conn,
+    ).to_dict('records')
+    dup_action = get_setting('duplicate_action', 'review')
     conn.close()
 
     return render_template(
@@ -1561,6 +1582,8 @@ def transactions_page():
         period_year=period_year_val,
         period_month=period_month_val,
         duplicates=duplicates,
+        resolved_duplicates=resolved_dups,
+        dup_action=dup_action,
     )
 
 
