@@ -1546,6 +1546,13 @@ def settings_page():
     month_default = get_setting('default_export_month', '')
     month_int = int(month_default) if str(month_default).isdigit() else None
     months = calculate_report_data(datetime.now().year)['months']
+    conn = get_db()
+    sku_df = pd.read_sql_query(
+        'SELECT type, COUNT(DISTINCT canonical_sku) as sku_count '
+        'FROM sku_map GROUP BY type',
+        conn,
+    )
+    conn.close()
     return render_template(
         'settings.html',
         primary_color=primary_color,
@@ -1565,6 +1572,7 @@ def settings_page():
         app_title=app_title,
         report_title=report_title,
         branding=branding,
+        sku_stats=sku_df.itertuples(),
     )
 
 if __name__ == '__main__':

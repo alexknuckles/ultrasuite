@@ -8,6 +8,7 @@
     <nav class="buttons tab-buttons mb-4" id="settingsTabs">
       <button type="button" class="mdc-button mdc-button--raised is-active" data-target="generalSettings">General</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="exportSettings">Export</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="skuSettings">SKUs</button>
     </nav>
     <form method="post" enctype="multipart/form-data">
     <div id="generalSettings" class="tab-pane">
@@ -112,6 +113,25 @@
           </label>
         </div>
       </div>
+    </div>
+    <div id="skuSettings" class="tab-pane is-hidden">
+      <div class="box mb-4">
+        <h3 class="title is-5 mb-3">SKU summary</h3>
+        <div class="table-responsive">
+          <table class="table is-fullwidth is-narrow">
+            <thead><tr><th>Type</th><th># of SKUs</th></tr></thead>
+            <tbody>
+            {% for row in sku_stats %}
+              <tr><td>{{ row.type }}</td><td>{{ row.sku_count }}</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p>
+        Manage SKU aliases and categories on the
+        <a href="{{ url_for('sku_map_page') }}">SKU map page</a>.
+      </p>
     </div>
       <button type="submit" class="mdc-button mdc-button--raised">Save</button>
     </form>
