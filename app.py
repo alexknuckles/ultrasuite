@@ -29,6 +29,83 @@ from markupsafe import Markup
 from werkzeug.utils import secure_filename
 from database import UPLOAD_FOLDER, get_db, get_setting, set_setting
 
+def _try_read_csv(data: bytes, encodings=None):
+    """Try reading CSV bytes with a series of encodings."""
+    encodings = encodings or ["utf-8", "utf-8-sig", "utf-16", "latin-1", "cp1252"]
+    for enc in encodings:
+        try:
+            return pd.read_csv(BytesIO(data), encoding=enc)
+        except Exception:
+            continue
+    raise ValueError("Unsupported CSV encoding")
+
+
+def _parse_shopify(file_storage):
+    data = file_storage.read()
+    file_storage.seek(0)
+    # try csv first then excel
+    try:
+        df = _try_read_csv(data)
+    except Exception:
+        try:
+            df = pd.read_excel(BytesIO(data))
+        except Exception as exc:
+            raise ValueError("Could not parse Shopify file") from exc
+    required = {"Created at", "Lineitem sku"}
+    if not required.issubset(set(df.columns)):
+        raise ValueError("Invalid Shopify data")
+    cleaned = df[[
+        "Created at",
+        "Lineitem sku",
+        "Lineitem name",
+        "Lineitem quantity",
+        "Lineitem price",
+    ]].copy()
+    cleaned["Total"] = pd.to_numeric(df["Lineitem price"], errors="coerce").fillna(0) * pd.to_numeric(
+        df["Lineitem quantity"], errors="coerce"
+    ).fillna(0)
+    cleaned.columns = ["created_at", "sku", "description", "quantity", "price", "total"]
+    return cleaned
+
+
+def _parse_qbo(file_storage):
+    data = file_storage.read()
+    file_storage.seek(0)
+    try:
+        df = pd.read_excel(BytesIO(data), skiprows=4)
+    except Exception:
+        try:
+            df = _try_read_csv(data)
+        except Exception as exc:
+            raise ValueError("Could not parse QuickBooks file") from exc
+    expected = {"transaction_date", "product_service"}
+    if set(df.columns[:2]).intersection(expected) != expected:
+        # Set proper headers if they appear exactly as expected from QBO
+        df.columns = [
+            "deleted_code",
+            "transaction_date",
+            "transaction_type",
+            "transaction_number",
+            "customer_name",
+            "line_description",
+            "quantity",
+            "sales_price",
+            "amount",
+            "balance",
+            "product_service",
+        ]
+    df = df[df.get("transaction_date").notna()]
+    cleaned = df[[
+        "transaction_date",
+        "product_service",
+        "line_description",
+        "quantity",
+        "sales_price",
+        "amount",
+    ]].copy()
+    cleaned.columns = ["created_at", "sku", "description", "quantity", "price", "total"]
+    return cleaned
+
 app = Flask(__name__)
 app.secret_key = 'secret'
 
@@ -177,53 +254,37 @@ def dashboard():
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
-        shopify = request.files.get('shopify')
-        qbo = request.files.get('qbo')
+        data_file = request.files.get('data_file')
+        source = request.form.get('source', '').lower()
+        if not data_file or not source:
+            flash('Please provide a file and select its source.')
+            return redirect(request.url)
+
         conn = get_db()
+        try:
+            if source == 'shopify':
+                cleaned = _parse_shopify(data_file)
+                cleaned.to_sql('shopify', conn, if_exists='replace', index=False)
+            elif source == 'qbo':
+                cleaned = _parse_qbo(data_file)
+                cleaned.to_sql('qbo', conn, if_exists='replace', index=False)
+            else:
+                flash('Unknown source selected.')
+                conn.close()
+                return redirect(request.url)
 
-        if shopify:
-            df = pd.read_csv(shopify)
-            cleaned = df[[
-                'Created at', 'Lineitem sku', 'Lineitem name', 'Lineitem quantity',
-                'Lineitem price'
-            ]].copy()
-            cleaned['Total'] = pd.to_numeric(df['Lineitem price'], errors='coerce').fillna(0) * \
-                pd.to_numeric(df['Lineitem quantity'], errors='coerce').fillna(0)
-            cleaned.columns = [
-                'created_at', 'sku', 'description', 'quantity', 'price', 'total'
-            ]
-            cleaned.to_sql('shopify', conn, if_exists='replace', index=False)
+            last_txn = pd.to_datetime(cleaned['created_at'], errors='coerce').max()
             conn.execute(
-                'REPLACE INTO meta (source, last_updated) VALUES (?, ?)',
-                ('shopify', datetime.now().isoformat())
+                'REPLACE INTO meta (source, last_updated, last_transaction) VALUES (?, ?, ?)',
+                (source, datetime.now().isoformat(), last_txn.isoformat() if pd.notna(last_txn) else None)
             )
             _update_sku_map(conn, cleaned['sku'])
-
-        if qbo:
-            df = pd.read_excel(qbo, skiprows=4)
-            df.columns = [
-                'deleted_code', 'transaction_date', 'transaction_type',
-                'transaction_number', 'customer_name', 'line_description', 'quantity',
-                'sales_price', 'amount', 'balance', 'product_service'
-            ]
-            df = df[df['transaction_date'].notna()]
-            cleaned = df[[
-                'transaction_date', 'product_service', 'line_description', 'quantity',
-                'sales_price', 'amount'
-            ]].copy()
-            cleaned.columns = [
-                'created_at', 'sku', 'description', 'quantity', 'price', 'total'
-            ]
-            cleaned.to_sql('qbo', conn, if_exists='replace', index=False)
-            conn.execute(
-                'REPLACE INTO meta (source, last_updated) VALUES (?, ?)',
-                ('qbo', datetime.now().isoformat())
-            )
-            _update_sku_map(conn, cleaned['sku'])
-
-        conn.commit()
-        conn.close()
-        flash('Files uploaded and data updated.')
+            conn.commit()
+            flash('File uploaded and data updated.')
+        except Exception as exc:
+            flash(f'Failed to process file: {exc}')
+        finally:
+            conn.close()
         return redirect(url_for('dashboard'))
     return render_template('upload.html')
 
