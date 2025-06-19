@@ -468,6 +468,16 @@
     });
   }
 
+  function moveCardToTop(card){
+    const mappedSection = document.getElementById('mapped');
+    const mergedSection = document.getElementById('merged');
+    if (card.closest('#mapped')) {
+      mappedSection.prepend(card);
+    } else if (card.closest('#merged')) {
+      mergedSection.prepend(card);
+    }
+  }
+
   function changeParent(card, newParent){
     const oldParent = card.dataset.canonical;
     if (newParent === oldParent) return;
@@ -516,6 +526,7 @@
       }
       other.dataset.canonical = newParent;
       refreshParentSelect(other);
+      moveCardToTop(other);
     });
 
     const typeVal = card.querySelector('.sku-row strong')?.textContent.trim() || 'unmapped';
@@ -549,13 +560,7 @@
       body: JSON.stringify({alias: oldParent, parent: newParent})
     });
 
-    const mappedSection = document.getElementById('mapped');
-    const mergedSection = document.getElementById('merged');
-    if (card.closest('#mapped')) {
-      mappedSection.prepend(card);
-    } else if (card.closest('#merged')) {
-      mergedSection.prepend(card);
-    }
+    moveCardToTop(card);
   }
 
   function setupParentSelect(select){
