@@ -1672,7 +1672,7 @@ def transactions_page():
     query = (
         'SELECT resolved_at, created_at, shopify_created_at, qbo_created_at, sku, '
         'shopify_sku, qbo_sku, shopify_desc, qbo_desc, quantity, total, action, shopify_id, qbo_id, ignored '
-        'FROM duplicate_log WHERE ignored=0'
+        'FROM duplicate_log WHERE action!="unmatched" AND ignored=0'
     )
     if clauses:
         query += ' AND ' + ' AND '.join(clauses)
