@@ -281,11 +281,12 @@ def upload():
             _update_sku_map(conn, cleaned['sku'])
             conn.commit()
             flash('File uploaded and data updated.')
+            conn.close()
+            return redirect(url_for('dashboard'))
         except Exception as exc:
             flash(f'Failed to process file: {exc}')
-        finally:
             conn.close()
-        return redirect(url_for('dashboard'))
+            return render_template('upload.html')
     return render_template('upload.html')
 
 
