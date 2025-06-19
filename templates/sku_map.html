@@ -4,13 +4,16 @@
   <div class="card-content">
     <h2 class="title is-4 mb-4">SKU alias mapping</h2>
     <nav class="buttons tab-buttons mb-4" id="mapTabs">
+      <button type="button" class="mdc-button mdc-button--raised" data-target="search">Search</button>
       <button type="button" class="mdc-button mdc-button--raised is-active" data-target="unmapped">Unmapped ({{ grouped|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="mapped">Mapped ({{ mapped|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged ({{ merged|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="sug">Suggestions ({{ suggestions|length }})</button>
     </nav>
-    <section id="unmapped" class="tab-pane">
+    <section id="search" class="tab-pane is-hidden">
       <input type="text" id="searchBox" class="input mb-4" placeholder="Search SKUs and aliases">
+    </section>
+    <section id="unmapped" class="tab-pane">
       <form method="POST">
         <input type="hidden" id="merge_target" name="merge_target" value="">
         {% for entry in grouped %}
@@ -114,7 +117,7 @@
       <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
         <div class="card-content">
           <div class="field is-flex is-align-items-center mb-2">
-            <label class="label mb-0 mr-1">Parent SKU</label>
+            <label class="label mb-0 mr-1">{% if entry.alias_count > 0 %}Parent SKU{% else %}SKU{% endif %}</label>
             {% if entry.aliases.strip() %}
             <div class="select">
               <select class="parent-select">
@@ -471,10 +474,11 @@
     const parent = aliases.length ?
       `<div class="select"><select class="parent-select"><option value="${canonical}" selected>${canonical}</option>${opts}</select></div>` :
       `<strong>${canonical}</strong>`;
+    const label = aliases.length ? 'Parent SKU' : 'SKU';
     div.innerHTML = `
       <div class="card-content">
         <div class="field is-flex is-align-items-center mb-2">
-          <label class="label mb-0 mr-1">Parent SKU</label>
+          <label class="label mb-0 mr-1">${label}</label>
           ${parent}
         </div>
         <div class="columns is-vcentered sku-row">
