@@ -607,6 +607,11 @@ def sku_map_page():
         key=lambda x: x.get('change_date') or datetime.min,
         reverse=True,
     )
+    unmapped_groups = sorted(
+        (g for g in grouped_list if g['type'] == 'unmapped'),
+        key=lambda x: x.get('change_date') or datetime.min,
+        reverse=True,
+    )
 
     # generate merge suggestions
     canonicals = sorted(grouped.keys())
@@ -614,7 +619,7 @@ def sku_map_page():
 
     return render_template(
         'sku_map.html',
-        grouped=grouped_list,
+        grouped=unmapped_groups,
         suggestions=suggestions,
         merged=merged_groups,
         mapped=mapped_groups,
