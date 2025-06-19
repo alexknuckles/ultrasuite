@@ -215,7 +215,8 @@
       <thead>
         <tr>
           <th>Resolved At</th>
-          <th>Date</th>
+          <th>Shopify Date</th>
+          <th>QBO Date</th>
           <th>Action</th>
           <th>SKU</th>
           <th>Shopify Description</th>
@@ -229,7 +230,8 @@
         {% for d in resolved_duplicates %}
         <tr>
           <td>{{ d.resolved_at|format_dt }}</td>
-          <td>{{ d.created_at|format_dt }}</td>
+          <td>{{ d.shopify_created_at|format_dt }}</td>
+          <td>{{ d.qbo_created_at|format_dt }}</td>
           <td>{{ d.action|capitalize }}</td>
           <td>{{ d.sku }}</td>
           <td>{{ d.shopify_desc }}</td>

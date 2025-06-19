@@ -379,8 +379,8 @@ def _resolve_duplicates(conn, action):
     pairs = _find_duplicates(conn)
     for p in pairs:
         conn.execute(
-            "INSERT INTO duplicate_log(resolved_at, shopify_id, qbo_id, action, sku, quantity, total, shopify_desc, qbo_desc, created_at, ignored) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,0)",
+            "INSERT INTO duplicate_log(resolved_at, shopify_id, qbo_id, action, sku, quantity, total, shopify_desc, qbo_desc, created_at, shopify_created_at, qbo_created_at, ignored) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0)",
             (
                 datetime.now(timezone.utc).isoformat(),
                 p['shopify_id'],
@@ -392,6 +392,8 @@ def _resolve_duplicates(conn, action):
                 p['shopify_desc'],
                 p['qbo_desc'],
                 p['created_at'],
+                p['shopify_created_at'],
+                p['qbo_created_at'],
             ),
         )
         if action == 'shopify':
@@ -484,6 +486,8 @@ def _find_duplicates(conn, sku=None, start=None, end=None):
                 'shopify_id': r.id_s,
                 'qbo_id': r.id_q,
                 'created_at': ts.isoformat(sep=' ', timespec='seconds'),
+                'shopify_created_at': r.created_at_s.isoformat(sep=' ', timespec='seconds'),
+                'qbo_created_at': r.created_at_q.isoformat(sep=' ', timespec='seconds'),
                 'sku': r.canonical,
                 'shopify_desc': r.description_s,
                 'qbo_desc': r.description_q,
@@ -1604,7 +1608,8 @@ def transactions_page():
         clauses.append('created_at <= ?')
         params.append(end_dt.isoformat(sep=' ', timespec='seconds'))
     query = (
-        'SELECT resolved_at, created_at, sku, shopify_desc, qbo_desc, quantity, total, action, shopify_id, qbo_id, ignored '
+        'SELECT resolved_at, created_at, shopify_created_at, qbo_created_at, sku, '
+        'shopify_desc, qbo_desc, quantity, total, action, shopify_id, qbo_id, ignored '
         'FROM duplicate_log'
     )
     if clauses:
