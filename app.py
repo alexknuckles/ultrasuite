@@ -588,7 +588,9 @@ def sku_map_page():
 
     all_txn['canonical'] = all_txn['sku'].apply(canonical)
     last_dates = all_txn.groupby('canonical')['created_at'].max().to_dict()
-    changed_dates = pd.to_datetime(mapping_df['changed_at'], errors='coerce')
+    changed_dates = pd.to_datetime(
+        mapping_df['changed_at'], errors='coerce', utc=True
+    ).dt.tz_localize(None)
     mapping_df['changed_dt'] = changed_dates
     changed_map = mapping_df.groupby('canonical_sku')['changed_dt'].max().to_dict()
 
