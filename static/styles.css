@@ -594,7 +594,8 @@ input.switch:checked::before {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background-color: var(--ultra-highlight);
+  background-color: var(--ultra-background);
+  color: var(--ultra-text);
   border: 1px solid var(--ultra-primary);
   border-radius: 4px;
   padding: 0.25rem 1.75rem 0.25rem 0.5rem;
