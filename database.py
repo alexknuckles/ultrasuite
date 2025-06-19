@@ -36,7 +36,7 @@ def init_db():
         "CREATE TABLE IF NOT EXISTS qbo (created_at TEXT, sku TEXT, description TEXT, quantity REAL, price REAL, total REAL)"
     )
     c.execute(
-        "CREATE TABLE IF NOT EXISTS sku_map (alias TEXT PRIMARY KEY, canonical_sku TEXT, type TEXT)"
+        "CREATE TABLE IF NOT EXISTS sku_map (alias TEXT PRIMARY KEY, canonical_sku TEXT, type TEXT, source TEXT)"
     )
     c.execute(
         "CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)"
@@ -62,6 +62,15 @@ def migrate_meta():
         conn.commit()
     conn.close()
 
+def migrate_sku_source():
+    """Ensure source column exists in the sku_map table."""
+    conn = get_db()
+    cols = [row['name'] for row in conn.execute('PRAGMA table_info(sku_map)').fetchall()]
+    if 'source' not in cols:
+        conn.execute('ALTER TABLE sku_map ADD COLUMN source TEXT')
+        conn.commit()
+    conn.close()
+
 def get_setting(key, default=""):
     conn = get_db()
     row = conn.execute('SELECT value FROM settings WHERE key=?', (key,)).fetchone()
@@ -77,3 +86,4 @@ def set_setting(key, value):
 init_db()
 migrate_types()
 migrate_meta()
+migrate_sku_source()
