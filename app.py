@@ -1906,6 +1906,7 @@ def settings_page():
         include_year_overall = 'include_year_overall' in request.form
         include_year_summary = 'include_year_summary' in request.form
         include_shopify = 'include_shopify' in request.form
+        prev_dup_action = get_setting('duplicate_action', 'review')
         dup_action = request.form.get('dup_action', 'review')
         detail_types = request.form.getlist('detail_types')
         set_setting('default_detail_types', ','.join(detail_types))
@@ -1917,6 +1918,11 @@ def settings_page():
         default_month = request.form.get('default_month', '')
         set_setting('default_export_month', default_month)
         set_setting('duplicate_action', dup_action)
+        if dup_action in {'shopify', 'qbo', 'both'} and dup_action != prev_dup_action:
+            conn = get_db()
+            _resolve_duplicates(conn, dup_action)
+            conn.commit()
+            conn.close()
         logo_file = request.files.get('logo')
         if logo_file and logo_file.filename:
             filename = secure_filename(logo_file.filename)
