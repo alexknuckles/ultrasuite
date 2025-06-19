@@ -439,8 +439,12 @@ def _find_duplicates(conn, sku=None, start=None, end=None):
 
     for df in (shopify, qbo):
         df['canonical'] = df['sku'].apply(canonical)
-        df['quantity'] = pd.to_numeric(df['quantity'], errors='coerce')
-        df['total'] = pd.to_numeric(df['total'], errors='coerce')
+        df['quantity'] = (
+            pd.to_numeric(df['quantity'], errors='coerce').astype(float)
+        )
+        df['total'] = (
+            pd.to_numeric(df['total'], errors='coerce').astype(float)
+        )
         df['created_at'] = (
             pd.to_datetime(df['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
             .dt.tz_localize(None)
