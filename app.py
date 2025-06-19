@@ -336,8 +336,8 @@ def _update_sku_map(conn, sku_series, source=None):
         row = conn.execute('SELECT 1 FROM sku_map WHERE alias=?', (alias,)).fetchone()
         if not row:
             conn.execute(
-                'INSERT INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
-                (alias, alias, 'unmapped', source)
+                'INSERT INTO sku_map(alias, canonical_sku, type, source, changed_at) VALUES(?,?,?,?,?)',
+                (alias, alias, 'unmapped', source, datetime.utcnow().isoformat())
             )
 
 
@@ -348,8 +348,8 @@ def _save_types(conn, form):
         type_val = form.get(f'type_{idx}', 'unmapped')
         if canonical:
             conn.execute(
-                'UPDATE sku_map SET type=? WHERE canonical_sku=?',
-                (type_val, canonical)
+                'UPDATE sku_map SET type=?, changed_at=? WHERE canonical_sku=?',
+                (type_val, datetime.utcnow().isoformat(), canonical)
             )
 
 
@@ -398,12 +398,13 @@ def sku_map_page():
                     ).fetchall()
                     for r in rows:
                         conn.execute(
-                            'REPLACE INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
-                            (r['alias'], target, target_type, r['source']),
+                            'REPLACE INTO sku_map(alias, canonical_sku, type, source, changed_at) VALUES(?,?,?,?,?)',
+                            (r['alias'], target, target_type, r['source'], datetime.utcnow().isoformat()),
                         )
                     if canonical != target:
                         conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (canonical,))
-                conn.execute('UPDATE sku_map SET type=? WHERE canonical_sku=?', (target_type, target))
+                conn.execute('UPDATE sku_map SET type=?, changed_at=? WHERE canonical_sku=?',
+                             (target_type, datetime.utcnow().isoformat(), target))
                 conn.commit()
                 flash('Entries merged.')
         elif 'merge_suggestions' in request.form:
@@ -419,8 +420,8 @@ def sku_map_page():
                     ).fetchall()
                     for r in rows:
                         conn.execute(
-                            'REPLACE INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
-                            (r['alias'], merge_to, r['type'], r['source']),
+                            'REPLACE INTO sku_map(alias, canonical_sku, type, source, changed_at) VALUES(?,?,?,?,?)',
+                            (r['alias'], merge_to, r['type'], r['source'], datetime.utcnow().isoformat()),
                         )
                     if merge_from != merge_to:
                         conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (merge_from,))
@@ -439,8 +440,8 @@ def sku_map_page():
                 conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (canonical,))
                 for alias in alias_set:
                     conn.execute(
-                        'REPLACE INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
-                        (alias, canonical, type_val, '')
+                        'REPLACE INTO sku_map(alias, canonical_sku, type, source, changed_at) VALUES(?,?,?,?,?)',
+                        (alias, canonical, type_val, '', datetime.utcnow().isoformat())
                     )
             canonical_new = request.form.get('canonical_new', '').lower().strip()
             aliases_new = request.form.get('aliases_new', '')
@@ -450,8 +451,8 @@ def sku_map_page():
                 alias_set = set(alias_list + [canonical_new])
                 for alias in alias_set:
                     conn.execute(
-                        'REPLACE INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
-                        (alias, canonical_new, type_new, '')
+                        'REPLACE INTO sku_map(alias, canonical_sku, type, source, changed_at) VALUES(?,?,?,?,?)',
+                        (alias, canonical_new, type_new, '', datetime.utcnow().isoformat())
                     )
             conn.commit()
             flash('SKU map updated.')
@@ -459,7 +460,7 @@ def sku_map_page():
         return redirect(url_for('sku_map_page'))
 
     mapping_df = pd.read_sql_query(
-        'SELECT alias, canonical_sku, type, source FROM sku_map',
+        'SELECT alias, canonical_sku, type, source, changed_at FROM sku_map',
         conn,
     )
     shopify = pd.read_sql_query('SELECT created_at, sku FROM shopify', conn)
@@ -492,6 +493,9 @@ def sku_map_page():
 
     all_txn['canonical'] = all_txn['sku'].apply(canonical)
     last_dates = all_txn.groupby('canonical')['created_at'].max().to_dict()
+    changed_dates = pd.to_datetime(mapping_df['changed_at'], errors='coerce')
+    mapping_df['changed_dt'] = changed_dates
+    changed_map = mapping_df.groupby('canonical_sku')['changed_dt'].max().to_dict()
 
     grouped = {}
     for r in mapping_df.itertuples(index=False):
@@ -511,7 +515,14 @@ def sku_map_page():
         aliases_sorted = sorted(g['aliases'])
         g['alias_count'] = len(aliases_sorted)
         g['aliases'] = ', '.join(aliases_sorted)
-        g['change_date'] = last_dates.get(g['canonical'])
+        last_change = last_dates.get(g['canonical'])
+        mod_change = changed_map.get(g['canonical'])
+        if pd.isna(mod_change):
+            mod_change = None
+        if last_change and mod_change:
+            g['change_date'] = max(last_change, mod_change)
+        else:
+            g['change_date'] = mod_change or last_change
         grouped_list.append(g)
 
     merged_groups = sorted(
@@ -543,7 +554,7 @@ def export_sku_map():
     """Download the SKU mapping as a CSV file."""
     conn = get_db()
     df = pd.read_sql_query(
-        'SELECT alias, canonical_sku, type, source FROM sku_map',
+        'SELECT alias, canonical_sku, type, source, changed_at FROM sku_map',
         conn,
     )
     conn.close()
@@ -589,8 +600,8 @@ def import_sku_map():
         type_val = str(row.type).lower().strip() or 'unmapped'
         source_val = str(row.source).lower().strip() if hasattr(row, 'source') else ''
         conn.execute(
-            'INSERT INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
-            (alias, canonical, type_val, source_val),
+            'INSERT INTO sku_map(alias, canonical_sku, type, source, changed_at) VALUES(?,?,?,?,?)',
+            (alias, canonical, type_val, source_val, datetime.utcnow().isoformat()),
         )
     conn.commit()
     conn.close()
@@ -617,8 +628,8 @@ def update_parent():
     group_type = rows[0]['type']
     for r in rows:
         conn.execute(
-            'REPLACE INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
-            (r['alias'], new_parent, group_type, r['source']),
+            'REPLACE INTO sku_map(alias, canonical_sku, type, source, changed_at) VALUES(?,?,?,?,?)',
+            (r['alias'], new_parent, group_type, r['source'], datetime.utcnow().isoformat()),
         )
     if old_parent != new_parent:
         conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (old_parent,))
