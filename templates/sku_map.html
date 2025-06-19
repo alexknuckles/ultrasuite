@@ -298,7 +298,10 @@
     });
     card.querySelectorAll('.alias-input').forEach(initAliasInput);
     card.addEventListener('click', e => {
-      if (e.target.closest('input') || e.target.closest('button') || e.target.closest('select')) return;
+      if (e.target.closest('.target-wrap') || e.target.closest('select')) return;
+      if (e.target.closest('.merge-check')) return;
+      if (e.target.matches('label[for^="merge_"]')) e.preventDefault();
+      if (e.target.closest('input') || e.target.closest('button')) return;
       if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); }
     });
   }
