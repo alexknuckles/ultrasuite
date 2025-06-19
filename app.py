@@ -494,17 +494,17 @@ def sku_map_page():
     last_dates = all_txn.groupby('canonical')['created_at'].max().to_dict()
 
     grouped = {}
-    for r in mapping_df.itertuples():
-        entry = grouped.setdefault(r['canonical_sku'], {
-            'canonical': r['canonical_sku'],
+    for r in mapping_df.itertuples(index=False):
+        entry = grouped.setdefault(r.canonical_sku, {
+            'canonical': r.canonical_sku,
             'aliases': [],
-            'type': r['type'],
+            'type': r.type,
             'source': ''
         })
-        if r['alias'] == r['canonical_sku']:
-            entry['source'] = r['source'] or ''
+        if r.alias == r.canonical_sku:
+            entry['source'] = r.source or ''
         else:
-            entry['aliases'].append(r['alias'])
+            entry['aliases'].append(r.alias)
 
     grouped_list = []
     for g in grouped.values():
