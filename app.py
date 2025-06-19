@@ -288,7 +288,7 @@ def upload():
                     first_txn.isoformat() if pd.notna(first_txn) else None,
                 )
             )
-            _update_sku_map(conn, cleaned['sku'])
+            _update_sku_map(conn, cleaned['sku'], source)
             conn.commit()
             flash('File uploaded and data updated.')
             conn.close()
@@ -304,14 +304,14 @@ def upload():
     return render_template('upload.html')
 
 
-def _update_sku_map(conn, sku_series):
+def _update_sku_map(conn, sku_series, source=None):
     aliases = sku_series.dropna().str.lower().str.strip().unique()
     for alias in aliases:
         row = conn.execute('SELECT 1 FROM sku_map WHERE alias=?', (alias,)).fetchone()
         if not row:
             conn.execute(
-                'INSERT INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
-                (alias, alias, 'unmapped')
+                'INSERT INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
+                (alias, alias, 'unmapped', source)
             )
 
 
@@ -367,13 +367,13 @@ def sku_map_page():
                 target_type = type_row['type'] if type_row else 'unmapped'
                 for canonical in selected:
                     rows = conn.execute(
-                        'SELECT alias FROM sku_map WHERE canonical_sku=?',
+                        'SELECT alias, source FROM sku_map WHERE canonical_sku=?',
                         (canonical,),
                     ).fetchall()
                     for r in rows:
                         conn.execute(
-                            'REPLACE INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
-                            (r['alias'], target, target_type),
+                            'REPLACE INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
+                            (r['alias'], target, target_type, r['source']),
                         )
                     if canonical != target:
                         conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (canonical,))
@@ -388,13 +388,13 @@ def sku_map_page():
                 merge_to = request.form.get(f'sug_target_{idx}', '').lower().strip()
                 if merge_from and merge_to:
                     rows = conn.execute(
-                        'SELECT alias, type FROM sku_map WHERE canonical_sku=?',
+                        'SELECT alias, type, source FROM sku_map WHERE canonical_sku=?',
                         (merge_from,),
                     ).fetchall()
                     for r in rows:
                         conn.execute(
-                            'REPLACE INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
-                            (r['alias'], merge_to, r['type']),
+                            'REPLACE INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
+                            (r['alias'], merge_to, r['type'], r['source']),
                         )
                     if merge_from != merge_to:
                         conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (merge_from,))
@@ -413,9 +413,9 @@ def sku_map_page():
                 conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (canonical,))
                 for alias in alias_set:
                     conn.execute(
-                        'REPLACE INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
-                (alias, canonical, type_val)
-            )
+                        'REPLACE INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
+                        (alias, canonical, type_val, '')
+                    )
             canonical_new = request.form.get('canonical_new', '').lower().strip()
             aliases_new = request.form.get('aliases_new', '')
             type_new = request.form.get('type_new', 'unmapped')
@@ -424,24 +424,27 @@ def sku_map_page():
                 alias_set = set(alias_list + [canonical_new])
                 for alias in alias_set:
                     conn.execute(
-                        'REPLACE INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
-                        (alias, canonical_new, type_new)
+                        'REPLACE INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
+                        (alias, canonical_new, type_new, '')
                     )
             conn.commit()
             flash('SKU map updated.')
         conn.close()
         return redirect(url_for('sku_map_page'))
 
-    rows = conn.execute('SELECT alias, canonical_sku, type FROM sku_map').fetchall()
+    rows = conn.execute('SELECT alias, canonical_sku, type, source FROM sku_map').fetchall()
     conn.close()
     grouped = {}
     for r in rows:
         entry = grouped.setdefault(r['canonical_sku'], {
             'canonical': r['canonical_sku'],
             'aliases': [],
-            'type': r['type']
+            'type': r['type'],
+            'source': ''
         })
-        if r['alias'] != r['canonical_sku']:
+        if r['alias'] == r['canonical_sku']:
+            entry['source'] = r['source'] or ''
+        else:
             entry['aliases'].append(r['alias'])
 
     grouped_list = []
@@ -475,7 +478,7 @@ def export_sku_map():
     """Download the SKU mapping as a CSV file."""
     conn = get_db()
     df = pd.read_sql_query(
-        'SELECT alias, canonical_sku, type FROM sku_map',
+        'SELECT alias, canonical_sku, type, source FROM sku_map',
         conn,
     )
     conn.close()
@@ -509,15 +512,18 @@ def import_sku_map():
     if not required.issubset(df.columns):
         flash('SKU map file must contain alias, canonical_sku and type columns.')
         return redirect(url_for('settings_page'))
+    if 'source' not in df.columns:
+        df['source'] = ''
     conn = get_db()
     conn.execute('DELETE FROM sku_map')
-    for row in df[['alias', 'canonical_sku', 'type']].itertuples(index=False):
+    for row in df[['alias', 'canonical_sku', 'type', 'source']].itertuples(index=False):
         alias = str(row.alias).lower().strip()
         canonical = str(row.canonical_sku).lower().strip() or alias
         type_val = str(row.type).lower().strip() or 'unmapped'
+        source_val = str(row.source).lower().strip() if hasattr(row, 'source') else ''
         conn.execute(
-            'INSERT INTO sku_map(alias, canonical_sku, type) VALUES(?,?,?)',
-            (alias, canonical, type_val),
+            'INSERT INTO sku_map(alias, canonical_sku, type, source) VALUES(?,?,?,?)',
+            (alias, canonical, type_val, source_val),
         )
     conn.commit()
     conn.close()

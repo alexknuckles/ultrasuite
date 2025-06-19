@@ -48,6 +48,12 @@
                   </div>
                 </div>
               </div>
+              <div class="column is-narrow">
+                <div class="field is-flex is-align-items-center">
+                  <label class="label mb-0 mr-1">Source</label>
+                  <strong>{{ entry.source }}</strong>
+                </div>
+              </div>
             </div>
             <div class="field alias-field" {% if not entry.aliases %}style="display:none"{% endif %}>
               <label class="label">Aliases</label>
@@ -83,6 +89,12 @@
                   </div>
                 </div>
               </div>
+              <div class="column is-narrow">
+                <div class="field is-flex is-align-items-center">
+                  <label class="label mb-0 mr-1">Source</label>
+                  <strong></strong>
+                </div>
+              </div>
             </div>
             <div class="field alias-field" style="display:none">
               <label class="label">Aliases</label>
@@ -110,6 +122,12 @@
               <div class="field is-flex is-align-items-center">
                 <label class="label mb-0 mr-1">Type</label>
                 <strong>{{ entry.type }}</strong>
+              </div>
+            </div>
+            <div class="column is-narrow">
+              <div class="field is-flex is-align-items-center">
+                <label class="label mb-0 mr-1">Source</label>
+                <strong>{{ entry.source }}</strong>
               </div>
             </div>
           </div>
@@ -141,6 +159,12 @@
               <div class="field is-flex is-align-items-center">
                 <label class="label mb-0 mr-1">Type</label>
                 <strong>{{ entry.type }}</strong>
+              </div>
+            </div>
+            <div class="column is-narrow">
+              <div class="field is-flex is-align-items-center">
+                <label class="label mb-0 mr-1">Source</label>
+                <strong>{{ entry.source }}</strong>
               </div>
             </div>
           </div>
@@ -312,7 +336,7 @@
 
   const typeOptions = Array.from(document.querySelector('#map select[name^="type_"]').options).map(o => `<option value="${o.value}">${o.textContent}</option>`).join('');
 
-  function createMapCard(idx, canonical, type){
+  function createMapCard(idx, canonical, type, source=''){
     const div = document.createElement('div');
     div.className = 'mdc-card sku-card';
     div.dataset.canonical = canonical;
@@ -338,6 +362,12 @@
               <div class="select">
                 <select name="type_${idx}">${typeOptions}</select>
               </div>
+            </div>
+          </div>
+          <div class="column is-narrow">
+            <div class="field is-flex is-align-items-center">
+              <label class="label mb-0 mr-1">Source</label>
+              <strong>${source}</strong>
             </div>
           </div>
         </div>
