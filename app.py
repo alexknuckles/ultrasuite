@@ -511,10 +511,12 @@ def export_sku_map():
     output = BytesIO()
     output.write(df.to_csv(index=False).encode('utf-8'))
     output.seek(0)
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'sku_map_{timestamp}.csv'
     return send_file(
         output,
         mimetype='text/csv',
-        download_name='sku_map.csv',
+        download_name=filename,
         as_attachment=True,
     )
 
