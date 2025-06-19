@@ -30,6 +30,16 @@ from markupsafe import Markup
 from werkzeug.utils import secure_filename
 from database import UPLOAD_FOLDER, get_db, get_setting, set_setting
 
+# default theme colors
+DEFAULT_LIGHT_PRIMARY = '#1976d2'
+DEFAULT_LIGHT_HIGHLIGHT = '#bbdefb'
+DEFAULT_LIGHT_BACKGROUND = '#f8f9fa'
+DEFAULT_LIGHT_TEXT = '#363636'
+DEFAULT_DARK_PRIMARY = '#1976d2'
+DEFAULT_DARK_HIGHLIGHT = '#161b22'
+DEFAULT_DARK_BACKGROUND = '#0d1117'
+DEFAULT_DARK_TEXT = '#c9d1d9'
+
 def _try_read_csv(data: bytes, encodings=None):
     """Try reading CSV bytes with a series of encodings."""
     encodings = encodings or ["utf-8", "utf-8-sig", "utf-16", "latin-1", "cp1252"]
@@ -202,14 +212,14 @@ app.jinja_env.filters['trend'] = trend
 @app.context_processor
 def inject_globals():
     theme = {
-        'light_primary': get_setting('theme_light_primary', ''),
-        'light_highlight': get_setting('theme_light_highlight', ''),
-        'light_background': get_setting('theme_light_background', ''),
-        'light_text': get_setting('theme_light_text', ''),
-        'dark_primary': get_setting('theme_dark_primary', ''),
-        'dark_highlight': get_setting('theme_dark_highlight', ''),
-        'dark_background': get_setting('theme_dark_background', ''),
-        'dark_text': get_setting('theme_dark_text', ''),
+        'light_primary': get_setting('theme_light_primary', DEFAULT_LIGHT_PRIMARY),
+        'light_highlight': get_setting('theme_light_highlight', DEFAULT_LIGHT_HIGHLIGHT),
+        'light_background': get_setting('theme_light_background', DEFAULT_LIGHT_BACKGROUND),
+        'light_text': get_setting('theme_light_text', DEFAULT_LIGHT_TEXT),
+        'dark_primary': get_setting('theme_dark_primary', DEFAULT_DARK_PRIMARY),
+        'dark_highlight': get_setting('theme_dark_highlight', DEFAULT_DARK_HIGHLIGHT),
+        'dark_background': get_setting('theme_dark_background', DEFAULT_DARK_BACKGROUND),
+        'dark_text': get_setting('theme_dark_text', DEFAULT_DARK_TEXT),
     }
     return {
         'app_name': get_setting('app_title', 'ultrasuite'),
@@ -1635,19 +1645,19 @@ def settings_page():
                 set_setting('app_logo', os.path.join(UPLOAD_FOLDER, save_name))
         flash('Settings saved.')
         return redirect(url_for('settings_page'))
-    primary_color = get_setting('branding_primary', '#1976d2')
-    highlight_color = get_setting('branding_highlight', '#bbdefb')
+    primary_color = get_setting('branding_primary', DEFAULT_LIGHT_PRIMARY)
+    highlight_color = get_setting('branding_highlight', DEFAULT_LIGHT_HIGHLIGHT)
     app_title = get_setting('app_title', 'ultrasuite')
     report_title = get_setting('report_title', 'Monthly Report')
     branding = get_setting('branding', '')
-    light_primary = get_setting('theme_light_primary', '')
-    light_highlight = get_setting('theme_light_highlight', '')
-    light_background = get_setting('theme_light_background', '')
-    light_text = get_setting('theme_light_text', '')
-    dark_primary = get_setting('theme_dark_primary', '')
-    dark_highlight = get_setting('theme_dark_highlight', '')
-    dark_background = get_setting('theme_dark_background', '')
-    dark_text = get_setting('theme_dark_text', '')
+    light_primary = get_setting('theme_light_primary', DEFAULT_LIGHT_PRIMARY)
+    light_highlight = get_setting('theme_light_highlight', DEFAULT_LIGHT_HIGHLIGHT)
+    light_background = get_setting('theme_light_background', DEFAULT_LIGHT_BACKGROUND)
+    light_text = get_setting('theme_light_text', DEFAULT_LIGHT_TEXT)
+    dark_primary = get_setting('theme_dark_primary', DEFAULT_DARK_PRIMARY)
+    dark_highlight = get_setting('theme_dark_highlight', DEFAULT_DARK_HIGHLIGHT)
+    dark_background = get_setting('theme_dark_background', DEFAULT_DARK_BACKGROUND)
+    dark_text = get_setting('theme_dark_text', DEFAULT_DARK_TEXT)
     dark_default = get_setting('dark_mode', '0') == '1'
     include_month_summary = get_setting('default_include_month_summary', '1') == '1'
     include_month_details = get_setting('default_include_month_details', '1') == '1'

@@ -34,43 +34,63 @@
           <div class="box mb-4">
             <h3 class="title is-6 mb-3">Light mode</h3>
             <div class="field mb-2">
+              <label class="label">Theme</label>
+              <div class="select is-fullwidth">
+                <select id="lightThemeSelect">
+                  <option value="">Custom</option>
+                  <option value="ocean">Ocean</option>
+                  <option value="orchid">Orchid</option>
+                </select>
+              </div>
+            </div>
+            <div class="field mb-2">
               <label class="label">Primary color</label>
-              <input class="input" type="color" name="light_primary" value="{{ light_primary }}">
+              <input class="input color-input" type="color" name="light_primary" value="{{ light_primary }}">
             </div>
             <div class="field mb-2">
               <label class="label">Highlight color</label>
-              <input class="input" type="color" name="light_highlight" value="{{ light_highlight }}">
+              <input class="input color-input" type="color" name="light_highlight" value="{{ light_highlight }}">
             </div>
             <div class="field mb-2">
               <label class="label">Background color</label>
-              <input class="input" type="color" name="light_background" value="{{ light_background }}">
+              <input class="input color-input" type="color" name="light_background" value="{{ light_background }}">
             </div>
             <div class="field mb-2">
               <label class="label">Text color</label>
-              <input class="input" type="color" name="light_text" value="{{ light_text }}">
+              <input class="input color-input" type="color" name="light_text" value="{{ light_text }}">
             </div>
           </div>
         </div>
-        <div class="column">
-          <div class="box mb-4">
-            <h3 class="title is-6 mb-3">Dark mode</h3>
-            <div class="field mb-2">
-              <label class="label">Primary color</label>
-              <input class="input" type="color" name="dark_primary" value="{{ dark_primary }}">
+          <div class="column">
+            <div class="box mb-4">
+              <h3 class="title is-6 mb-3">Dark mode</h3>
+              <div class="field mb-2">
+                <label class="label">Theme</label>
+                <div class="select is-fullwidth">
+                  <select id="darkThemeSelect">
+                    <option value="">Custom</option>
+                    <option value="codex">Codex</option>
+                    <option value="midnight">Midnight</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field mb-2">
+                <label class="label">Primary color</label>
+                <input class="input color-input" type="color" name="dark_primary" value="{{ dark_primary }}">
+              </div>
+              <div class="field mb-2">
+                <label class="label">Highlight color</label>
+                <input class="input color-input" type="color" name="dark_highlight" value="{{ dark_highlight }}">
+              </div>
+              <div class="field mb-2">
+                <label class="label">Background color</label>
+                <input class="input color-input" type="color" name="dark_background" value="{{ dark_background }}">
+              </div>
+              <div class="field mb-2">
+                <label class="label">Text color</label>
+                <input class="input color-input" type="color" name="dark_text" value="{{ dark_text }}">
+              </div>
             </div>
-            <div class="field mb-2">
-              <label class="label">Highlight color</label>
-              <input class="input" type="color" name="dark_highlight" value="{{ dark_highlight }}">
-            </div>
-            <div class="field mb-2">
-              <label class="label">Background color</label>
-              <input class="input" type="color" name="dark_background" value="{{ dark_background }}">
-            </div>
-            <div class="field mb-2">
-              <label class="label">Text color</label>
-              <input class="input" type="color" name="dark_text" value="{{ dark_text }}">
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -95,11 +115,11 @@
         <div class="columns">
           <div class="column field mb-4">
             <label class="label">Primary color</label>
-            <input class="input" type="color" name="primary_color" value="{{ primary_color }}">
+            <input class="input color-input" type="color" name="primary_color" value="{{ primary_color }}">
           </div>
           <div class="column field mb-4">
             <label class="label">Highlight color</label>
-            <input class="input" type="color" name="highlight_color" value="{{ highlight_color }}">
+            <input class="input color-input" type="color" name="highlight_color" value="{{ highlight_color }}">
           </div>
         </div>
       </div>
@@ -212,6 +232,29 @@
     importInput.addEventListener('change', () => {
       if(importInput.files.length) document.getElementById('importSkuForm').submit();
     });
+  }
+  const lightThemes = {
+    ocean: {primary: '#1976d2', highlight: '#bbdefb', background: '#f8f9fa', text: '#363636'},
+    orchid: {primary: '#9c27b0', highlight: '#f3e5f5', background: '#ffffff', text: '#363636'}
+  };
+  const darkThemes = {
+    codex: {primary: '#1976d2', highlight: '#161b22', background: '#0d1117', text: '#c9d1d9'},
+    midnight: {primary: '#90caf9', highlight: '#0d47a1', background: '#121212', text: '#e0e0e0'}
+  };
+  function applyTheme(theme, prefix){
+    if(!theme) return;
+    document.querySelector(`input[name="${prefix}_primary"]`).value = theme.primary;
+    document.querySelector(`input[name="${prefix}_highlight"]`).value = theme.highlight;
+    document.querySelector(`input[name="${prefix}_background"]`).value = theme.background;
+    document.querySelector(`input[name="${prefix}_text"]`).value = theme.text;
+  }
+  const lightSelect = document.getElementById('lightThemeSelect');
+  const darkSelect = document.getElementById('darkThemeSelect');
+  if(lightSelect){
+    lightSelect.addEventListener('change', () => applyTheme(lightThemes[lightSelect.value], 'light'));
+  }
+  if(darkSelect){
+    darkSelect.addEventListener('change', () => applyTheme(darkThemes[darkSelect.value], 'dark'));
   }
   const detailsCb = document.querySelector('input[name="include_month_details"]');
   const detailsField = document.getElementById('detailTypesField');
