@@ -68,10 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
 (function(){
   const root = document.documentElement;
   const stored = localStorage.getItem('ultra-dark');
-  const defaultDark = {{ 'true' if default_dark_mode else 'false' }};
   if (stored === null) {
-    if (defaultDark) root.classList.add('dark-mode');
-    localStorage.setItem('ultra-dark', defaultDark ? '1' : '0');
+    localStorage.setItem('ultra-dark', '0');
   } else if (stored === '1') {
     root.classList.add('dark-mode');
   }

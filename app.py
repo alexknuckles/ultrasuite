@@ -223,7 +223,6 @@ def inject_globals():
     }
     return {
         'app_name': get_setting('app_title', 'ultrasuite'),
-        'default_dark_mode': get_setting('dark_mode', '0') == '1',
         'theme': theme,
     }
 
@@ -1887,6 +1886,40 @@ def unmatch_duplicate():
     if sid is None or qid is None:
         return jsonify(success=False), 400
     conn = get_db()
+    row = conn.execute(
+        'SELECT action, sku, quantity, total, shopify_desc, qbo_desc, '
+        'shopify_created_at, qbo_created_at FROM duplicate_log '
+        'WHERE shopify_id=? AND qbo_id=? ORDER BY resolved_at DESC LIMIT 1',
+        (sid, qid),
+    ).fetchone()
+    if row:
+        price = row['total'] / row['quantity'] if row['quantity'] else 0
+        if row['action'] == 'shopify':
+            conn.execute(
+                'INSERT INTO qbo(created_at, sku, description, quantity, price, total) '
+                'VALUES(?,?,?,?,?,?)',
+                (
+                    row['qbo_created_at'],
+                    row['sku'],
+                    row['qbo_desc'],
+                    row['quantity'],
+                    price,
+                    row['total'],
+                ),
+            )
+        elif row['action'] == 'qbo':
+            conn.execute(
+                'INSERT INTO shopify(created_at, sku, description, quantity, price, total) '
+                'VALUES(?,?,?,?,?,?)',
+                (
+                    row['shopify_created_at'],
+                    row['sku'],
+                    row['shopify_desc'],
+                    row['quantity'],
+                    price,
+                    row['total'],
+                ),
+            )
     conn.execute(
         'UPDATE duplicate_log SET action="unmatched", ignored=0 '
         'WHERE shopify_id=? AND qbo_id=?',
@@ -1918,8 +1951,6 @@ def settings_page():
         set_setting('theme_dark_highlight', dark_highlight)
         set_setting('theme_dark_background', dark_background)
         set_setting('theme_dark_text', dark_text)
-        dark_default = 'default_dark' in request.form
-        set_setting('dark_mode', '1' if dark_default else '0')
 
         primary_color = request.form.get('primary_color', '').strip()
         highlight_color = request.form.get('highlight_color', '').strip()
@@ -1986,7 +2017,6 @@ def settings_page():
     dark_highlight = get_setting('theme_dark_highlight', DEFAULT_DARK_HIGHLIGHT)
     dark_background = get_setting('theme_dark_background', DEFAULT_DARK_BACKGROUND)
     dark_text = get_setting('theme_dark_text', DEFAULT_DARK_TEXT)
-    dark_default = get_setting('dark_mode', '0') == '1'
     include_month_summary = get_setting('default_include_month_summary', '1') == '1'
     include_month_details = get_setting('default_include_month_details', '1') == '1'
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
@@ -2029,7 +2059,6 @@ def settings_page():
         dark_highlight=dark_highlight,
         dark_background=dark_background,
         dark_text=dark_text,
-        dark_default=dark_default,
         dup_action=dup_action,
     )
 
