@@ -201,9 +201,20 @@ app.jinja_env.filters['trend'] = trend
 
 @app.context_processor
 def inject_globals():
+    theme = {
+        'light_primary': get_setting('theme_light_primary', ''),
+        'light_highlight': get_setting('theme_light_highlight', ''),
+        'light_background': get_setting('theme_light_background', ''),
+        'light_text': get_setting('theme_light_text', ''),
+        'dark_primary': get_setting('theme_dark_primary', ''),
+        'dark_highlight': get_setting('theme_dark_highlight', ''),
+        'dark_background': get_setting('theme_dark_background', ''),
+        'dark_text': get_setting('theme_dark_text', ''),
+    }
     return {
         'app_name': get_setting('app_title', 'ultrasuite'),
         'default_dark_mode': get_setting('dark_mode', '0') == '1',
+        'theme': theme,
     }
 
 
@@ -224,7 +235,12 @@ def favicon():
 
 @app.route('/logo.png')
 def logo():
-    """Serve the ultrasuite application logo."""
+    """Serve the application logo, using an uploaded file if available."""
+    custom = get_setting('app_logo', '')
+    if custom:
+        path = custom if os.path.isabs(custom) else os.path.join(app.root_path, custom)
+        if os.path.exists(path):
+            return send_file(path, mimetype='image/png')
     return send_file(os.path.join(app.root_path, 'static', 'ultrasuite-logo.png'), mimetype='image/png')
 
 
@@ -1555,6 +1571,26 @@ def sku_transactions(sku, source):
 @app.route('/settings', methods=['GET', 'POST'])
 def settings_page():
     if request.method == 'POST':
+        # Appearance settings
+        light_primary = request.form.get('light_primary', '').strip()
+        light_highlight = request.form.get('light_highlight', '').strip()
+        light_background = request.form.get('light_background', '').strip()
+        light_text = request.form.get('light_text', '').strip()
+        dark_primary = request.form.get('dark_primary', '').strip()
+        dark_highlight = request.form.get('dark_highlight', '').strip()
+        dark_background = request.form.get('dark_background', '').strip()
+        dark_text = request.form.get('dark_text', '').strip()
+        set_setting('theme_light_primary', light_primary)
+        set_setting('theme_light_highlight', light_highlight)
+        set_setting('theme_light_background', light_background)
+        set_setting('theme_light_text', light_text)
+        set_setting('theme_dark_primary', dark_primary)
+        set_setting('theme_dark_highlight', dark_highlight)
+        set_setting('theme_dark_background', dark_background)
+        set_setting('theme_dark_text', dark_text)
+        dark_default = 'default_dark' in request.form
+        set_setting('dark_mode', '1' if dark_default else '0')
+
         primary_color = request.form.get('primary_color', '').strip()
         highlight_color = request.form.get('highlight_color', '').strip()
         set_setting('branding_primary', primary_color)
@@ -1588,6 +1624,15 @@ def settings_page():
                 path = os.path.join(UPLOAD_FOLDER, save_name)
                 logo_file.save(path)
                 set_setting('branding_logo', os.path.join(UPLOAD_FOLDER, save_name))
+        app_logo_file = request.files.get('app_logo')
+        if app_logo_file and app_logo_file.filename:
+            filename = secure_filename(app_logo_file.filename)
+            ext = os.path.splitext(filename)[1].lower()
+            if ext in {'.png', '.jpg', '.jpeg', '.gif'}:
+                save_name = f'app_logo{ext}'
+                path = os.path.join(UPLOAD_FOLDER, save_name)
+                app_logo_file.save(path)
+                set_setting('app_logo', os.path.join(UPLOAD_FOLDER, save_name))
         flash('Settings saved.')
         return redirect(url_for('settings_page'))
     primary_color = get_setting('branding_primary', '#1976d2')
@@ -1595,6 +1640,15 @@ def settings_page():
     app_title = get_setting('app_title', 'ultrasuite')
     report_title = get_setting('report_title', 'Monthly Report')
     branding = get_setting('branding', '')
+    light_primary = get_setting('theme_light_primary', '')
+    light_highlight = get_setting('theme_light_highlight', '')
+    light_background = get_setting('theme_light_background', '')
+    light_text = get_setting('theme_light_text', '')
+    dark_primary = get_setting('theme_dark_primary', '')
+    dark_highlight = get_setting('theme_dark_highlight', '')
+    dark_background = get_setting('theme_dark_background', '')
+    dark_text = get_setting('theme_dark_text', '')
+    dark_default = get_setting('dark_mode', '0') == '1'
     include_month_summary = get_setting('default_include_month_summary', '1') == '1'
     include_month_details = get_setting('default_include_month_details', '1') == '1'
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
@@ -1604,6 +1658,7 @@ def settings_page():
     detail_types = [t for t in types_default.split(',') if t]
     detail_types_all = len(detail_types) == len(CATEGORIES)
     logo_path = get_setting('branding_logo', '')
+    app_logo_path = get_setting('app_logo', '')
     month_default = get_setting('default_export_month', '')
     month_int = int(month_default) if str(month_default).isdigit() else None
     months = calculate_report_data(datetime.now().year)['months']
@@ -1621,11 +1676,21 @@ def settings_page():
         categories=CATEGORIES,
         labels=CATEGORY_LABELS,
         logo_path=logo_path,
+        app_logo_path=app_logo_path,
         months=months,
         default_month=month_int,
         app_title=app_title,
         report_title=report_title,
         branding=branding,
+        light_primary=light_primary,
+        light_highlight=light_highlight,
+        light_background=light_background,
+        light_text=light_text,
+        dark_primary=dark_primary,
+        dark_highlight=dark_highlight,
+        dark_background=dark_background,
+        dark_text=dark_text,
+        dark_default=dark_default,
     )
 
 if __name__ == '__main__':

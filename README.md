@@ -12,7 +12,7 @@ Ultrasuite is a Flask application for aggregating sales data. Upload transaction
 - **Dashboard** – View last upload dates and a summary of mapped SKUs.
 - **SKU Mapping** – Map alias SKUs to canonical SKUs and categorize them by type.
 - **Reports** – Interactive charts for monthly trends and yearly comparisons, with optional PDF export.
-- **Settings** – Customize reports.
+- **Settings** – Customize reports and appearance.
 
 Data is stored locally and charts are generated with Matplotlib.
 

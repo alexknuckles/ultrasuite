@@ -8,6 +8,22 @@
   <link rel="icon" href="{{ url_for('favicon') }}">
   <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  {% if theme %}
+  <style>
+  :root {
+    {% if theme.light_primary %}--ultra-primary: {{ theme.light_primary }};{% endif %}
+    {% if theme.light_highlight %}--ultra-highlight: {{ theme.light_highlight }};{% endif %}
+    {% if theme.light_background %}--ultra-background: {{ theme.light_background }};{% endif %}
+    {% if theme.light_text %}--ultra-text: {{ theme.light_text }};{% endif %}
+  }
+  .dark-mode {
+    {% if theme.dark_primary %}--ultra-primary: {{ theme.dark_primary }};{% endif %}
+    {% if theme.dark_highlight %}--ultra-highlight: {{ theme.dark_highlight }};{% endif %}
+    {% if theme.dark_background %}--ultra-background: {{ theme.dark_background }};{% endif %}
+    {% if theme.dark_text %}--ultra-text: {{ theme.dark_text }};{% endif %}
+  }
+  </style>
+  {% endif %}
 </head>
 <body>
 <header class="mdc-top-app-bar mb-4">

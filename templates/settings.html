@@ -16,6 +16,63 @@
         <label class="label">Application title</label>
         <input class="input" type="text" name="app_title" value="{{ app_title }}">
       </div>
+      <div class="field mb-4">
+        <label class="label">Application logo</label>
+        {% if app_logo_path %}
+        <img src="{{ url_for('logo') }}" alt="logo" style="max-height:3rem;" class="mb-2">
+        {% endif %}
+        <input class="input" type="file" name="app_logo" accept="image/*">
+      </div>
+      <div class="field mb-4">
+        <label class="switch-label">
+          <input type="checkbox" class="switch" name="default_dark" {% if dark_default %}checked{% endif %}>
+          <span>Use dark mode by default</span>
+        </label>
+      </div>
+      <div class="columns">
+        <div class="column">
+          <div class="box mb-4">
+            <h3 class="title is-6 mb-3">Light mode</h3>
+            <div class="field mb-2">
+              <label class="label">Primary color</label>
+              <input class="input" type="color" name="light_primary" value="{{ light_primary }}">
+            </div>
+            <div class="field mb-2">
+              <label class="label">Highlight color</label>
+              <input class="input" type="color" name="light_highlight" value="{{ light_highlight }}">
+            </div>
+            <div class="field mb-2">
+              <label class="label">Background color</label>
+              <input class="input" type="color" name="light_background" value="{{ light_background }}">
+            </div>
+            <div class="field mb-2">
+              <label class="label">Text color</label>
+              <input class="input" type="color" name="light_text" value="{{ light_text }}">
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="box mb-4">
+            <h3 class="title is-6 mb-3">Dark mode</h3>
+            <div class="field mb-2">
+              <label class="label">Primary color</label>
+              <input class="input" type="color" name="dark_primary" value="{{ dark_primary }}">
+            </div>
+            <div class="field mb-2">
+              <label class="label">Highlight color</label>
+              <input class="input" type="color" name="dark_highlight" value="{{ dark_highlight }}">
+            </div>
+            <div class="field mb-2">
+              <label class="label">Background color</label>
+              <input class="input" type="color" name="dark_background" value="{{ dark_background }}">
+            </div>
+            <div class="field mb-2">
+              <label class="label">Text color</label>
+              <input class="input" type="color" name="dark_text" value="{{ dark_text }}">
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div id="exportSettings" class="tab-pane is-hidden">
       <div class="box mb-4">
