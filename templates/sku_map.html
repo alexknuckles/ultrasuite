@@ -115,8 +115,14 @@
         <div class="card-content">
           <div class="field is-flex is-align-items-center mb-2">
             <label class="label mb-0 mr-1">Parent SKU</label>
-            <strong>{{ entry.canonical }}</strong>
-            <button type="button" class="mdc-button modify-parent-btn ml-2">Modify Parent</button>
+            <div class="select is-small">
+              <select class="parent-select">
+                <option value="{{ entry.canonical }}" selected>{{ entry.canonical }}</option>
+                {% for a in entry.aliases.split(',') if a.strip() %}
+                <option value="{{ a.strip() }}">{{ a.strip() }}</option>
+                {% endfor %}
+              </select>
+            </div>
           </div>
           <div class="columns is-vcentered sku-row">
             <div class="column is-narrow">
@@ -153,8 +159,14 @@
         <div class="card-content">
           <div class="field is-flex is-align-items-center mb-2">
             <label class="label mb-0 mr-1">Parent SKU</label>
-            <strong>{{ entry.canonical }}</strong>
-            <button type="button" class="mdc-button modify-parent-btn ml-2">Modify Parent</button>
+            <div class="select is-small">
+              <select class="parent-select">
+                <option value="{{ entry.canonical }}" selected>{{ entry.canonical }}</option>
+                {% for a in entry.aliases.split(',') if a.strip() %}
+                <option value="{{ a.strip() }}">{{ a.strip() }}</option>
+                {% endfor %}
+              </select>
+            </div>
           </div>
           <div class="columns is-vcentered sku-row">
             <div class="column is-narrow">
@@ -426,6 +438,8 @@
         const count = document.querySelectorAll(`#${sec} .sku-card`).length;
         tabBtn.textContent = sec.charAt(0).toUpperCase() + sec.slice(1) + ` (${count})`;
       }
+    } else {
+      refreshParentSelect(card);
     }
   }
 
@@ -435,93 +449,71 @@
 
   document.querySelectorAll('#merged .alias-badges .delete, #mapped .alias-badges .delete').forEach(setupAliasDelete);
 
-  function initModifyParentButtons(){
-    document.querySelectorAll('#mapped .modify-parent-btn, #merged .modify-parent-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const card = btn.closest('.sku-card');
-        if (!card || card.querySelector('.modify-parent-controls')) return;
-        const tags = Array.from(card.querySelectorAll('.alias-badges .tag'));
-        const aliases = tags.map(t => t.dataset.alias).filter(Boolean);
-        if (aliases.length === 0) return;
-        const wrap = document.createElement('span');
-        wrap.className = 'modify-parent-controls ml-2';
-        const select = document.createElement('select');
-        aliases.forEach(a => {
-          const opt = document.createElement('option');
-          opt.value = a;
-          opt.textContent = a;
-          select.appendChild(opt);
-        });
-        const apply = document.createElement('button');
-        apply.type = 'button';
-        apply.className = 'mdc-button mdc-button--raised ml-1';
-        apply.textContent = 'Apply';
-        const cancel = document.createElement('button');
-        cancel.type = 'button';
-        cancel.className = 'mdc-button ml-1';
-        cancel.textContent = 'Cancel';
-        wrap.appendChild(select);
-        wrap.appendChild(apply);
-        wrap.appendChild(cancel);
-        btn.after(wrap);
-        btn.classList.add('is-invisible');
-
-        cancel.addEventListener('click', () => {
-          wrap.remove();
-          btn.classList.remove('is-invisible');
-        });
-
-        apply.addEventListener('click', () => {
-          const newParent = select.value;
-          const strong = card.querySelector('strong');
-          const oldParent = strong.textContent.trim();
-          if (newParent === oldParent) { cancel.click(); return; }
-
-          // update alias badges
-          const container = card.querySelector('.alias-badges');
-          const field = container ? container.closest('.alias-field') : null;
-          const selectedTag = card.querySelector(`.alias-badges [data-alias="${newParent}"]`);
-          if (selectedTag) selectedTag.remove();
-          if (container) {
-            const newTag = document.createElement('span');
-            newTag.className = 'tag is-info is-light';
-            newTag.dataset.alias = oldParent;
-            newTag.textContent = oldParent;
-            const delBtn = document.createElement('button');
-            delBtn.type = 'button';
-            delBtn.className = 'delete is-small ml-1';
-            delBtn.textContent = '×';
-            newTag.appendChild(delBtn);
-            container.prepend(newTag);
-            setupAliasDelete(delBtn);
-            if (field) field.style.display = '';
-          }
-
-          strong.textContent = newParent;
-          card.dataset.canonical = newParent;
-
-          // update mapping form
-          const typeVal = card.querySelector('.sku-row strong')?.textContent.trim() || 'unmapped';
-          const aliasList = Array.from(card.querySelectorAll('.alias-badges .tag')).map(t => t.dataset.alias).filter(Boolean);
-          aliasList.unshift(oldParent);
-          let mapCard = document.querySelector(`#map .sku-card[data-canonical="${newParent}"]`);
-          if (!mapCard) {
-            addMapCard(newParent, typeVal);
-            mapCard = document.querySelector(`#map .sku-card[data-canonical="${newParent}"]`);
-          }
-          const input = mapCard.querySelector('.alias-input');
-          if (input) {
-            input.value = Array.from(new Set(aliasList)).join(', ');
-            input.dispatchEvent(new Event('change'));
-          }
-          wrap.remove();
-          btn.classList.remove('is-invisible');
-        });
-      });
+  function refreshParentSelect(card){
+    const select = card.querySelector('.parent-select');
+    if (!select) return;
+    const canonical = card.dataset.canonical;
+    const aliases = Array.from(card.querySelectorAll('.alias-badges .tag')).map(t => t.dataset.alias).filter(Boolean);
+    select.innerHTML = '';
+    [canonical, ...aliases].forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      if (v === canonical) opt.selected = true;
+      select.appendChild(opt);
     });
   }
 
-  initModifyParentButtons();
+  function changeParent(card, newParent){
+    const oldParent = card.dataset.canonical;
+    if (newParent === oldParent) return;
+
+    const container = card.querySelector('.alias-badges');
+    const field = container ? container.closest('.alias-field') : null;
+    const selectedTag = card.querySelector(`.alias-badges [data-alias="${newParent}"]`);
+    if (selectedTag) selectedTag.remove();
+    if (container) {
+      const newTag = document.createElement('span');
+      newTag.className = 'tag is-info is-light';
+      newTag.dataset.alias = oldParent;
+      newTag.textContent = oldParent;
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'delete is-small ml-1';
+      delBtn.textContent = '×';
+      newTag.appendChild(delBtn);
+      container.prepend(newTag);
+      setupAliasDelete(delBtn);
+      if (field) field.style.display = '';
+    }
+
+    card.dataset.canonical = newParent;
+    refreshParentSelect(card);
+
+    const typeVal = card.querySelector('.sku-row strong')?.textContent.trim() || 'unmapped';
+    const aliasList = Array.from(card.querySelectorAll('.alias-badges .tag')).map(t => t.dataset.alias).filter(Boolean);
+    aliasList.unshift(oldParent);
+    let mapCard = document.querySelector(`#map .sku-card[data-canonical="${newParent}"]`);
+    if (!mapCard) {
+      addMapCard(newParent, typeVal);
+      mapCard = document.querySelector(`#map .sku-card[data-canonical="${newParent}"]`);
+    }
+    const input = mapCard.querySelector('.alias-input');
+    if (input) {
+      input.value = Array.from(new Set(aliasList)).join(', ');
+      input.dispatchEvent(new Event('change'));
+    }
+  }
+
+  function setupParentSelect(select){
+    const card = select.closest('.sku-card');
+    refreshParentSelect(card);
+    select.addEventListener('change', () => {
+      changeParent(card, select.value);
+    });
+  }
+
+  document.querySelectorAll('#mapped .parent-select, #merged .parent-select').forEach(setupParentSelect);
 
   updateTargets();
 })();
