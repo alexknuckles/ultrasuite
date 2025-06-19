@@ -379,8 +379,8 @@ def _resolve_duplicates(conn, action):
     pairs = _find_duplicates(conn)
     for p in pairs:
         conn.execute(
-            "INSERT INTO duplicate_log(resolved_at, shopify_id, qbo_id, action, sku, quantity, total, shopify_desc, qbo_desc) "
-            "VALUES (?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO duplicate_log(resolved_at, shopify_id, qbo_id, action, sku, quantity, total, shopify_desc, qbo_desc, created_at, ignored) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,0)",
             (
                 datetime.now(timezone.utc).isoformat(),
                 p['shopify_id'],
@@ -391,6 +391,7 @@ def _resolve_duplicates(conn, action):
                 p['total'],
                 p['shopify_desc'],
                 p['qbo_desc'],
+                p['created_at'],
             ),
         )
         if action == 'shopify':
@@ -442,6 +443,11 @@ def _find_duplicates(conn):
         on=['date', 'canonical', 'quantity', 'total'],
         suffixes=('_s', '_q'),
     )
+
+    ignored_df = pd.read_sql_query('SELECT shopify_id, qbo_id FROM duplicate_log WHERE ignored=1', conn)
+    if not ignored_df.empty:
+        ignored_pairs = set(map(tuple, ignored_df.values))
+        merged = merged[[ (r.id_s, r.id_q) not in ignored_pairs for r in merged.itertuples(index=False) ]]
 
     rows = []
     for r in merged.itertuples(index=False):
@@ -1557,7 +1563,7 @@ def transactions_page():
 
     duplicates = _find_duplicates(conn)
     resolved_dups = pd.read_sql_query(
-        'SELECT resolved_at, sku, shopify_desc, qbo_desc, quantity, total, action '
+        'SELECT resolved_at, created_at, sku, shopify_desc, qbo_desc, quantity, total, action, shopify_id, qbo_id, ignored '
         'FROM duplicate_log ORDER BY resolved_at DESC LIMIT 20',
         conn,
     ).to_dict('records')
@@ -1790,6 +1796,23 @@ def resolve_duplicate():
         return jsonify(success=False), 400
     conn = get_db()
     _resolve_duplicates(conn, action if action in {'shopify', 'qbo', 'both'} else 'both')
+    conn.commit()
+    conn.close()
+    return jsonify(success=True)
+
+
+@app.route('/unmatch-duplicate', methods=['POST'])
+def unmatch_duplicate():
+    """Mark a previously resolved duplicate so it is ignored going forward."""
+    sid = request.form.get('shopify_id', type=int)
+    qid = request.form.get('qbo_id', type=int)
+    if sid is None or qid is None:
+        return jsonify(success=False), 400
+    conn = get_db()
+    conn.execute(
+        'UPDATE duplicate_log SET ignored=1 WHERE shopify_id=? AND qbo_id=?',
+        (sid, qid),
+    )
     conn.commit()
     conn.close()
     return jsonify(success=True)
