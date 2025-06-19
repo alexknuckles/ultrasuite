@@ -25,8 +25,7 @@ Download the latest release from the [releases page](https://github.com/alexknuc
    ```bash
    pip install -r requirements.txt
    ```
-3. Start the application. Run the Flask server with `python app.py` or launch
-   the desktop version with `python gui.py`:
+3. Start the application:
    ```bash
    python app.py  # runs the Flask server
    # or
