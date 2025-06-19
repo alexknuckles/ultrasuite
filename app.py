@@ -308,6 +308,34 @@ def upload():
                 elif source == 'qbo':
                     cleaned = _parse_qbo(data_file)
                     cleaned.to_sql('qbo', conn, if_exists='replace', index=False)
+                elif source == 'sku_map':
+                    try:
+                        if data_file.filename.lower().endswith(('.xls', '.xlsx')):
+                            df = pd.read_excel(data_file)
+                        else:
+                            df = pd.read_csv(data_file)
+                    except Exception:
+                        flash('Unable to parse SKU map file.')
+                        conn.close()
+                        return redirect(request.url)
+                    required = {'alias', 'canonical_sku', 'type'}
+                    if not required.issubset(df.columns):
+                        flash('SKU map file must contain alias, canonical_sku and type columns.')
+                        conn.close()
+                        return redirect(request.url)
+                    if 'source' not in df.columns:
+                        df['source'] = ''
+                    conn.execute('DELETE FROM sku_map')
+                    for row in df[['alias', 'canonical_sku', 'type', 'source']].itertuples(index=False):
+                        alias = str(row.alias).lower().strip()
+                        canonical = str(row.canonical_sku).lower().strip() or alias
+                        type_val = str(row.type).lower().strip() or 'unmapped'
+                        source_val = str(row.source).lower().strip() if hasattr(row, 'source') else ''
+                        conn.execute(
+                            'INSERT INTO sku_map(alias, canonical_sku, type, source, changed_at) VALUES(?,?,?,?,?)',
+                            (alias, canonical, type_val, source_val, datetime.now(timezone.utc).isoformat()),
+                        )
+                    continue
                 else:
                     flash('Unknown source selected.')
                     conn.close()
