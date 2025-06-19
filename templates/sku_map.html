@@ -115,6 +115,7 @@
         <div class="card-content">
           <div class="field is-flex is-align-items-center mb-2">
             <label class="label mb-0 mr-1">Parent SKU</label>
+            {% if entry.aliases.strip() %}
             <div class="select">
               <select class="parent-select">
                 <option value="{{ entry.canonical }}" selected>{{ entry.canonical }}</option>
@@ -123,6 +124,9 @@
                 {% endfor %}
               </select>
             </div>
+            {% else %}
+            <strong>{{ entry.canonical }}</strong>
+            {% endif %}
           </div>
           <div class="columns is-vcentered sku-row">
             <div class="column is-narrow">
@@ -171,6 +175,7 @@
         <div class="card-content">
           <div class="field is-flex is-align-items-center mb-2">
             <label class="label mb-0 mr-1">Parent SKU</label>
+            {% if entry.aliases.strip() %}
             <div class="select">
               <select class="parent-select">
                 <option value="{{ entry.canonical }}" selected>{{ entry.canonical }}</option>
@@ -179,6 +184,9 @@
                 {% endfor %}
               </select>
             </div>
+            {% else %}
+            <strong>{{ entry.canonical }}</strong>
+            {% endif %}
           </div>
           <div class="columns is-vcentered sku-row">
             <div class="column is-narrow">
@@ -291,9 +299,9 @@
         text = text.toLowerCase();
         if (text.includes(term)) {
           const canonical = card.dataset.canonical;
-          const strongs = card.querySelectorAll('.sku-row strong');
-          const type = strongs[0]?.textContent.trim() || 'unmapped';
-          const source = strongs[1]?.textContent.trim() || '';
+          const typeSel = card.querySelector('.type-select');
+          const type = typeSel ? typeSel.value : 'unmapped';
+          const source = card.querySelector('.sku-row strong')?.textContent.trim() || '';
           const aliases = Array.from(card.querySelectorAll('.alias-badges .tag')).map(t => t.dataset.alias).filter(Boolean);
           const clone = createDisplayCard(canonical, type, aliases, source);
           clone.classList.add('search-clone');
@@ -481,16 +489,14 @@
     const opts = aliases.map(a => `<option value="${a}">${a}</option>`).join('');
     const tags = aliases.map(a => `<span class="tag is-info is-light" data-alias="${a}">${a}<button type="button" class="delete is-small ml-1">×</button></span>`).join('');
     const show = aliases.length ? '' : 'style="display:none"';
+    const parent = aliases.length ?
+      `<div class="select"><select class="parent-select"><option value="${canonical}" selected>${canonical}</option>${opts}</select></div>` :
+      `<strong>${canonical}</strong>`;
     div.innerHTML = `
       <div class="card-content">
         <div class="field is-flex is-align-items-center mb-2">
           <label class="label mb-0 mr-1">Parent SKU</label>
-          <div class="select">
-            <select class="parent-select">
-              <option value="${canonical}" selected>${canonical}</option>
-              ${opts}
-            </select>
-          </div>
+          ${parent}
         </div>
         <div class="columns is-vcentered sku-row">
           <div class="column is-narrow">
@@ -581,9 +587,14 @@
     const field = container ? container.closest('.alias-field') : null;
     if (container && container.children.length === 0) {
       if (field) field.style.display = 'none';
-      card.remove();
-      const sec = btn.closest('#merged') ? 'merged' : 'mapped';
-      updateCount(sec);
+      if (!card.classList.contains('search-clone')) {
+        card.remove();
+        const sec = btn.closest('#merged') ? 'merged' : 'mapped';
+        updateCount(sec);
+      } else {
+        card.dataset.aliases = '';
+        refreshParentSelect(card);
+      }
     } else {
       refreshParentSelect(card);
       if (container) {
@@ -710,6 +721,13 @@
 
   function changeType(card, newType){
     const canonical = card.dataset.canonical;
+    document.querySelectorAll(`.sku-card[data-canonical="${canonical}"]`).forEach(c => {
+      if (c === card) return;
+      const sel1 = c.querySelector('select[name^="type_"]');
+      if (sel1) sel1.value = newType;
+      const sel2 = c.querySelector('.type-select');
+      if (sel2) sel2.value = newType;
+    });
     fetch('/update-type', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
