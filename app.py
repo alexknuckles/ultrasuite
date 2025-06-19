@@ -401,8 +401,20 @@ def _resolve_duplicates(conn, action):
         elif action == 'both':
             continue
 
-def _find_duplicates(conn):
-    """Return possible duplicate transactions between Shopify and QBO."""
+def _find_duplicates(conn, sku=None, start=None, end=None):
+    """Return possible duplicate transactions between Shopify and QBO.
+
+    Parameters
+    ----------
+    conn : sqlite3.Connection
+        Database connection.
+    sku : str, optional
+        Canonical SKU to filter by.
+    start : datetime, optional
+        Include transactions on or after this date.
+    end : datetime, optional
+        Include transactions on or before this date.
+    """
     shopify = pd.read_sql_query(
         'SELECT rowid AS id, created_at, sku, description, quantity, total FROM shopify',
         conn,
@@ -434,8 +446,19 @@ def _find_duplicates(conn):
             .dt.tz_localize(None)
         )
         df['date'] = df['created_at'].dt.date
+
     shopify = shopify.dropna(subset=['created_at'])
     qbo = qbo.dropna(subset=['created_at'])
+
+    if start is not None:
+        shopify = shopify[shopify['created_at'] >= start]
+        qbo = qbo[qbo['created_at'] >= start]
+    if end is not None:
+        shopify = shopify[shopify['created_at'] <= end]
+        qbo = qbo[qbo['created_at'] <= end]
+    if sku:
+        shopify = shopify[shopify['canonical'] == sku]
+        qbo = qbo[qbo['canonical'] == sku]
 
     merged = pd.merge(
         shopify,
@@ -1563,12 +1586,27 @@ def transactions_page():
     else:
         df_all = pd.DataFrame(columns=shopify.columns.tolist() + ['source_title'])
 
-    duplicates = _find_duplicates(conn)
-    resolved_dups = pd.read_sql_query(
+    duplicates = _find_duplicates(conn, sku=sku or None, start=start_dt, end=end_dt)
+
+    params = []
+    clauses = []
+    if sku:
+        clauses.append('sku=?')
+        params.append(sku)
+    if start_dt is not None:
+        clauses.append('created_at >= ?')
+        params.append(start_dt.isoformat(sep=' ', timespec='seconds'))
+    if end_dt is not None:
+        clauses.append('created_at <= ?')
+        params.append(end_dt.isoformat(sep=' ', timespec='seconds'))
+    query = (
         'SELECT resolved_at, created_at, sku, shopify_desc, qbo_desc, quantity, total, action, shopify_id, qbo_id, ignored '
-        'FROM duplicate_log ORDER BY resolved_at DESC LIMIT 20',
-        conn,
-    ).to_dict('records')
+        'FROM duplicate_log'
+    )
+    if clauses:
+        query += ' WHERE ' + ' AND '.join(clauses)
+    query += ' ORDER BY resolved_at DESC LIMIT 20'
+    resolved_dups = pd.read_sql_query(query, conn, params=params).to_dict('records')
     dup_action = get_setting('duplicate_action', 'review')
     conn.close()
 
