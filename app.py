@@ -470,6 +470,38 @@ def _resolve_duplicates(conn, action):
         elif action == 'both':
             continue
 
+def _resolve_duplicate_pair(conn, sid, qid, action):
+    """Resolve a specific duplicate pair."""
+    pairs = _find_duplicates(conn)
+    pair = next((p for p in pairs if p['shopify_id'] == sid and p['qbo_id'] == qid), None)
+    if not pair:
+        return
+    conn.execute('UPDATE duplicate_log SET ignored=0 WHERE shopify_id=? AND qbo_id=?', (sid, qid))
+    conn.execute(
+        "INSERT INTO duplicate_log(resolved_at, shopify_id, qbo_id, action, sku, shopify_sku, qbo_sku, quantity, total, shopify_desc, qbo_desc, created_at, shopify_created_at, qbo_created_at, ignored) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,0)",
+        (
+            datetime.now(timezone.utc).isoformat(),
+            sid,
+            qid,
+            action,
+            pair['sku'],
+            pair.get('shopify_sku'),
+            pair.get('qbo_sku'),
+            pair['quantity'],
+            pair['total'],
+            pair['shopify_desc'],
+            pair['qbo_desc'],
+            pair['created_at'],
+            pair['shopify_created_at'],
+            pair['qbo_created_at'],
+        ),
+    )
+    if action == 'shopify':
+        conn.execute('DELETE FROM qbo WHERE rowid=?', (qid,))
+    elif action == 'qbo':
+        conn.execute('DELETE FROM shopify WHERE rowid=?', (sid,))
+
 def _find_duplicates(conn, sku=None, start=None, end=None):
     """Return possible duplicate transactions between Shopify and QBO.
 
@@ -1924,7 +1956,12 @@ def resolve_duplicate():
     if sid is None or qid is None:
         return jsonify(success=False), 400
     conn = get_db()
-    _resolve_duplicates(conn, action if action in {'shopify', 'qbo', 'both'} else 'both')
+    _resolve_duplicate_pair(
+        conn,
+        sid,
+        qid,
+        action if action in {'shopify', 'qbo', 'both'} else 'both',
+    )
     conn.commit()
     conn.close()
     return jsonify(success=True)
