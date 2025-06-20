@@ -550,11 +550,22 @@
   function addDisplayCard(sec, canonical, type, aliases, source=''){
     if (document.querySelector(`#${sec} .sku-card[data-canonical="${canonical}"]`)) return;
     const section = document.getElementById(sec);
+    const form = section.querySelector('form');
     const card = createDisplayCard(canonical, type, aliases, source);
-    if (isAllTabActive()) {
-      section.appendChild(card);
+    if (form) {
+      const mergeBtn = form.querySelector('.buttons');
+      const firstCard = form.querySelector('.sku-card');
+      if (isAllTabActive()) {
+        form.insertBefore(card, mergeBtn || null);
+      } else {
+        form.insertBefore(card, firstCard || mergeBtn || null);
+      }
     } else {
-      section.prepend(card);
+      if (isAllTabActive()) {
+        section.appendChild(card);
+      } else {
+        section.prepend(card);
+      }
     }
     card.querySelectorAll('.alias-badges .delete').forEach(setupAliasDelete);
     card.querySelectorAll('.parent-select').forEach(setupParentSelect);
