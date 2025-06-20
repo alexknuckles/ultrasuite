@@ -1706,7 +1706,9 @@ def transactions_page():
     else:
         df_all = pd.DataFrame(columns=shopify.columns.tolist() + ['source_title'])
 
-    duplicates = _find_duplicates(conn, sku=sku or None, start=start_dt, end=end_dt)
+    dup_all = _find_duplicates(conn, sku=sku or None, start=start_dt, end=end_dt)
+    duplicates = [d for d in dup_all if not d.get('ignored')]
+    ignored_dups = [d for d in dup_all if d.get('ignored')]
 
     params = []
     clauses = []
@@ -1750,6 +1752,7 @@ def transactions_page():
         period_month=period_month_val,
         duplicates=duplicates,
         resolved_duplicates=resolved_dups,
+        ignored_duplicates=ignored_dups,
         dup_action=dup_action,
     )
 

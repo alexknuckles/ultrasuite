@@ -165,8 +165,9 @@
   </header>
   <div class="card-content">
     <nav class="buttons tab-buttons mb-4" id="dupTabs">
-      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="dupCurrent">Duplicates</button>
-      <button type="button" class="mdc-button mdc-button--raised" data-target="dupResolved">Resolved Duplicates</button>
+      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="dupCurrent">Unresolved</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="dupResolved">Resolved</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="dupIgnored">Ignored</button>
     </nav>
     <div id="dupCurrent" class="tab-pane">
       {% if duplicates %}
@@ -180,7 +181,6 @@
             <th>QBO SKU</th>
             <th>Qty</th>
             <th>Total</th>
-            <th>Ignored</th>
             <th>Unmatched</th>
             <th>Action</th>
           </tr>
@@ -194,9 +194,6 @@
             <td>{{ d.qbo_sku }}</td>
             <td>{{ d.quantity }}</td>
             <td>${{ "%.2f"|format(d.total) }}</td>
-            <td class="ignored-cell">
-              {% if d.ignored %}<span class="bool-icon has-text-success">✓</span>{% else %}<span class="bool-icon has-text-danger">✗</span>{% endif %}
-            </td>
             <td class="unmatched-cell">
               {% if d.unmatched %}<span class="bool-icon has-text-success">✓</span>{% else %}<span class="bool-icon has-text-danger">✗</span>{% endif %}
             </td>
@@ -259,6 +256,48 @@
       </div>
       {% else %}
       <p>No resolved duplicates found.</p>
+      {% endif %}
+    </div>
+    <div id="dupIgnored" class="tab-pane is-hidden">
+      {% if ignored_duplicates %}
+      <div class="table-responsive">
+      <table class="table is-fullwidth is-striped is-narrow">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>SKU</th>
+            <th>Shopify SKU</th>
+            <th>QBO SKU</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th>Unmatched</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in ignored_duplicates %}
+          <tr id="dup-{{ d.shopify_id }}-{{ d.qbo_id }}">
+            <td>{{ d.created_at|format_dt }}</td>
+            <td>{{ d.sku }}</td>
+            <td>{{ d.shopify_sku }}</td>
+            <td>{{ d.qbo_sku }}</td>
+            <td>{{ d.quantity }}</td>
+            <td>${{ "%.2f"|format(d.total) }}</td>
+            <td class="unmatched-cell">
+              {% if d.unmatched %}<span class="bool-icon has-text-success">✓</span>{% else %}<span class="bool-icon has-text-danger">✗</span>{% endif %}
+            </td>
+            <td>
+              <button data-action="shopify" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Shopify</button>
+              <button data-action="qbo" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep QBO</button>
+              <button data-action="both" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Both</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% else %}
+      <p>No ignored duplicates found.</p>
       {% endif %}
     </div>
   </div>
@@ -409,7 +448,7 @@ document.querySelectorAll('#dupTabs button').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('#dupTabs button').forEach(b => b.classList.remove('is-active'));
     btn.classList.add('is-active');
-    document.querySelectorAll('#dupCurrent, #dupResolved').forEach(p => p.classList.add('is-hidden'));
+    document.querySelectorAll('#dupCurrent, #dupResolved, #dupIgnored').forEach(p => p.classList.add('is-hidden'));
     document.getElementById(btn.dataset.target).classList.remove('is-hidden');
   });
 });
@@ -426,10 +465,8 @@ document.querySelectorAll('button[data-action]').forEach(btn => {
       }).then(r => r.json()).then(res => {
         if(res.success){
           const row = document.getElementById(`dup-${sid}-${qid}`);
-          if(row){
-            const cell = row.querySelector('.ignored-cell');
-            if(cell) cell.innerHTML = '<span class="bool-icon has-text-success">✓</span>';
-          }
+          if(row) row.remove();
+          location.reload();
         }
       });
     } else {
