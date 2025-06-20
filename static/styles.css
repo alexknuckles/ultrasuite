@@ -40,7 +40,6 @@
   margin-left: 0.25rem;
 }
 
-.is-invisible { visibility: hidden; }
 
 html, body {
   background-color: var(--ultra-background);
@@ -142,14 +141,6 @@ a:hover {
   cursor: pointer;
 }
 
-button.theme-toggle {
-  background: none;
-  border: none;
-  color: var(--mdc-theme-on-primary);
-  font-size: 1.25rem;
-  cursor: pointer;
-  padding: 0 0.75rem;
-}
 
 /* buttons */
 .mdc-button {
@@ -161,9 +152,6 @@ button.theme-toggle {
   color: var(--ultra-text);
 }
 
-.has-text-primary {
-  color: var(--ultra-primary) !important;
-}
 
 .tag.is-info.is-light {
   background-color: var(--ultra-primary);
@@ -393,14 +381,6 @@ input.switch:checked::before {
   align-items: center;
 }
 
-/* pagination controls */
-.page-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: flex-end;
-  margin-bottom: 0.5rem;
-}
 
 .report-content {
   overflow-x: auto;
