@@ -176,6 +176,7 @@
           <th>Qty</th>
           <th>Total</th>
           <th>Ignored</th>
+          <th>Unmatched</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -188,11 +189,13 @@
           <td>{{ d.qbo_sku }}</td>
           <td>{{ d.quantity }}</td>
           <td>${{ "%.2f"|format(d.total) }}</td>
-          <td class="ignored-cell">{% if d.ignored %}Yes{% else %}No{% endif %}</td>
+          <td class="ignored-cell">
+            {% if d.ignored %}<span class="bool-icon has-text-success">✓</span>{% else %}<span class="bool-icon has-text-danger">✗</span>{% endif %}
+          </td>
+          <td class="unmatched-cell">
+            {% if d.unmatched %}<span class="bool-icon has-text-success">✓</span>{% else %}<span class="bool-icon has-text-danger">✗</span>{% endif %}
+          </td>
           <td>
-            {% if d.unmatched %}
-            <span class="tag is-warning is-light mr-2">Manually Unmatched</span>
-            {% endif %}
             <button data-action="shopify" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Shopify</button>
             <button data-action="qbo" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep QBO</button>
             <button data-action="both" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Both</button>
@@ -415,7 +418,7 @@ document.querySelectorAll('button[data-action]').forEach(btn => {
           const row = document.getElementById(`dup-${sid}-${qid}`);
           if(row){
             const cell = row.querySelector('.ignored-cell');
-            if(cell) cell.textContent = 'Yes';
+            if(cell) cell.innerHTML = '<span class="bool-icon has-text-success">✓</span>';
           }
         }
       });
