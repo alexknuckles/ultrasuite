@@ -161,103 +161,105 @@
 {% if duplicates is defined %}
 <div class="mdc-card page-card mt-5">
   <header class="card-header">
-    <p class="card-header-title">Duplicate Transactions</p>
+    <p class="card-header-title">Duplicates</p>
   </header>
   <div class="card-content">
-    {% if duplicates %}
-    <div class="table-responsive">
-    <table class="table is-fullwidth is-striped is-narrow">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>SKU</th>
-          <th>Shopify SKU</th>
-          <th>QBO SKU</th>
-          <th>Qty</th>
-          <th>Total</th>
-          <th>Ignored</th>
-          <th>Unmatched</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for d in duplicates %}
-        <tr id="dup-{{ d.shopify_id }}-{{ d.qbo_id }}">
-          <td>{{ d.created_at|format_dt }}</td>
-          <td>{{ d.sku }}</td>
-          <td>{{ d.shopify_sku }}</td>
-          <td>{{ d.qbo_sku }}</td>
-          <td>{{ d.quantity }}</td>
-          <td>${{ "%.2f"|format(d.total) }}</td>
-          <td class="ignored-cell">
-            {% if d.ignored %}<span class="bool-icon has-text-success">✓</span>{% else %}<span class="bool-icon has-text-danger">✗</span>{% endif %}
-          </td>
-          <td class="unmatched-cell">
-            {% if d.unmatched %}<span class="bool-icon has-text-success">✓</span>{% else %}<span class="bool-icon has-text-danger">✗</span>{% endif %}
-          </td>
-          <td>
-            <button data-action="shopify" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Shopify</button>
-            <button data-action="qbo" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep QBO</button>
-            <button data-action="both" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Both</button>
-            <button data-action="ignore" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button">Ignore</button>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <nav class="buttons tab-buttons mb-4" id="dupTabs">
+      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="dupCurrent">Duplicates</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="dupResolved">Resolved Duplicates</button>
+    </nav>
+    <div id="dupCurrent" class="tab-pane">
+      {% if duplicates %}
+      <div class="table-responsive">
+      <table class="table is-fullwidth is-striped is-narrow">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>SKU</th>
+            <th>Shopify SKU</th>
+            <th>QBO SKU</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th>Ignored</th>
+            <th>Unmatched</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in duplicates %}
+          <tr id="dup-{{ d.shopify_id }}-{{ d.qbo_id }}">
+            <td>{{ d.created_at|format_dt }}</td>
+            <td>{{ d.sku }}</td>
+            <td>{{ d.shopify_sku }}</td>
+            <td>{{ d.qbo_sku }}</td>
+            <td>{{ d.quantity }}</td>
+            <td>${{ "%.2f"|format(d.total) }}</td>
+            <td class="ignored-cell">
+              {% if d.ignored %}<span class="bool-icon has-text-success">✓</span>{% else %}<span class="bool-icon has-text-danger">✗</span>{% endif %}
+            </td>
+            <td class="unmatched-cell">
+              {% if d.unmatched %}<span class="bool-icon has-text-success">✓</span>{% else %}<span class="bool-icon has-text-danger">✗</span>{% endif %}
+            </td>
+            <td>
+              <button data-action="shopify" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Shopify</button>
+              <button data-action="qbo" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep QBO</button>
+              <button data-action="both" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button mdc-button--raised">Keep Both</button>
+              <button data-action="ignore" data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button">Ignore</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% else %}
+      <p>No duplicates found.</p>
+      {% endif %}
     </div>
-    {% else %}
-    <p>No duplicates found.</p>
-    {% endif %}
-  </div>
-  </div>
-  {% endif %}
-
-{% if resolved_duplicates %}
-<div class="mdc-card page-card mt-5">
-  <header class="card-header">
-    <p class="card-header-title">Previously Resolved Duplicates</p>
-  </header>
-  <div class="card-content">
-    <div class="table-responsive">
-    <table class="table is-fullwidth is-striped is-narrow">
-      <thead>
-        <tr>
-          <th>Resolved At</th>
-          <th>Shopify Date</th>
-          <th>QBO Date</th>
-          <th>Action</th>
-          <th>Parent SKU</th>
-          <th>Shopify SKU</th>
-          <th>QBO SKU</th>
-          <th>Qty</th>
-          <th>Total</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for d in resolved_duplicates %}
-        <tr>
-          <td>{{ d.resolved_at|format_dt }}</td>
-          <td>{{ d.shopify_created_at|format_dt }}</td>
-          <td>{{ d.qbo_created_at|format_dt }}</td>
-          <td>{{ d.action|capitalize }}</td>
-          <td>{{ d.sku }}</td>
-          <td>{{ d.shopify_sku }}</td>
-          <td>{{ d.qbo_sku }}</td>
-          <td>{{ d.quantity }}</td>
-          <td>${{ "%.2f"|format(d.total) }}</td>
-          <td>
-            {% if d.ignored %}
-            <span>Unmatched</span>
-            {% else %}
-            <button data-unmatch data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button">Unmatch</button>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div id="dupResolved" class="tab-pane is-hidden">
+      {% if resolved_duplicates %}
+      <div class="table-responsive">
+      <table class="table is-fullwidth is-striped is-narrow">
+        <thead>
+          <tr>
+            <th>Resolved At</th>
+            <th>Shopify Date</th>
+            <th>QBO Date</th>
+            <th>Action</th>
+            <th>Parent SKU</th>
+            <th>Shopify SKU</th>
+            <th>QBO SKU</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in resolved_duplicates %}
+          <tr>
+            <td>{{ d.resolved_at|format_dt }}</td>
+            <td>{{ d.shopify_created_at|format_dt }}</td>
+            <td>{{ d.qbo_created_at|format_dt }}</td>
+            <td>{{ d.action|capitalize }}</td>
+            <td>{{ d.sku }}</td>
+            <td>{{ d.shopify_sku }}</td>
+            <td>{{ d.qbo_sku }}</td>
+            <td>{{ d.quantity }}</td>
+            <td>${{ "%.2f"|format(d.total) }}</td>
+            <td>
+              {% if d.ignored %}
+              <span>Unmatched</span>
+              {% else %}
+              <button data-unmatch data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button">Unmatch</button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% else %}
+      <p>No resolved duplicates found.</p>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -398,11 +400,19 @@
       if(form){ form.submit(); }
     });
 
-    setButtonLabel();
+  setButtonLabel();
   });
   </script>
 {% if duplicates is defined %}
 <script>
+document.querySelectorAll('#dupTabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#dupTabs button').forEach(b => b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    document.querySelectorAll('#dupCurrent, #dupResolved').forEach(p => p.classList.add('is-hidden'));
+    document.getElementById(btn.dataset.target).classList.remove('is-hidden');
+  });
+});
 document.querySelectorAll('button[data-action]').forEach(btn => {
   btn.addEventListener('click', () => {
     const sid = btn.dataset.sid;
@@ -427,12 +437,13 @@ document.querySelectorAll('button[data-action]').forEach(btn => {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `shopify_id=${sid}&qbo_id=${qid}&action=${action}`
-      }).then(r => r.json()).then(res => {
-        if(res.success){
-          const row = document.getElementById(`dup-${sid}-${qid}`);
-          if(row) row.remove();
-        }
-      });
+    }).then(r => r.json()).then(res => {
+      if(res.success){
+        const row = document.getElementById(`dup-${sid}-${qid}`);
+        if(row) row.remove();
+        location.reload();
+      }
+    });
     }
   });
 });
