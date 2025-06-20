@@ -3,9 +3,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 import base64
-from difflib import SequenceMatcher
 import itertools
-import re
 from calendar import monthrange
 
 import pandas as pd
@@ -419,24 +417,6 @@ def _save_types(conn, form):
             )
 
 
-def _clean_sku(text):
-    text = text.lower().replace('gal', '')
-    return re.sub(r'[^a-z0-9]', '', text)
-
-
-def _suggest_merges(canonicals, threshold=0.95):
-    cleaned = {c: _clean_sku(c) for c in canonicals}
-    suggestions = []
-    for a, b in itertools.combinations(canonicals, 2):
-        ca, cb = cleaned[a], cleaned[b]
-        if not ca or not cb or ca[0] != cb[0]:
-            continue
-        ratio = 1.0 if ca == cb else SequenceMatcher(None, ca, cb).ratio()
-        if ratio >= threshold:
-            suggestions.append((a, b, ratio))
-    suggestions.sort(key=lambda x: -x[2])
-    return suggestions
-
 def _resolve_duplicates(conn, action):
     """Resolve duplicate transactions between Shopify and QBO."""
     pairs = _find_duplicates(conn)
@@ -645,26 +625,6 @@ def sku_map_page():
                              (target_type, datetime.now(timezone.utc).isoformat(), target))
                 conn.commit()
                 flash('Entries merged.')
-        elif 'merge_suggestions' in request.form:
-            _save_types(conn, request.form)
-            pairs = [k.split('_')[1] for k in request.form if k.startswith('suggest_')]
-            for idx in pairs:
-                merge_from = request.form.get(f'sug_merge_{idx}', '').lower().strip()
-                merge_to = request.form.get(f'sug_target_{idx}', '').lower().strip()
-                if merge_from and merge_to:
-                    rows = conn.execute(
-                        'SELECT alias, type, source FROM sku_map WHERE canonical_sku=?',
-                        (merge_from,),
-                    ).fetchall()
-                    for r in rows:
-                        conn.execute(
-                            'REPLACE INTO sku_map(alias, canonical_sku, type, source, changed_at) VALUES(?,?,?,?,?)',
-                            (r['alias'], merge_to, r['type'], r['source'], datetime.now(timezone.utc).isoformat()),
-                        )
-                    if merge_from != merge_to:
-                        conn.execute('DELETE FROM sku_map WHERE canonical_sku=?', (merge_from,))
-            conn.commit()
-            flash('Suggestions merged.')
         else:
             entries = [k.split('_')[1] for k in request.form.keys() if k.startswith('canonical_')]
             for idx in entries:
@@ -781,26 +741,14 @@ def sku_map_page():
         reverse=True,
     )
 
-    # generate merge suggestions and include source info
-    canonicals = sorted(grouped.keys())
-    raw_suggestions = _suggest_merges(canonicals, threshold=0.95)
-    suggestions = [
-        {
-            'keep': a,
-            'merge': b,
-            'score': ratio,
-            'source_keep': grouped.get(a, {}).get('source', ''),
-            'source_merge': grouped.get(b, {}).get('source', ''),
-        }
-        for a, b, ratio in raw_suggestions
-    ]
+    all_count = len(grouped_list)
 
     return render_template(
         'sku_map.html',
         grouped=unmapped_groups,
-        suggestions=suggestions,
         merged=merged_groups,
         mapped=mapped_groups,
+        all_count=all_count,
     )
 
 

@@ -10,7 +10,7 @@
       <button type="button" class="mdc-button mdc-button--raised is-active" data-target="unmapped">Unmapped ({{ grouped|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="mapped">Mapped ({{ mapped|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged ({{ merged|length }})</button>
-      <button type="button" class="mdc-button mdc-button--raised" data-target="sug">Suggestions ({{ suggestions|length }})</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="all">All ({{ all_count }})</button>
     </nav>
     <section id="unmapped" class="tab-pane">
       <form method="POST">
@@ -244,42 +244,6 @@
       </div>
       {% endfor %}
     </section>
-    <section id="sug" class="tab-pane is-hidden">
-      {% if suggestions %}
-      <form method="POST">
-        <div class="table-responsive">
-        <table class="table is-fullwidth is-narrow">
-          <thead>
-            <tr><th></th><th>Keep</th><th>Merge</th><th class="no-wrap">Score</th></tr>
-          </thead>
-          <tbody>
-          {% for s in suggestions %}
-          <tr>
-            <td class="has-text-centered">
-              <input type="checkbox" name="suggest_{{ loop.index0 }}">
-            </td>
-            <td>
-              {{ s.keep }}
-              <span class="has-text-grey is-size-7">({{ s.source_keep }})</span>
-              <input type="hidden" name="sug_target_{{ loop.index0 }}" value="{{ s.keep }}">
-            </td>
-            <td>
-              {{ s.merge }}
-              <span class="has-text-grey is-size-7">({{ s.source_merge }})</span>
-              <input type="hidden" name="sug_merge_{{ loop.index0 }}" value="{{ s.merge }}">
-            </td>
-            <td class="no-wrap">{{ (s.score*100)|round(1) }}%</td>
-          </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-        </div>
-        <button class="mdc-button mdc-button--raised" type="submit" name="merge_suggestions" value="1">Merge selected</button>
-      </form>
-      {% else %}
-      <p>No suggestions available.</p>
-      {% endif %}
-    </section>
   </div>
 </div>
 <script>
@@ -287,14 +251,28 @@
   const active = document.querySelector('#mapTabs .is-active');
   if (active) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
-    document.getElementById(active.dataset.target).classList.remove('is-hidden');
+    if (active.dataset.target === 'all') {
+      ['unmapped', 'mapped', 'merged'].forEach(id => {
+        const sec = document.getElementById(id);
+        if (sec) sec.classList.remove('is-hidden');
+      });
+    } else {
+      document.getElementById(active.dataset.target).classList.remove('is-hidden');
+    }
   }
   document.querySelectorAll('#mapTabs button').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#mapTabs button').forEach(b => b.classList.remove('is-active'));
       btn.classList.add('is-active');
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
-      document.getElementById(btn.dataset.target).classList.remove('is-hidden');
+      if (btn.dataset.target === 'all') {
+        ['unmapped', 'mapped', 'merged'].forEach(id => {
+          const sec = document.getElementById(id);
+          if (sec) sec.classList.remove('is-hidden');
+        });
+      } else {
+        document.getElementById(btn.dataset.target).classList.remove('is-hidden');
+      }
       document.querySelectorAll('#mapped .parent-select, #merged .parent-select').forEach(sel => {
         const card = sel.closest('.sku-card');
         refreshParentSelect(card);
@@ -486,8 +464,23 @@
   function updateCount(sec){
     const tabBtn = document.querySelector(`#mapTabs button[data-target="${sec}"]`);
     if (tabBtn) {
-      const count = document.querySelectorAll(`#${sec} .sku-card`).length;
+      let count;
+      if (sec === 'all') {
+        const set = new Set();
+        document.querySelectorAll('.sku-card').forEach(c => set.add(c.dataset.canonical));
+        count = set.size;
+      } else {
+        count = document.querySelectorAll(`#${sec} .sku-card`).length;
+      }
       tabBtn.textContent = sec.charAt(0).toUpperCase() + sec.slice(1) + ` (${count})`;
+    }
+    if (sec !== 'all') {
+      const allBtn = document.querySelector('#mapTabs button[data-target="all"]');
+      if (allBtn) {
+        const set = new Set();
+        document.querySelectorAll('.sku-card').forEach(c => set.add(c.dataset.canonical));
+        allBtn.textContent = `All (${set.size})`;
+      }
     }
   }
 
@@ -799,6 +792,7 @@
   document.querySelectorAll('#mapped .type-select, #merged .type-select').forEach(setupDisplayTypeSelect);
 
   updateTargets();
+  updateCount('all');
 })();
 </script>
 {% endblock %}
