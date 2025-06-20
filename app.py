@@ -781,9 +781,19 @@ def sku_map_page():
         reverse=True,
     )
 
-    # generate merge suggestions
+    # generate merge suggestions and include source info
     canonicals = sorted(grouped.keys())
-    suggestions = _suggest_merges(canonicals, threshold=0.95)
+    raw_suggestions = _suggest_merges(canonicals, threshold=0.95)
+    suggestions = [
+        {
+            'keep': a,
+            'merge': b,
+            'score': ratio,
+            'source_keep': grouped.get(a, {}).get('source', ''),
+            'source_merge': grouped.get(b, {}).get('source', ''),
+        }
+        for a, b, ratio in raw_suggestions
+    ]
 
     return render_template(
         'sku_map.html',
