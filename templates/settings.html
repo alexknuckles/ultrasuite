@@ -24,68 +24,37 @@
         {% endif %}
         <input class="input" type="file" name="app_logo" accept="image/*">
       </div>
-      <div class="columns">
-        <div class="column">
-          <div class="box mb-4">
-            <h3 class="title is-6 mb-3">Light mode</h3>
-            <div class="field mb-2">
-              <label class="label">Theme</label>
-              <div class="select is-fullwidth">
-                <select id="lightThemeSelect">
-                  <option value="">Custom</option>
-                  <option value="ocean">Ocean</option>
-                  <option value="orchid">Orchid</option>
-                </select>
-              </div>
-            </div>
-            <div class="field mb-2">
-              <label class="label">Primary color</label>
-              <input class="input color-input" type="color" name="light_primary" value="{{ light_primary }}">
-            </div>
-            <div class="field mb-2">
-              <label class="label">Highlight color</label>
-              <input class="input color-input" type="color" name="light_highlight" value="{{ light_highlight }}">
-            </div>
-            <div class="field mb-2">
-              <label class="label">Background color</label>
-              <input class="input color-input" type="color" name="light_background" value="{{ light_background }}">
-            </div>
-            <div class="field mb-2">
-              <label class="label">Text color</label>
-              <input class="input color-input" type="color" name="light_text" value="{{ light_text }}">
-            </div>
+      <div class="box mb-4">
+        <h3 class="title is-6 mb-3">Themes</h3>
+        <div class="field mb-2">
+          <label class="label">Theme</label>
+          <div class="select is-fullwidth">
+            <select id="themeSelect">
+              <option value="" {% if not active_theme %}selected{% endif %}>Custom</option>
+              <option value="ocean" {% if active_theme == 'ocean' %}selected{% endif %}>Ocean</option>
+              <option value="orchid" {% if active_theme == 'orchid' %}selected{% endif %}>Orchid</option>
+              <option value="codex" {% if active_theme == 'codex' %}selected{% endif %}>Codex</option>
+              <option value="midnight" {% if active_theme == 'midnight' %}selected{% endif %}>Midnight</option>
+            </select>
           </div>
         </div>
-          <div class="column">
-            <div class="box mb-4">
-              <h3 class="title is-6 mb-3">Dark mode</h3>
-              <div class="field mb-2">
-                <label class="label">Theme</label>
-                <div class="select is-fullwidth">
-                  <select id="darkThemeSelect">
-                    <option value="">Custom</option>
-                    <option value="codex">Codex</option>
-                    <option value="midnight">Midnight</option>
-                  </select>
-                </div>
-              </div>
-              <div class="field mb-2">
-                <label class="label">Primary color</label>
-                <input class="input color-input" type="color" name="dark_primary" value="{{ dark_primary }}">
-              </div>
-              <div class="field mb-2">
-                <label class="label">Highlight color</label>
-                <input class="input color-input" type="color" name="dark_highlight" value="{{ dark_highlight }}">
-              </div>
-              <div class="field mb-2">
-                <label class="label">Background color</label>
-                <input class="input color-input" type="color" name="dark_background" value="{{ dark_background }}">
-              </div>
-              <div class="field mb-2">
-                <label class="label">Text color</label>
-                <input class="input color-input" type="color" name="dark_text" value="{{ dark_text }}">
-              </div>
-            </div>
+        <div id="customThemeColors">
+          <div class="field mb-2">
+            <label class="label">Primary color</label>
+            <input class="input color-input" type="color" name="theme_primary" value="{{ theme_primary }}">
+          </div>
+          <div class="field mb-2">
+            <label class="label">Highlight color</label>
+            <input class="input color-input" type="color" name="theme_highlight" value="{{ theme_highlight }}">
+          </div>
+          <div class="field mb-2">
+            <label class="label">Background color</label>
+            <input class="input color-input" type="color" name="theme_background" value="{{ theme_background }}">
+          </div>
+          <div class="field mb-2">
+            <label class="label">Text color</label>
+            <input class="input color-input" type="color" name="theme_text" value="{{ theme_text }}">
+          </div>
         </div>
       </div>
     </div>
@@ -244,33 +213,35 @@
       if(importInput.files.length) document.getElementById('importSkuForm').submit();
     });
   }
-  const lightThemes = {
-    ocean: {primary: '#1976d2', highlight: '#bbdefb', background: '#f8f9fa', text: '#363636'},
-    orchid: {primary: '#9c27b0', highlight: '#f3e5f5', background: '#ffffff', text: '#363636'}
+  const themes = {
+    ocean: {primary: "#1976d2", highlight: "#bbdefb", background: "#f8f9fa", text: "#363636"},
+    orchid: {primary: "#9c27b0", highlight: "#f3e5f5", background: "#ffffff", text: "#363636"},
+    codex: {primary: "#1976d2", highlight: "#161b22", background: "#0d1117", text: "#c9d1d9"},
+    midnight: {primary: "#90caf9", highlight: "#0d47a1", background: "#121212", text: "#e0e0e0"}
   };
-  const darkThemes = {
-    codex: {primary: '#1976d2', highlight: '#161b22', background: '#0d1117', text: '#c9d1d9'},
-    midnight: {primary: '#90caf9', highlight: '#0d47a1', background: '#121212', text: '#e0e0e0'}
-  };
-  function applyTheme(theme, prefix){
+  function applyTheme(theme){
     if(!theme) return;
-    document.querySelector(`input[name="${prefix}_primary"]`).value = theme.primary;
-    document.querySelector(`input[name="${prefix}_highlight"]`).value = theme.highlight;
-    document.querySelector(`input[name="${prefix}_background"]`).value = theme.background;
-    document.querySelector(`input[name="${prefix}_text"]`).value = theme.text;
+    document.querySelector("input[name="theme_primary"]").value = theme.primary;
+    document.querySelector("input[name="theme_highlight"]").value = theme.highlight;
+    document.querySelector("input[name="theme_background"]").value = theme.background;
+    document.querySelector("input[name="theme_text"]").value = theme.text;
   }
-  const lightSelect = document.getElementById('lightThemeSelect');
-  const darkSelect = document.getElementById('darkThemeSelect');
-  if(lightSelect){
-    lightSelect.addEventListener('change', () => applyTheme(lightThemes[lightSelect.value], 'light'));
+  const themeSelect = document.getElementById("themeSelect");
+  const customColors = document.getElementById("customThemeColors");
+  function toggleCustomColors(){
+    if(customColors) customColors.style.display = themeSelect && themeSelect.value ? 'none' : '';
   }
-  if(darkSelect){
-    darkSelect.addEventListener('change', () => applyTheme(darkThemes[darkSelect.value], 'dark'));
+  if(themeSelect){
+    themeSelect.addEventListener("change", () => {
+      applyTheme(themes[themeSelect.value]);
+      toggleCustomColors();
+    });
+    toggleCustomColors();
   }
   const detailsCb = document.querySelector('input[name="include_month_details"]');
-  const detailsField = document.getElementById('detailTypesField');
-  const allCb = document.getElementById('detailAll');
-  const typeWrap = document.getElementById('detailTypeOptions');
+  const detailsField = document.getElementById("detailTypesField");
+  const allCb = document.getElementById("detailAll");
+  const typeWrap = document.getElementById("detailTypeOptions");
   function toggleDetails(){
     if (detailsField) detailsField.style.display = detailsCb && detailsCb.checked ? '' : 'none';
   }

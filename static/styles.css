@@ -79,7 +79,7 @@ textarea {
   padding: 0 1rem;
 }
 
-/* ocean light theme */
+/* default theme */
 :root {
   --ultra-primary: #1976d2;
   --ultra-highlight: #bbdefb;
@@ -88,14 +88,6 @@ textarea {
   --ultra-text: #363636;
   --ultra-font: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --base-font-size: 1rem;
-}
-
-/* codex-inspired dark mode */
-.dark-mode {
-  --ultra-background: #0d1117;
-  --ultra-text: #c9d1d9;
-  --ultra-highlight: #161b22;
-  --ultra-tab-bg: #21262d;
 }
 
 a,

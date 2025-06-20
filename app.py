@@ -31,14 +31,37 @@ from werkzeug.utils import secure_filename
 from database import UPLOAD_FOLDER, get_db, get_setting, set_setting
 
 # default theme colors
-DEFAULT_LIGHT_PRIMARY = '#1976d2'
-DEFAULT_LIGHT_HIGHLIGHT = '#bbdefb'
-DEFAULT_LIGHT_BACKGROUND = '#f8f9fa'
-DEFAULT_LIGHT_TEXT = '#363636'
-DEFAULT_DARK_PRIMARY = '#1976d2'
-DEFAULT_DARK_HIGHLIGHT = '#161b22'
-DEFAULT_DARK_BACKGROUND = '#0d1117'
-DEFAULT_DARK_TEXT = '#c9d1d9'
+DEFAULT_THEME_PRIMARY = '#1976d2'
+DEFAULT_THEME_HIGHLIGHT = '#bbdefb'
+DEFAULT_THEME_BACKGROUND = '#f8f9fa'
+DEFAULT_THEME_TEXT = '#363636'
+
+THEMES = {
+    'ocean': {
+        'primary': '#1976d2',
+        'highlight': '#bbdefb',
+        'background': '#f8f9fa',
+        'text': '#363636',
+    },
+    'orchid': {
+        'primary': '#9c27b0',
+        'highlight': '#f3e5f5',
+        'background': '#ffffff',
+        'text': '#363636',
+    },
+    'codex': {
+        'primary': '#1976d2',
+        'highlight': '#161b22',
+        'background': '#0d1117',
+        'text': '#c9d1d9',
+    },
+    'midnight': {
+        'primary': '#90caf9',
+        'highlight': '#0d47a1',
+        'background': '#121212',
+        'text': '#e0e0e0',
+    },
+}
 
 def _try_read_csv(data: bytes, encodings=None):
     """Try reading CSV bytes with a series of encodings."""
@@ -212,14 +235,10 @@ app.jinja_env.filters['trend'] = trend
 @app.context_processor
 def inject_globals():
     theme = {
-        'light_primary': get_setting('theme_light_primary', DEFAULT_LIGHT_PRIMARY),
-        'light_highlight': get_setting('theme_light_highlight', DEFAULT_LIGHT_HIGHLIGHT),
-        'light_background': get_setting('theme_light_background', DEFAULT_LIGHT_BACKGROUND),
-        'light_text': get_setting('theme_light_text', DEFAULT_LIGHT_TEXT),
-        'dark_primary': get_setting('theme_dark_primary', DEFAULT_DARK_PRIMARY),
-        'dark_highlight': get_setting('theme_dark_highlight', DEFAULT_DARK_HIGHLIGHT),
-        'dark_background': get_setting('theme_dark_background', DEFAULT_DARK_BACKGROUND),
-        'dark_text': get_setting('theme_dark_text', DEFAULT_DARK_TEXT),
+        'primary': get_setting('theme_primary', DEFAULT_THEME_PRIMARY),
+        'highlight': get_setting('theme_highlight', DEFAULT_THEME_HIGHLIGHT),
+        'background': get_setting('theme_background', DEFAULT_THEME_BACKGROUND),
+        'text': get_setting('theme_text', DEFAULT_THEME_TEXT),
     }
     return {
         'app_name': get_setting('app_title', 'ultrasuite'),
@@ -2017,22 +2036,14 @@ def ignore_duplicate():
 def settings_page():
     if request.method == 'POST':
         # Appearance settings
-        light_primary = request.form.get('light_primary', '').strip()
-        light_highlight = request.form.get('light_highlight', '').strip()
-        light_background = request.form.get('light_background', '').strip()
-        light_text = request.form.get('light_text', '').strip()
-        dark_primary = request.form.get('dark_primary', '').strip()
-        dark_highlight = request.form.get('dark_highlight', '').strip()
-        dark_background = request.form.get('dark_background', '').strip()
-        dark_text = request.form.get('dark_text', '').strip()
-        set_setting('theme_light_primary', light_primary)
-        set_setting('theme_light_highlight', light_highlight)
-        set_setting('theme_light_background', light_background)
-        set_setting('theme_light_text', light_text)
-        set_setting('theme_dark_primary', dark_primary)
-        set_setting('theme_dark_highlight', dark_highlight)
-        set_setting('theme_dark_background', dark_background)
-        set_setting('theme_dark_text', dark_text)
+        theme_primary = request.form.get('theme_primary', '').strip()
+        theme_highlight = request.form.get('theme_highlight', '').strip()
+        theme_background = request.form.get('theme_background', '').strip()
+        theme_text = request.form.get('theme_text', '').strip()
+        set_setting('theme_primary', theme_primary)
+        set_setting('theme_highlight', theme_highlight)
+        set_setting('theme_background', theme_background)
+        set_setting('theme_text', theme_text)
 
         primary_color = request.form.get('primary_color', '').strip()
         highlight_color = request.form.get('highlight_color', '').strip()
@@ -2086,19 +2097,25 @@ def settings_page():
                 set_setting('app_logo', os.path.join(UPLOAD_FOLDER, save_name))
         flash('Settings saved.')
         return redirect(url_for('settings_page'))
-    primary_color = get_setting('branding_primary', DEFAULT_LIGHT_PRIMARY)
-    highlight_color = get_setting('branding_highlight', DEFAULT_LIGHT_HIGHLIGHT)
+    primary_color = get_setting('branding_primary', DEFAULT_THEME_PRIMARY)
+    highlight_color = get_setting('branding_highlight', DEFAULT_THEME_HIGHLIGHT)
     app_title = get_setting('app_title', 'ultrasuite')
     report_title = get_setting('report_title', 'Monthly Report')
     branding = get_setting('branding', '')
-    light_primary = get_setting('theme_light_primary', DEFAULT_LIGHT_PRIMARY)
-    light_highlight = get_setting('theme_light_highlight', DEFAULT_LIGHT_HIGHLIGHT)
-    light_background = get_setting('theme_light_background', DEFAULT_LIGHT_BACKGROUND)
-    light_text = get_setting('theme_light_text', DEFAULT_LIGHT_TEXT)
-    dark_primary = get_setting('theme_dark_primary', DEFAULT_DARK_PRIMARY)
-    dark_highlight = get_setting('theme_dark_highlight', DEFAULT_DARK_HIGHLIGHT)
-    dark_background = get_setting('theme_dark_background', DEFAULT_DARK_BACKGROUND)
-    dark_text = get_setting('theme_dark_text', DEFAULT_DARK_TEXT)
+    theme_primary = get_setting('theme_primary', DEFAULT_THEME_PRIMARY)
+    theme_highlight = get_setting('theme_highlight', DEFAULT_THEME_HIGHLIGHT)
+    theme_background = get_setting('theme_background', DEFAULT_THEME_BACKGROUND)
+    theme_text = get_setting('theme_text', DEFAULT_THEME_TEXT)
+    active_theme = ''
+    for name, vals in THEMES.items():
+        if (
+            theme_primary == vals['primary'] and
+            theme_highlight == vals['highlight'] and
+            theme_background == vals['background'] and
+            theme_text == vals['text']
+        ):
+            active_theme = name
+            break
     include_month_summary = get_setting('default_include_month_summary', '1') == '1'
     include_month_details = get_setting('default_include_month_details', '1') == '1'
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
@@ -2133,14 +2150,11 @@ def settings_page():
         app_title=app_title,
         report_title=report_title,
         branding=branding,
-        light_primary=light_primary,
-        light_highlight=light_highlight,
-        light_background=light_background,
-        light_text=light_text,
-        dark_primary=dark_primary,
-        dark_highlight=dark_highlight,
-        dark_background=dark_background,
-        dark_text=dark_text,
+        theme_primary=theme_primary,
+        theme_highlight=theme_highlight,
+        theme_background=theme_background,
+        theme_text=theme_text,
+        active_theme=active_theme,
         dup_action=dup_action,
     )
 
