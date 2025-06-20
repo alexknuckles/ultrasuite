@@ -3,11 +3,10 @@ import os
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 import base64
-import itertools
 from calendar import monthrange
 
 import pandas as pd
-import numpy as np
+import math
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -169,6 +168,18 @@ CATEGORY_LABELS = {
     'service': 'Service',
     'shopify': 'Shopify',
     'shipping': 'Shipping',
+}
+
+# Common orderings for monthly and quarterly summaries
+MONTHS_ORDER = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+]
+QUARTER_MAP = {
+    1: [1, 2, 3],
+    2: [4, 5, 6],
+    3: [7, 8, 9],
+    4: [10, 11, 12],
 }
 
 def format_dt(value):
@@ -900,14 +911,13 @@ def calculate_report_data(year, month_param=None):
     this_year = summary[summary['year'] == year].set_index('month')
     last_year = summary[summary['year'] == year - 1].set_index('month')
 
-    months_order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
     months_list = [
         {'num': i, 'name': m}
-        for i, m in enumerate(months_order, start=1)
+        for i, m in enumerate(MONTHS_ORDER, start=1)
     ]
     month_choices = months_list[:cutoff_month]
     rows = []
-    for i, month in enumerate(months_order[:cutoff_month], start=1):
+    for i, month in enumerate(MONTHS_ORDER[:cutoff_month], start=1):
         current = this_year["total"].get(month, 0)
         previous = last_year["total"].get(month, 0)
         pct = '-'
@@ -919,8 +929,7 @@ def calculate_report_data(year, month_param=None):
 
     # aggregate sales by quarter for the overall report
     quarter_rows = []
-    quarter_map = {1: [1, 2, 3], 2: [4, 5, 6], 3: [7, 8, 9], 4: [10, 11, 12]}
-    for q, months in quarter_map.items():
+    for q, months in QUARTER_MAP.items():
         months_in_range = [m for m in months if m <= cutoff_month]
         if not months_in_range:
             continue
@@ -938,10 +947,6 @@ def calculate_report_data(year, month_param=None):
             pct = '∞'
         quarter_rows.append((f'Q{q}', cur_total, prev_total, pct))
 
-    year_data = all_data[
-        (all_data["year"] == year)
-        & (all_data["month_num"] <= cutoff_month)
-    ]
     categories = CATEGORIES
     labels = CATEGORY_LABELS
 
@@ -963,10 +968,10 @@ def calculate_report_data(year, month_param=None):
         .reindex(range(1, 13))
         .fillna(0)
     )
-    shopify_avg = shopify_pivot.replace(0, np.nan).mean(axis=1)
+    shopify_avg = shopify_pivot.replace(0, math.nan).mean(axis=1)
     shopify_rows = []
     for m in range(1, 13):
-        month_name = months_order[m - 1]
+        month_name = MONTHS_ORDER[m - 1]
         raw_vals = [float(shopify_pivot.at[m, y]) if y in shopify_pivot.columns else 0.0 for y in shopify_years]
         avg_val = shopify_avg.get(m)
         avg_val = 0.0 if pd.isna(avg_val) else float(avg_val)
@@ -983,7 +988,7 @@ def calculate_report_data(year, month_param=None):
 
     # Shopify totals by quarter
     shopify_quarters = []
-    for q, months in quarter_map.items():
+    for q, months in QUARTER_MAP.items():
         vals = []
         for y in shopify_years:
             val = shopify_summary[(shopify_summary['year'] == y) & shopify_summary['month_num'].isin(months)]['total'].sum()
@@ -1007,7 +1012,6 @@ def calculate_report_data(year, month_param=None):
             & (summary_type['month_num'] <= cutoff_month)
         ]
         totals = cur.set_index('month_num').reindex(range(1, cutoff_month + 1), fill_value=0)
-        qtys = totals['quantity']
         totals = totals['total']
         total_cur = totals.sum()
         total_prev = prev['total'].sum()
@@ -1065,7 +1069,6 @@ def calculate_report_data(year, month_param=None):
             & (summary_type['type'] == cat)
         ]
         cur_total = cur_month['total'].sum()
-        cur_qty = cur_month['quantity'].sum()
         prev_total = prev_month['total'].sum()
         vs_last = '-'
         if prev_total > 0:
@@ -1279,13 +1282,12 @@ def generate_year_chart_base64(year):
     this_year = summary[summary['year'] == year].set_index('month')
     last_year = summary[summary['year'] == year - 1].set_index('month')
 
-    months_order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    y1 = [this_year['total'].get(m, 0) for m in months_order]
-    y2 = [last_year['total'].get(m, 0) for m in months_order]
+    y1 = [this_year['total'].get(m, 0) for m in MONTHS_ORDER]
+    y2 = [last_year['total'].get(m, 0) for m in MONTHS_ORDER]
 
     fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(months_order, y1, label=str(year), marker='o')
-    ax.plot(months_order, y2, label=str(year-1), linestyle='--', marker='x')
+    ax.plot(MONTHS_ORDER, y1, label=str(year), marker='o')
+    ax.plot(MONTHS_ORDER, y2, label=str(year-1), linestyle='--', marker='x')
     ax.set_title('Monthly Sales Comparison')
     ax.set_ylabel('Total Sales ($)')
     ax.legend()
@@ -1495,13 +1497,12 @@ def report_chart():
     this_year = summary[summary['year'] == year].set_index('month')
     last_year = summary[summary['year'] == year - 1].set_index('month')
 
-    months_order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    y1 = [this_year['total'].get(m, 0) for m in months_order]
-    y2 = [last_year['total'].get(m, 0) for m in months_order]
+    y1 = [this_year['total'].get(m, 0) for m in MONTHS_ORDER]
+    y2 = [last_year['total'].get(m, 0) for m in MONTHS_ORDER]
 
     fig, ax = plt.subplots(figsize=(10,4))
-    ax.plot(months_order, y1, label=str(year), marker='o')
-    ax.plot(months_order, y2, label=str(year-1), linestyle='--', marker='x')
+    ax.plot(MONTHS_ORDER, y1, label=str(year), marker='o')
+    ax.plot(MONTHS_ORDER, y2, label=str(year-1), linestyle='--', marker='x')
     ax.set_title('Monthly Sales Comparison')
     ax.set_ylabel('Total Sales ($)')
     ax.legend()
