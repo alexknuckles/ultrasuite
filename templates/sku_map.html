@@ -258,9 +258,17 @@
             <td class="has-text-centered">
               <input type="checkbox" name="suggest_{{ loop.index0 }}">
             </td>
-            <td>{{ s[0] }}<input type="hidden" name="sug_target_{{ loop.index0 }}" value="{{ s[0] }}"></td>
-            <td>{{ s[1] }}<input type="hidden" name="sug_merge_{{ loop.index0 }}" value="{{ s[1] }}"></td>
-            <td class="no-wrap">{{ (s[2]*100)|round(1) }}%</td>
+            <td>
+              {{ s.keep }}
+              <span class="has-text-grey is-size-7">({{ s.source_keep }})</span>
+              <input type="hidden" name="sug_target_{{ loop.index0 }}" value="{{ s.keep }}">
+            </td>
+            <td>
+              {{ s.merge }}
+              <span class="has-text-grey is-size-7">({{ s.source_merge }})</span>
+              <input type="hidden" name="sug_merge_{{ loop.index0 }}" value="{{ s.merge }}">
+            </td>
+            <td class="no-wrap">{{ (s.score*100)|round(1) }}%</td>
           </tr>
           {% endfor %}
           </tbody>
