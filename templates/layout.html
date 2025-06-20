@@ -11,16 +11,10 @@
   {% if theme %}
   <style>
   :root {
-    {% if theme.light_primary %}--ultra-primary: {{ theme.light_primary }};{% endif %}
-    {% if theme.light_highlight %}--ultra-highlight: {{ theme.light_highlight }};{% endif %}
-    {% if theme.light_background %}--ultra-background: {{ theme.light_background }};{% endif %}
-    {% if theme.light_text %}--ultra-text: {{ theme.light_text }};{% endif %}
-  }
-  .dark-mode {
-    {% if theme.dark_primary %}--ultra-primary: {{ theme.dark_primary }};{% endif %}
-    {% if theme.dark_highlight %}--ultra-highlight: {{ theme.dark_highlight }};{% endif %}
-    {% if theme.dark_background %}--ultra-background: {{ theme.dark_background }};{% endif %}
-    {% if theme.dark_text %}--ultra-text: {{ theme.dark_text }};{% endif %}
+    {% if theme.primary %}--ultra-primary: {{ theme.primary }};{% endif %}
+    {% if theme.highlight %}--ultra-highlight: {{ theme.highlight }};{% endif %}
+    {% if theme.background %}--ultra-background: {{ theme.background }};{% endif %}
+    {% if theme.text %}--ultra-text: {{ theme.text }};{% endif %}
   }
   </style>
   {% endif %}
@@ -44,7 +38,6 @@
         </div>
       </section>
       <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
-        <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle theme">🌙</button>
       </section>
   </div>
 </header>
@@ -66,30 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <script>
 (function(){
-  const root = document.documentElement;
-  const stored = localStorage.getItem('ultra-dark');
-  if (stored === null) {
-    localStorage.setItem('ultra-dark', '0');
-  } else if (stored === '1') {
-    root.classList.add('dark-mode');
-  }
 })();
 document.addEventListener('DOMContentLoaded', function() {
-  const root = document.documentElement;
-  const toggle = document.getElementById('themeToggle');
   const navToggle = document.getElementById('navToggle');
   const navLinks = document.querySelector('.nav-links');
-  function apply(dark) {
-    root.classList.toggle('dark-mode', dark);
-    toggle.textContent = dark ? '☀️' : '🌙';
-  }
-  const isDark = localStorage.getItem('ultra-dark') === '1';
-  apply(isDark);
-  toggle.addEventListener('click', function() {
-    const newDark = !(localStorage.getItem('ultra-dark') === '1');
-    localStorage.setItem('ultra-dark', newDark ? '1' : '0');
-    apply(newDark);
-  });
   navToggle.addEventListener('click', function() {
     navLinks.classList.toggle('is-open');
   });
