@@ -142,17 +142,9 @@
       </thead>
       <tbody>
         {% for row in rows %}
-        <tr
-          data-date="{{ row.created_at|format_dt }}"
-          data-sku="{{ row.sku }}"
-          data-canonical="{{ row.canonical }}"
-          data-description="{{ row.description }}"
-          data-price="{{ '%.2f'|format(row.price) }}"
-          data-quantity="{{ '%.2f'|format(row.quantity) }}"
-          data-total="{{ '%.2f'|format(row.total) }}"
-          data-source="{{ row.source_title }}">
+        <tr>
           <td class="no-wrap">{{ row.created_at|format_dt }}</td>
-          <td class="no-wrap">{{ row.sku }}</td>
+          <td class="no-wrap">{{ row.canonical }}</td>
           <td>{{ row.description }}</td>
           <td class="no-wrap">{{ "%.2f"|format(row.price) }}</td>
           <td class="no-wrap">{{ "%.2f"|format(row.quantity) }}</td>
@@ -166,25 +158,7 @@
     </div>
     </div>
 
-<div id="txnModal" class="txn-modal is-hidden">
-  <div class="txn-modal-content">
-    <table class="table is-fullwidth is-narrow">
-      <tbody>
-        <tr><th>Date</th><td id="mDate"></td></tr>
-        <tr><th>SKU</th><td id="mSku"></td></tr>
-        <tr><th>Canonical</th><td id="mCanonical"></td></tr>
-        <tr><th>Description</th><td id="mDesc"></td></tr>
-        <tr><th>Price</th><td id="mPrice"></td></tr>
-        <tr><th>Quantity</th><td id="mQty"></td></tr>
-        <tr><th>Total</th><td id="mTotal"></td></tr>
-        <tr><th>Source</th><td id="mSource"></td></tr>
-      </tbody>
-    </table>
-    <div class="has-text-right mt-2">
-      <button id="txnClose" class="mdc-button mdc-button--raised">Close</button>
-    </div>
-  </div>
-</div>
+
 
 {% if duplicates is defined %}
 <div class="mdc-card page-card mt-5">
@@ -461,28 +435,6 @@
 
   setButtonLabel();
   });
-  </script>
-<script>
-document.querySelectorAll('#txnTable tbody tr').forEach(function(row){
-  row.addEventListener('click', function(){
-    document.getElementById('mDate').textContent = row.dataset.date || '';
-    document.getElementById('mSku').textContent = row.dataset.sku || '';
-    document.getElementById('mDesc').textContent = row.dataset.description || '';
-    document.getElementById('mPrice').textContent = row.dataset.price || '';
-    document.getElementById('mQty').textContent = row.dataset.quantity || '';
-    document.getElementById('mTotal').textContent = row.dataset.total || '';
-    document.getElementById('mSource').textContent = row.dataset.source || '';
-    document.getElementById('mCanonical').textContent = row.dataset.canonical || '';
-    document.getElementById('txnModal').classList.remove('is-hidden');
-  });
-});
-(function(){
-  var modal = document.getElementById('txnModal');
-  var closeBtn = document.getElementById('txnClose');
-  function hide(){ modal.classList.add('is-hidden'); }
-  if(closeBtn) closeBtn.addEventListener('click', hide);
-  if(modal) modal.addEventListener('click', function(e){ if(e.target === modal) hide(); });
-})();
 </script>
 {% if duplicates is defined %}
 <script>
