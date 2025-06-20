@@ -581,10 +581,7 @@ def _find_duplicates(conn, sku=None, start=None, end=None):
                 'quantity': r.quantity,
                 'total': r.total,
                 'unmatched': (r.id_s, r.id_q) in unmatched_pairs,
-                'ignored': (
-                    (r.id_s, r.id_q) in ignored_pairs
-                    or (r.id_s, r.id_q) in unmatched_pairs
-                ),
+                'ignored': (r.id_s, r.id_q) in ignored_pairs,
             }
         )
     return rows
@@ -1917,6 +1914,13 @@ def resolve_duplicate():
     if sid is None or qid is None:
         return jsonify(success=False), 400
     conn = get_db()
+    row = conn.execute(
+        'SELECT ignored FROM duplicate_log WHERE shopify_id=? AND qbo_id=? ORDER BY resolved_at DESC LIMIT 1',
+        (sid, qid),
+    ).fetchone()
+    if row and row['ignored']:
+        conn.close()
+        return jsonify(success=False), 400
     _resolve_duplicate_pair(
         conn,
         sid,
@@ -1930,7 +1934,7 @@ def resolve_duplicate():
 
 @app.route('/unmatch-duplicate', methods=['POST'])
 def unmatch_duplicate():
-    """Reopen a resolved duplicate and mark it as ignored."""
+    """Reopen a resolved duplicate for manual review."""
     sid = request.form.get('shopify_id', type=int)
     qid = request.form.get('qbo_id', type=int)
     if sid is None or qid is None:
@@ -1974,7 +1978,7 @@ def unmatch_duplicate():
             )
             new_sid = cur.lastrowid
     conn.execute(
-        'UPDATE duplicate_log SET action="unmatched", ignored=1, shopify_id=?, qbo_id=? '
+        'UPDATE duplicate_log SET action="unmatched", ignored=0, shopify_id=?, qbo_id=? '
         'WHERE shopify_id=? AND qbo_id=?',
         (new_sid, new_qid, sid, qid),
     )
