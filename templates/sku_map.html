@@ -7,10 +7,10 @@
       <input type="text" id="searchBox" class="input" placeholder="Search SKUs and aliases">
     </div>
     <nav class="buttons tab-buttons mb-4" id="mapTabs">
-      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="unmapped">Unmapped ({{ grouped|length }})</button>
+      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="all">All ({{ all_count }})</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="unmapped">Unmapped ({{ grouped|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="mapped">Mapped ({{ mapped|length }})</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged ({{ merged|length }})</button>
-      <button type="button" class="mdc-button mdc-button--raised" data-target="all">All ({{ all_count }})</button>
     </nav>
     <section id="unmapped" class="tab-pane">
       <form method="POST">
@@ -285,6 +285,10 @@
   function isFiltering(){
     return search && search.value.trim() !== '';
   }
+  function isAllTabActive(){
+    const btn = document.querySelector('#mapTabs .is-active');
+    return btn && btn.dataset.target === 'all';
+  }
   function filterSearch(){
     if (!search) return;
     const term = search.value.toLowerCase().trim();
@@ -547,7 +551,11 @@
     if (document.querySelector(`#${sec} .sku-card[data-canonical="${canonical}"]`)) return;
     const section = document.getElementById(sec);
     const card = createDisplayCard(canonical, type, aliases, source);
-    section.prepend(card);
+    if (isAllTabActive()) {
+      section.appendChild(card);
+    } else {
+      section.prepend(card);
+    }
     card.querySelectorAll('.alias-badges .delete').forEach(setupAliasDelete);
     card.querySelectorAll('.parent-select').forEach(setupParentSelect);
     card.querySelectorAll('.type-select').forEach(setupDisplayTypeSelect);
@@ -637,6 +645,7 @@
   }
 
   function moveCardToTop(card){
+    if (isAllTabActive()) return;
     const mappedSection = document.getElementById('mapped');
     const mergedSection = document.getElementById('merged');
     if (card.closest('#mapped')) {
@@ -713,7 +722,7 @@
       }
       other.dataset.canonical = newParent;
       refreshParentSelect(other);
-      if (!isFiltering()) moveCardToTop(other);
+      if (!isFiltering() && !isAllTabActive()) moveCardToTop(other);
     });
 
     const typeVal = card.querySelector('.sku-row strong')?.textContent.trim() || 'unmapped';
@@ -747,7 +756,7 @@
       body: JSON.stringify({alias: oldParent, parent: newParent})
     });
 
-    if (!isFiltering()) moveCardToTop(card);
+    if (!isFiltering() && !isAllTabActive()) moveCardToTop(card);
     filterSearch();
   }
 

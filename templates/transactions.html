@@ -145,6 +145,7 @@
         <tr
           data-date="{{ row.created_at|format_dt }}"
           data-sku="{{ row.sku }}"
+          data-canonical="{{ row.canonical }}"
           data-description="{{ row.description }}"
           data-price="{{ '%.2f'|format(row.price) }}"
           data-quantity="{{ '%.2f'|format(row.quantity) }}"
@@ -171,6 +172,7 @@
       <tbody>
         <tr><th>Date</th><td id="mDate"></td></tr>
         <tr><th>SKU</th><td id="mSku"></td></tr>
+        <tr><th>Canonical</th><td id="mCanonical"></td></tr>
         <tr><th>Description</th><td id="mDesc"></td></tr>
         <tr><th>Price</th><td id="mPrice"></td></tr>
         <tr><th>Quantity</th><td id="mQty"></td></tr>
@@ -470,6 +472,7 @@ document.querySelectorAll('#txnTable tbody tr').forEach(function(row){
     document.getElementById('mQty').textContent = row.dataset.quantity || '';
     document.getElementById('mTotal').textContent = row.dataset.total || '';
     document.getElementById('mSource').textContent = row.dataset.source || '';
+    document.getElementById('mCanonical').textContent = row.dataset.canonical || '';
     document.getElementById('txnModal').classList.remove('is-hidden');
   });
 });
