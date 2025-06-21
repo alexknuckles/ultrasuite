@@ -1,8 +1,10 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="mdc-card page-card centered">
+  <header class="card-header">
+    <p class="card-header-title">SKU details: {{ sku }}</p>
+  </header>
   <div class="card-content">
-    <h2 class="title is-4 mb-4">SKU details: {{ sku }}</h2>
     <div class="table-responsive is-auto">
     <table class="table is-fullwidth is-striped is-narrow">
       <thead>
