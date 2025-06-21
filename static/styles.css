@@ -30,6 +30,9 @@
   align-items: center;
   border-radius: var(--radius-pill);
   padding: 0 0.5rem;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .delete.is-small {
@@ -230,6 +233,11 @@ input.switch:checked::before {
 .page-content > .page-card {
   margin-top: 0.75rem; /* align spacing with dashboard columns */
 }
+.sku-map-card {
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
 .card-header {
   background-color: var(--ultra-primary);
   color: var(--mdc-theme-on-primary);
@@ -388,7 +396,7 @@ input.switch:checked::before {
   padding: 0.2rem 0.5rem;
 }
 .sku-card .field {
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.25rem;
 }
 .sku-card.selected {
   border-color: var(--ultra-primary);
