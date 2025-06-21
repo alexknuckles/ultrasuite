@@ -598,13 +598,15 @@ input.switch:checked::before {
   .date-modal-content {
     max-width: none;
     width: 95%;
+    padding: var(--spacing-sm);
   }
   .date-modal-body {
     flex-direction: row;
     align-items: flex-start;
+    gap: var(--spacing-sm);
   }
   .date-modal-left {
-    width: 7rem;
+    width: 6rem;
     border-right: 1px solid var(--ultra-highlight);
     border-bottom: none;
     margin-bottom: 0;
@@ -613,10 +615,12 @@ input.switch:checked::before {
     min-width: 0;
   }
   .date-inputs {
-    flex-direction: column;
+    flex-direction: row;
+    gap: var(--spacing-sm);
   }
   .cal-tabs {
     display: flex;
+    margin-top: var(--spacing-xs);
   }
 }
 
