@@ -277,6 +277,7 @@ input.switch:checked::before {
 .columns {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   margin-left: -0.75rem;
   margin-right: -0.75rem;
 }
@@ -285,6 +286,7 @@ input.switch:checked::before {
 .column {
   flex: 0 0 auto;
   padding: 0.75rem;
+  box-sizing: border-box;
 }
 
 .column.is-half {
