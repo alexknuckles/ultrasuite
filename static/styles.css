@@ -469,6 +469,9 @@ input.switch:checked::before {
   overflow-x: visible;
   white-space: normal;
 }
+.report-content .title {
+  text-align: center;
+}
 .table-responsive {
   width: 100%;
   overflow-x: auto;
@@ -674,5 +677,7 @@ input.switch:checked::before {
 #yearChart {
   max-width: 100%;
   height: auto;
+  display: block;
+  margin: 0 auto;
 }
 
