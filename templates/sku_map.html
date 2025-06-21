@@ -16,10 +16,10 @@
       <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged ({{ merged|length }})</button>
     </nav>
     <section id="unmapped" class="tab-pane">
-      <form method="POST" class="sku-list">
+      <form id="unmappedForm" method="POST" class="sku-list">
         <input type="hidden" id="merge_target" class="merge-target" name="merge_target" value="">
         {% for entry in grouped %}
-        <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
+        <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}" data-type="{{ entry.type }}">
           <div class="card-content">
             <div class="field is-flex is-align-items-center mb-2">
               <div class="merge-col mr-2">
@@ -110,16 +110,16 @@
             </div>
           </div>
         </div>
-        <div class="buttons mb-5 mt-4">
+        <div id="unmappedMerge" class="buttons mb-5 mt-4">
           <button class="mdc-button mdc-button--raised" type="submit" name="merge" value="1">Merge selected</button>
         </div>
       </form>
     </section>
     <section id="mapped" class="tab-pane is-hidden">
-      <form method="POST" class="sku-list">
+      <form id="mappedForm" method="POST" class="sku-list">
         <input type="hidden" name="merge_target" value="" class="merge-target">
         {% for entry in mapped %}
-        <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
+        <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}" data-type="{{ entry.type }}">
           <div class="card-content">
             <div class="field is-flex is-align-items-center mb-2">
               <div class="merge-col mr-2">
@@ -186,7 +186,7 @@
         </div>
         </div>
         {% endfor %}
-        <div class="buttons mb-5 mt-4">
+        <div id="mappedMerge" class="buttons mb-5 mt-4">
           <button class="mdc-button mdc-button--raised" type="submit" name="merge" value="1">Merge selected</button>
         </div>
       </form>
@@ -194,7 +194,7 @@
     <section id="merged" class="tab-pane is-hidden">
       <div class="sku-list">
       {% for entry in merged %}
-      <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
+      <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}" data-type="{{ entry.type }}">
         <div class="card-content">
           <div class="field is-flex is-align-items-center mb-2">
             <label class="label mb-0 mr-1">Parent SKU</label>
@@ -253,10 +253,14 @@
       {% endfor %}
       </div>
     </section>
+    <div id="allMerge" class="buttons mb-5 mt-4" style="display:none;">
+      <button class="mdc-button mdc-button--raised" type="submit" form="unmappedForm" name="merge" value="1">Merge selected</button>
+    </div>
   </div>
 </div>
 <script>
 (function(){
+  const pendingMoves = new Map();
   const active = document.querySelector('#mapTabs .is-active');
   if (active) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
@@ -270,8 +274,23 @@
     }
     updateMergeButtons();
   }
+  function applyPendingMoves(){
+    pendingMoves.forEach((type, canonical) => {
+      const card = document.querySelector(`#unmapped .sku-card[data-canonical="${canonical}"]`) ||
+                   document.querySelector(`#mapped .sku-card[data-canonical="${canonical}"]`);
+      if (!card) return;
+      if(type === 'unmapped' && !card.closest('#unmapped')){
+        moveToUnmapped(card);
+      } else if(type !== 'unmapped' && card.closest('#unmapped')){
+        moveToMapped(card, type);
+      }
+    });
+    pendingMoves.clear();
+  }
+
   document.querySelectorAll('#mapTabs button').forEach(btn => {
     btn.addEventListener('click', () => {
+      if(btn.dataset.target !== 'all') applyPendingMoves();
       document.querySelectorAll('#mapTabs button').forEach(b => b.classList.remove('is-active'));
       btn.classList.add('is-active');
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
@@ -303,8 +322,13 @@
   }
 
   function updateMergeButtons(){
-    const mappedBtn = document.querySelector('#mapped form .buttons');
-    if (mappedBtn) mappedBtn.style.display = isAllTabActive() ? 'none' : '';
+    const mappedBtn = document.querySelector('#mappedMerge');
+    const unmappedBtn = document.querySelector('#unmappedMerge');
+    const allBtn = document.getElementById('allMerge');
+    const allActive = isAllTabActive();
+    if (mappedBtn) mappedBtn.style.display = allActive ? 'none' : '';
+    if (unmappedBtn) unmappedBtn.style.display = allActive ? 'none' : '';
+    if (allBtn) allBtn.style.display = allActive ? '' : 'none';
   }
   function filterSearch(){
     if (!search) return;
@@ -434,6 +458,7 @@
     const div = document.createElement('div');
     div.className = 'mdc-card sku-card';
     div.dataset.canonical = canonical;
+    div.dataset.type = type;
     div.dataset.aliases = '';
     div.innerHTML = `
       <div class="card-content">
@@ -812,7 +837,10 @@
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({canonical, type: newType})
     });
-    if(newType === 'unmapped' && !card.closest('#unmapped')){
+    card.dataset.type = newType;
+    if(isAllTabActive()){
+      pendingMoves.set(canonical, newType);
+    } else if(newType === 'unmapped' && !card.closest('#unmapped')){
       moveToUnmapped(card);
     } else if(newType !== 'unmapped' && card.closest('#unmapped')){
       moveToMapped(card, newType);
@@ -837,6 +865,27 @@
 
   document.querySelectorAll('#mapped .parent-select, #merged .parent-select').forEach(setupParentSelect);
   document.querySelectorAll('#mapped .type-select, #merged .type-select').forEach(setupDisplayTypeSelect);
+
+  const allMergeBtn = document.querySelector('#allMerge button');
+  if(allMergeBtn){
+    allMergeBtn.addEventListener('click', () => {
+      const form = document.getElementById('unmappedForm');
+      const mappedForm = document.getElementById('mappedForm');
+      if(!form || !mappedForm) return;
+      mappedForm.querySelectorAll('input[name^="select_m"]:checked').forEach(cb => {
+        const clone = document.createElement('input');
+        clone.type = 'hidden';
+        clone.name = cb.name;
+        clone.value = cb.value;
+        form.appendChild(clone);
+      });
+      const target = mappedForm.querySelector('input.merge-target');
+      if(target && target.value){
+        const hidden = form.querySelector('input.merge-target');
+        if(hidden) hidden.value = target.value;
+      }
+    });
+  }
 
   updateTargets();
   updateCount('all');
