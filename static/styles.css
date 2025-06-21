@@ -623,7 +623,7 @@ input.switch:checked::before {
     flex: 1 1 0;
   }
   .date-input input {
-    width: 100%;
+    width: 8rem;
   }
   /* reduce calendar padding for smaller screens */
   #dateModal .flatpickr-calendar {
@@ -651,7 +651,7 @@ input.switch:checked::before {
       flex: 1 1 0;
     }
     .date-input input {
-      width: 100%;
+      width: 8rem;
     }
   }
 
@@ -755,7 +755,7 @@ input.switch:checked::before {
   flex: 1 1 0;
 }
 .date-input input {
-  width: 100%;
+  width: 8rem;
 }
 .date-modal-right .buttons {
   display: flex;
