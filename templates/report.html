@@ -16,8 +16,8 @@
       <button type="button" id="exportBtn" class="mdc-button">🖨️ Export PDF</button>
     </div>
     <nav class="buttons tab-buttons mb-4" id="reportTabs">
-      <button type="button" class="mdc-button mdc-button--raised is-active" data-target="by-month">By month</button>
-      <button type="button" class="mdc-button mdc-button--raised" data-target="by-year">By year</button>
+      <button type="button" class="mdc-button mdc-button--raised{% if default_tab != 'by-year' %} is-active{% endif %}" data-target="by-month">By month</button>
+      <button type="button" class="mdc-button mdc-button--raised{% if default_tab == 'by-year' %} is-active{% endif %}" data-target="by-year">By year</button>
     </nav>
     <form method="get" class="mb-4 filter-form">
       <div class="field mr-2">
@@ -42,7 +42,7 @@
       </div>
     </form>
 
-    <div id="by-month" class="tab-pane">
+    <div id="by-month" class="tab-pane{% if default_tab != 'by-month' %} is-hidden{% endif %}">
       <h4 class="title is-5">Last month sales by type ({{ last_month_label }})</h4>
       <img id="lastMonthChart" data-src="{{ url_for('last_month_chart', year=selected_year, month=selected_month) }}" class="my-3" alt="Last Month Chart">
 
@@ -116,7 +116,7 @@
 
     <div class="report-break"></div>
 
-    <div id="by-year" class="tab-pane is-hidden">
+    <div id="by-year" class="tab-pane{% if default_tab == 'by-year' %}{% else %} is-hidden{% endif %}">
       <h4 class="title is-5">Overall sales by month ({{ selected_year }})</h4>
       <img id="yearChart" data-src="{{ url_for('report_chart', year=selected_year) }}" class="my-3" alt="Monthly Chart">
       <h4 class="title is-5 mt-5">Overall sales by month ({{ selected_year }})</h4>
@@ -356,12 +356,17 @@
     });
   });
   document.addEventListener('DOMContentLoaded', function(){
-    var monthImg = document.getElementById('lastMonthChart');
-    if(monthImg){
-      monthImg.src = monthImg.getAttribute('data-src') + '&t=' + Date.now();
-    }
+    var active = document.querySelector('#reportTabs .is-active');
     var monthWrap = document.getElementById('monthSelectWrapper');
-    if(monthWrap){ monthWrap.style.display = ''; }
+    if(active && active.getAttribute('data-target') === 'by-year') {
+      var yImg = document.getElementById('yearChart');
+      if(yImg){ yImg.src = yImg.getAttribute('data-src') + '&t=' + Date.now(); }
+      if(monthWrap){ monthWrap.style.display = 'none'; }
+    } else {
+      var mImg = document.getElementById('lastMonthChart');
+      if(mImg){ mImg.src = mImg.getAttribute('data-src') + '&t=' + Date.now(); }
+      if(monthWrap){ monthWrap.style.display = ''; }
+    }
 
     var exportBtn = document.getElementById('exportBtn');
     var exportBtnBottom = document.getElementById('exportBtnBottom');
