@@ -672,9 +672,29 @@ input.switch:checked::before {
   background-color: var(--ultra-primary);
   color: #fff;
 }
+.date-modal-left li.has-dropdown .arrow {
+  float: right;
+}
+.date-modal-left ul ul {
+  margin-left: 0.5rem;
+  margin-top: 0.25rem;
+}
+.date-modal-left ul ul.is-hidden {
+  display: none;
+}
 .date-modal-right {
   flex: 1;
   min-width: 12rem;
+}
+.date-inputs {
+  display: flex;
+  gap: var(--spacing-md);
+}
+.date-input {
+  flex: 1;
+}
+.date-input input {
+  width: 100%;
 }
 .date-modal-right .buttons {
   display: flex;
@@ -689,7 +709,7 @@ input.switch:checked::before {
 .date-pane.is-hidden {
   display: none;
 }
-.date-pane .flatpickr-calendar {
+.date-input .flatpickr-calendar {
   margin-top: var(--spacing-sm);
 }
 

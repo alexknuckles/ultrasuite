@@ -58,31 +58,26 @@
               <li data-type="mtd">Month to date</li>
               <li data-type="qtd">Quarter to date</li>
               <li data-type="ytd">Year to date</li>
-              <li data-type="quarter">Quarters</li>
+              <li id="quarterToggle" class="has-dropdown">Quarters <span class="arrow">&#9662;</span>
+                <ul id="quarterMenu" class="is-hidden">
+                  {% for opt in quarter_options %}
+                  <li data-type="quarter" data-value="{{ opt.value }}">{{ opt.label }}</li>
+                  {% endfor %}
+                </ul>
+              </li>
             </ul>
           </div>
           <div class="date-modal-right">
-          <div id="pane-today" class="date-pane"></div>
-          <div id="pane-yesterday" class="date-pane is-hidden"></div>
-          <div id="pane-last7" class="date-pane is-hidden"></div>
-          <div id="pane-last30" class="date-pane is-hidden"></div>
-          <div id="pane-last365" class="date-pane is-hidden"></div>
-          <div id="pane-lastmonth" class="date-pane is-hidden"></div>
-          <div id="pane-last12" class="date-pane is-hidden"></div>
-          <div id="pane-lastyear" class="date-pane is-hidden"></div>
-          <div id="pane-wtd" class="date-pane is-hidden"></div>
-          <div id="pane-mtd" class="date-pane is-hidden"></div>
-          <div id="pane-qtd" class="date-pane is-hidden"></div>
-          <div id="pane-ytd" class="date-pane is-hidden"></div>
-          <div id="pane-quarter" class="date-pane is-hidden">
-            <div class="select">
-              <select id="quarterSelect">
-                {% for opt in quarter_options %}
-                <option value="{{ opt.value }}">{{ opt.label }}</option>
-                {% endfor %}
-              </select>
+            <div class="date-inputs">
+              <div class="date-input">
+                <label for="startBox">Start</label>
+                <input id="startBox" type="text">
+              </div>
+              <div class="date-input">
+                <label for="endBox">End</label>
+                <input id="endBox" type="text">
+              </div>
             </div>
-          </div>
           </div>
         </div>
         <div class="date-modal-footer">
@@ -288,15 +283,19 @@
     var modal = document.getElementById('dateModal');
     var btn = document.getElementById('datePickerBtn');
     var dateLabel = document.getElementById('dateLabel');
-    var tabs = document.querySelectorAll('#dateTabs li');
-    var panes = document.querySelectorAll('.date-pane');
+    var tabs = document.querySelectorAll('#dateTabs li[data-type]');
     var periodInput = document.getElementById('periodInput');
     var startInput = document.getElementById('startInput');
     var endInput = document.getElementById('endInput');
-    var quarterSelect = document.getElementById('quarterSelect');
+    var startBox = document.getElementById('startBox');
+    var endBox = document.getElementById('endBox');
+    var quarterMenu = document.getElementById('quarterMenu');
+    var quarterToggle = document.getElementById('quarterToggle');
     var apply = document.getElementById('applyDate');
     var cancel = document.getElementById('cancelDate');
     var closeBtn = document.getElementById('closeDateModal');
+    var selectedQuarter = '';
+    var selectedQuarterText = '';
     var activeType = 'today';
 
     function fmt(d){ return d.toISOString().slice(0,10); }
@@ -343,8 +342,8 @@
           start = fmt(new Date(now.getFullYear(),0,1));
           end = fmt(now); break;
         case 'quarter':
-          if(quarterSelect){
-            var parts = quarterSelect.value.split('-');
+          if(selectedQuarter){
+            var parts = selectedQuarter.split('-');
             if(parts.length===3){
               var year = parseInt(parts[1]);
               var qNum = parseInt(parts[2].replace('Q',''));
@@ -361,21 +360,36 @@
     var init = periodInput.value;
     if(init.startsWith('quarter-')){
       activeType = 'quarter';
-      if(quarterSelect){ quarterSelect.value = init; }
+      selectedQuarter = init;
+      var li = quarterMenu ? quarterMenu.querySelector('[data-value="'+init+'"]') : null;
+      if(li){ selectedQuarterText = li.textContent; }
     } else if(init){
       activeType = init;
     }
 
+    function updateBoxes(r){
+      if(startBox._flatpickr){ startBox._flatpickr.setDate(r.start, true); }
+      if(endBox._flatpickr){ endBox._flatpickr.setDate(r.end, true); }
+    }
+
+    flatpickr(startBox,{dateFormat:'Y-m-d', inline:true});
+    flatpickr(endBox,{dateFormat:'Y-m-d', inline:true});
+
+    if(startInput.value && endInput.value){
+      updateBoxes({start:startInput.value, end:endInput.value});
+    } else {
+      updateBoxes(computeRange(activeType));
+    }
+
     tabs.forEach(function(x){
       var type = x.dataset.type;
-      if(type === activeType){
+      if(type === activeType && type !== 'quarter'){
         x.classList.add('is-active');
-        document.getElementById('pane-' + type).classList.remove('is-hidden');
       } else {
         x.classList.remove('is-active');
-        document.getElementById('pane-' + type).classList.add('is-hidden');
       }
     });
+    if(activeType === 'quarter'){ quarterToggle.classList.add('is-active'); }
 
     function showModal(){ modal.classList.remove('is-hidden'); }
     function hideModal(){ modal.classList.add('is-hidden'); }
@@ -393,13 +407,40 @@
     tabs.forEach(function(t){
       t.addEventListener('click', function(){
         tabs.forEach(function(x){ x.classList.remove('is-active'); });
+        quarterToggle.classList.remove('is-active');
         t.classList.add('is-active');
         activeType = t.dataset.type;
-        panes.forEach(function(p){ p.classList.add('is-hidden'); });
-        document.getElementById('pane-' + activeType).classList.remove('is-hidden');
+        updateBoxes(computeRange(activeType));
         setButtonLabel();
       });
     });
+
+    if(quarterToggle){
+      quarterToggle.addEventListener('click', function(e){
+        e.stopPropagation();
+        quarterMenu.classList.toggle('is-hidden');
+      });
+      document.addEventListener('click', function(e){
+        if(!quarterToggle.contains(e.target)){
+          quarterMenu.classList.add('is-hidden');
+        }
+      });
+    }
+
+    if(quarterMenu){
+      quarterMenu.querySelectorAll('li').forEach(function(li){
+        li.addEventListener('click', function(){
+          selectedQuarter = li.dataset.value;
+          selectedQuarterText = li.textContent;
+          activeType = 'quarter';
+          tabs.forEach(function(x){ x.classList.remove('is-active'); });
+          quarterToggle.classList.add('is-active');
+          quarterMenu.classList.add('is-hidden');
+          updateBoxes(computeRange('quarter'));
+          setButtonLabel();
+        });
+      });
+    }
 
     function setButtonLabel(){
       var labels = {
@@ -417,17 +458,16 @@
         ytd: 'Year to date'
       };
       var label = labels[activeType] || '';
-      if(activeType === 'quarter' && quarterSelect){
-        label = quarterSelect.options[quarterSelect.selectedIndex].text;
+      if(activeType === 'quarter'){
+        label = selectedQuarterText || '';
       }
       dateLabel.textContent = label || 'Custom';
     }
 
     apply.addEventListener('click', function(){
-      var rng = computeRange(activeType);
-      periodInput.value = activeType === 'quarter' ? quarterSelect.value : activeType;
-      startInput.value = rng.start || '';
-      endInput.value = rng.end || '';
+      periodInput.value = activeType === 'quarter' ? selectedQuarter : activeType;
+      startInput.value = startBox.value;
+      endInput.value = endBox.value;
       setButtonLabel();
       hideModal();
       if(form){ form.submit(); }
