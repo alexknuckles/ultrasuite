@@ -625,9 +625,11 @@ input.switch:checked::before {
   .date-input input {
     width: 100%;
   }
-  /* reduce calendar padding for smaller screens */
+  /* reduce calendar padding and scale calendar for small screens */
   #dateModal .flatpickr-calendar {
     padding: 0;
+    transform: scale(0.85);
+    transform-origin: top left;
   }
   /* ensure room for calendar tabs */
   .date-pane {
