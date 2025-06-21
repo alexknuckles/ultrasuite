@@ -1264,13 +1264,29 @@ def get_shopify_monthly():
     years = data['shopify_years'][:year_limit]
     rows = []
     for r in data['shopify_rows']:
-        rows.append({'month': r['month'], 'values': r['values'][:len(years)], 'avg': r['avg']})
+        values = r['values'][:len(years)]
+        nonzero = [v['val'] for v in values if v['val'] != 0]
+        avg = sum(nonzero) / len(nonzero) if nonzero else 0.0
+        rows.append({
+            'month': r['month'],
+            'values': [{
+                'val': v['val'],
+                'diff': v['val'] - avg
+            } for v in values],
+            'avg': avg,
+        })
     totals = data['shopify_totals'][:len(years)]
+    total_vals = [t['val'] for t in totals if t['val'] != 0]
+    avg_total = sum(total_vals) / len(total_vals) if total_vals else 0.0
+    totals = [{
+        'val': t['val'],
+        'diff': t['val'] - avg_total
+    } for t in totals]
     return {
         'years': years,
         'rows': rows,
         'totals': totals,
-        'average_total': data['shopify_avg_total'],
+        'average_total': avg_total,
     }
 
 
@@ -1281,7 +1297,17 @@ def get_shopify_quarterly():
     years = data['shopify_years'][:year_limit]
     rows = []
     for r in data['shopify_quarters']:
-        rows.append({'quarter': r['quarter'], 'values': r['values'][:len(years)], 'avg': r['avg']})
+        values = r['values'][:len(years)]
+        nonzero = [v['val'] for v in values if v['val'] != 0]
+        avg = sum(nonzero) / len(nonzero) if nonzero else 0.0
+        rows.append({
+            'quarter': r['quarter'],
+            'values': [{
+                'val': v['val'],
+                'diff': v['val'] - avg
+            } for v in values],
+            'avg': avg,
+        })
     return {
         'years': years,
         'rows': rows,
