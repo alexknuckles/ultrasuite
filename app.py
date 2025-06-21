@@ -1283,8 +1283,16 @@ def get_shopify_quarterly():
     }
 
 
-def generate_year_chart_base64(year):
-    """Return base64 PNG for the year-over-year monthly sales chart."""
+def generate_year_chart_base64(year, *, light=False):
+    """Return base64 PNG for the year-over-year monthly sales chart.
+
+    Parameters
+    ----------
+    year : int
+        Year to generate chart for.
+    light : bool, optional
+        Use light mode chart styling regardless of theme.
+    """
     conn = get_db()
     shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)
     qbo = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM qbo', conn)
@@ -1308,7 +1316,8 @@ def generate_year_chart_base64(year):
     y1 = [this_year['total'].get(m, 0) for m in MONTHS_ORDER]
     y2 = [last_year['total'].get(m, 0) for m in MONTHS_ORDER]
 
-    with plt.style.context(_chart_style()):
+    style = 'default' if light else _chart_style()
+    with plt.style.context(style):
         fig, ax = plt.subplots(figsize=(10, 4))
         ax.plot(MONTHS_ORDER, y1, label=str(year), marker='o')
         ax.plot(MONTHS_ORDER, y2, label=str(year-1), linestyle='--', marker='x')
@@ -1325,8 +1334,18 @@ def generate_year_chart_base64(year):
     return base64.b64encode(output.read()).decode('utf-8')
 
 
-def generate_last_month_chart_base64(year, month_param=None):
-    """Return base64 PNG for the last-month sales by type bar chart."""
+def generate_last_month_chart_base64(year, month_param=None, *, light=False):
+    """Return base64 PNG for the last-month sales by type bar chart.
+
+    Parameters
+    ----------
+    year : int
+        Year to generate chart for.
+    month_param : int, optional
+        Explicit month to use instead of current month.
+    light : bool, optional
+        Use light mode chart styling regardless of theme.
+    """
     conn = get_db()
     shopify = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM shopify', conn)
     qbo = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM qbo', conn)
@@ -1387,7 +1406,8 @@ def generate_last_month_chart_base64(year, month_param=None):
     y2 = [prev['total'].get(cat, 0) for cat in categories]
     xlabels = [labels.get(cat, cat) for cat in categories]
 
-    with plt.style.context(_chart_style()):
+    style = 'default' if light else _chart_style()
+    with plt.style.context(style):
         fig, ax = plt.subplots(figsize=(10, 4))
         idx = range(len(categories))
         width = 0.35
@@ -1468,8 +1488,8 @@ def export_report():
             'logo_size': LOGO_SIZE,
             'primary_color': get_setting('branding_primary', ''),
             'highlight_color': get_setting('branding_highlight', ''),
-            'year_chart': generate_year_chart_base64(year) if include_year_overall else '',
-            'last_month_chart': generate_last_month_chart_base64(year, month) if include_month_summary else '',
+            'year_chart': generate_year_chart_base64(year, light=True) if include_year_overall else '',
+            'last_month_chart': generate_last_month_chart_base64(year, month, light=True) if include_month_summary else '',
         })
         html = render_template('report_pdf.html', **data, datetime=datetime)
         output = BytesIO()
@@ -2056,6 +2076,23 @@ def ignore_duplicate():
                 'INSERT INTO duplicate_log(resolved_at, shopify_id, qbo_id, action, ignored) VALUES (?,?,?,?,1)',
                 (datetime.now(timezone.utc).isoformat(), sid, qid, 'both'),
             )
+    conn.commit()
+    conn.close()
+    return jsonify(success=True)
+
+
+@app.route('/unignore-duplicate', methods=['POST'])
+def unignore_duplicate():
+    """Remove ignored status from a duplicate pair."""
+    sid = request.form.get('shopify_id', type=int)
+    qid = request.form.get('qbo_id', type=int)
+    if sid is None or qid is None:
+        return jsonify(success=False), 400
+    conn = get_db()
+    conn.execute(
+        'UPDATE duplicate_log SET ignored=0 WHERE shopify_id=? AND qbo_id=?',
+        (sid, qid),
+    )
     conn.commit()
     conn.close()
     return jsonify(success=True)

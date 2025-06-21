@@ -284,7 +284,9 @@
             <td>{{ d.qbo_sku }}</td>
             <td>{{ d.quantity }}</td>
             <td>${{ "%.2f"|format(d.total) }}</td>
-            <td>Ignored</td>
+            <td>
+              <button data-unignore data-sid="{{ d.shopify_id }}" data-qid="{{ d.qbo_id }}" class="mdc-button">Unignore</button>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -484,6 +486,23 @@ document.querySelectorAll('button[data-unmatch]').forEach(btn => {
     const sid = btn.dataset.sid;
     const qid = btn.dataset.qid;
     fetch('{{ url_for('unmatch_duplicate') }}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: `shopify_id=${sid}&qbo_id=${qid}`
+    }).then(r => r.json()).then(res => {
+      if(res.success){
+        const row = btn.closest('tr');
+        if(row) row.remove();
+        location.reload();
+      }
+    });
+  });
+});
+document.querySelectorAll('button[data-unignore]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const sid = btn.dataset.sid;
+    const qid = btn.dataset.qid;
+    fetch('{{ url_for('unignore_duplicate') }}', {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: `shopify_id=${sid}&qbo_id=${qid}`
