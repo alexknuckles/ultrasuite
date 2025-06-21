@@ -234,6 +234,9 @@ input.switch:checked::before {
   margin-left: auto;
   margin-right: auto;
 }
+.page-card.wide {
+  max-width: 1100px;
+}
 .card-header {
   background-color: var(--ultra-primary);
   color: var(--mdc-theme-on-primary);
