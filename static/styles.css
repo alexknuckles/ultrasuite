@@ -227,6 +227,7 @@ input.switch:checked::before {
   margin: 0.75rem 0 var(--spacing-md);
   overflow-x: auto;
   overflow-y: visible;
+  width: 100%;
 }
 .page-card.centered {
   max-width: 700px;
@@ -237,7 +238,7 @@ input.switch:checked::before {
   max-width: 1100px;
 }
 .page-card > .card-content {
-  white-space: nowrap;
+  white-space: normal;
 }
 .card-header {
   background-color: var(--ultra-primary);
