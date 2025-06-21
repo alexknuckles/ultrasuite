@@ -627,7 +627,7 @@ input.switch:checked::before {
   }
   /* reduce calendar padding for smaller screens */
   #dateModal .flatpickr-calendar {
-    padding: 0 var(--spacing-xs);
+    padding: 0;
   }
   /* ensure room for calendar tabs */
   .date-pane {
