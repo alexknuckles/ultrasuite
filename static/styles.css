@@ -450,8 +450,8 @@ input.switch:checked::before {
 
 
 .report-content {
-  overflow-x: auto;
-  white-space: nowrap;
+  overflow-x: visible;
+  white-space: normal;
 }
 .table-responsive {
   width: 100%;
