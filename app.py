@@ -1427,6 +1427,12 @@ def monthly_report():
     year = request.args.get('year', default=datetime.now().year, type=int)
     month_param = request.args.get('month', type=int)
     data = calculate_report_data(year, month_param)
+    year_limit = int(get_setting('reports_year_limit', '5') or 5)
+    data['years'] = sorted(data['years'], reverse=True)[:year_limit]
+    if year not in data['years']:
+        data['years'].append(year)
+        data['years'] = sorted(data['years'], reverse=True)
+    data['default_tab'] = get_setting('reports_start_tab', 'by-month')
     default_month = get_setting('default_export_month', '')
     month_int = int(default_month) if str(default_month).isdigit() else None
     exp_types = [t for t in get_setting('default_detail_types', ','.join(CATEGORIES)).split(',') if t]
@@ -2121,6 +2127,12 @@ def settings_page():
         include_year_overall = 'include_year_overall' in request.form
         include_year_summary = 'include_year_summary' in request.form
         include_shopify = 'include_shopify' in request.form
+        reports_start_tab = request.form.get('reports_start_tab', 'by-month')
+        year_limit_val = request.form.get('reports_year_limit', '5')
+        try:
+            year_limit = int(year_limit_val)
+        except ValueError:
+            year_limit = 5
         prev_dup_action = get_setting('duplicate_action', 'review')
         dup_action = request.form.get('dup_action', 'review')
         detail_types = request.form.getlist('detail_types')
@@ -2130,6 +2142,8 @@ def settings_page():
         set_setting('default_include_year_overall', '1' if include_year_overall else '0')
         set_setting('default_include_year_summary', '1' if include_year_summary else '0')
         set_setting('default_include_shopify', '1' if include_shopify else '0')
+        set_setting('reports_start_tab', reports_start_tab)
+        set_setting('reports_year_limit', str(max(1, year_limit)))
         default_month = request.form.get('default_month', '')
         set_setting('default_export_month', default_month)
         set_setting('duplicate_action', dup_action)
@@ -2182,6 +2196,8 @@ def settings_page():
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
     include_year_summary = get_setting('default_include_year_summary', '1') == '1'
     include_shopify = get_setting('default_include_shopify', '1') == '1'
+    reports_start_tab = get_setting('reports_start_tab', 'by-month')
+    year_limit = int(get_setting('reports_year_limit', '5') or 5)
     dup_action = get_setting('duplicate_action', 'review')
     types_default = get_setting('default_detail_types', ','.join(CATEGORIES))
     detail_types = [t for t in types_default.split(',') if t]
@@ -2217,6 +2233,8 @@ def settings_page():
         theme_text=theme_text,
         active_theme=active_theme,
         dup_action=dup_action,
+        reports_start_tab=reports_start_tab,
+        reports_year_limit=year_limit,
     )
 
 if __name__ == '__main__':
