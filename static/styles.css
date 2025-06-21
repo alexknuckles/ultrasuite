@@ -31,6 +31,10 @@
   padding: 0 0.5rem;
 }
 
+.duplicate-all {
+  display: none;
+}
+
 .delete.is-small {
   background: none;
   border: none;
