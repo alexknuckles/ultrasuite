@@ -224,10 +224,8 @@ input.switch:checked::before {
   padding: var(--spacing-md);
   border-radius: var(--radius-md);
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  margin-bottom: var(--spacing-md);
-}
-.page-content > .page-card {
-  margin-top: 0.75rem; /* align spacing with dashboard columns */
+  margin: 0.75rem 0 var(--spacing-md);
+  overflow: hidden;
 }
 .page-card.centered {
   max-width: 700px;
