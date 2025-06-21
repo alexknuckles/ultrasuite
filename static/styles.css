@@ -617,12 +617,13 @@ input.switch:checked::before {
   .date-inputs {
     display: flex;
     flex-direction: row;
-    flex-wrap: nowrap;
     gap: var(--spacing-sm);
   }
-  /* keep inputs narrow so both fit side by side */
+  .date-input {
+    flex: 1 1 0;
+  }
   .date-input input {
-    width: 8rem;
+    width: 100%;
   }
   /* reduce calendar padding for smaller screens */
   #dateModal .flatpickr-calendar {
@@ -639,14 +640,20 @@ input.switch:checked::before {
 }
 
 /* ensure date inputs stay side by side on wider mobile screens */
-@media (max-width: 768px) {
-  .date-modal-right {
-    min-width: 0;
+  @media (max-width: 768px) {
+    .date-modal-right {
+      min-width: 0;
+    }
+    .date-inputs {
+      flex-wrap: nowrap;
+    }
+    .date-input {
+      flex: 1 1 0;
+    }
+    .date-input input {
+      width: 100%;
+    }
   }
-  .date-inputs {
-    flex-wrap: nowrap;
-  }
-}
 
 /* shared modal styles */
 .date-modal {
@@ -742,15 +749,13 @@ input.switch:checked::before {
 .date-inputs {
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
   gap: var(--spacing-md);
 }
 .date-input {
-  flex: 1;
+  flex: 1 1 0;
 }
 .date-input input {
-  /* keep input width compact regardless of active tab */
-  width: 8rem;
+  width: 100%;
 }
 .date-modal-right .buttons {
   display: flex;
