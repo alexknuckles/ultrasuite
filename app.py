@@ -206,18 +206,12 @@ QUARTER_MAP = {
 }
 
 def format_dt(value):
-    """Format ISO timestamp into a readable string like 'May 4th, 2025 - 5:30pm'."""
+    """Format ISO timestamp into 'mm/dd/yy - h:mma/pm'."""
     try:
         dt = datetime.fromisoformat(value)
-
-        def _suffix(day):
-            if 11 <= day % 100 <= 13:
-                return "th"
-            return {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
-
-        month = dt.strftime("%B")
         time_str = dt.strftime("%I:%M%p").lstrip('0').lower()
-        return f"{month} {dt.day}{_suffix(dt.day)}, {dt.year} - {time_str}"
+        date_str = dt.strftime("%m/%d/%y")
+        return f"{date_str} - {time_str}"
     except Exception:
         return value
 
