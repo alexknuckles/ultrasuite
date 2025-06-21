@@ -243,24 +243,16 @@ input.switch:checked::before {
 }
 
 /* basic table styling */
-
-/* global table styling */
 .table {
-  width: auto;
-  max-width: 100%;
+  width: 100%;
   border-collapse: collapse;
-  table-layout: auto;
-}
-.table.is-fullwidth {
-  width: auto;
 }
 
 .table th,
 .table td {
   padding: 0.5rem;
   border: 1px solid var(--ultra-highlight);
-  white-space: normal;
-  word-break: normal;
+  word-break: break-word;
 }
 .table th {
   background-color: var(--ultra-primary);
@@ -440,9 +432,6 @@ input.switch:checked::before {
 }
 .has-text-right {
   text-align: right !important;
-}
-.has-text-centered {
-  text-align: center !important;
 }
 .no-wrap {
   white-space: nowrap;
