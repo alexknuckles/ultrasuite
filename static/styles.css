@@ -735,7 +735,8 @@ input.switch:checked::before {
   flex: 1;
 }
 .date-input input {
-  width: 100%;
+  /* keep input width compact regardless of active tab */
+  width: 8rem;
 }
 .date-modal-right .buttons {
   display: flex;
