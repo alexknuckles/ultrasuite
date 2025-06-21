@@ -637,6 +637,9 @@ input.switch:checked::before {
     display: flex;
     margin-top: var(--spacing-xs);
   }
+  .calendars {
+    flex-direction: column;
+  }
 }
 
 /* ensure date inputs stay side by side on wider mobile screens */
@@ -757,6 +760,13 @@ input.switch:checked::before {
 .date-input input {
   width: 8rem;
 }
+.calendars {
+  display: flex;
+  gap: var(--spacing-md);
+}
+.calendars .date-pane {
+  flex: 1;
+}
 .date-modal-right .buttons {
   display: flex;
   justify-content: flex-end;
@@ -775,7 +785,7 @@ input.switch:checked::before {
   gap: var(--spacing-sm);
   margin-top: var(--spacing-sm);
 }
-.date-input .flatpickr-calendar {
+.calendars .flatpickr-calendar {
   margin-top: var(--spacing-sm);
 }
 
