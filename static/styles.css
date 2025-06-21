@@ -366,6 +366,15 @@ input.switch:checked::before {
   background-color: var(--ultra-primary);
 }
 
+/* search input with clear button */
+.search-group {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+.search-group .mdc-button {
+  align-self: center;
+}
+
 /* grid layout for form fields */
 .form-grid {
   display: grid;
@@ -408,6 +417,20 @@ input.switch:checked::before {
 .sku-card.selected {
   border-color: var(--ultra-primary);
   background-color: var(--ultra-highlight);
+}
+
+/* responsive layout for sku cards */
+.sku-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.sku-list > .sku-card {
+  flex: 1 0 300px;
+}
+.sku-list > hr,
+.sku-list > .buttons {
+  flex-basis: 100%;
 }
 
 .target-wrap {

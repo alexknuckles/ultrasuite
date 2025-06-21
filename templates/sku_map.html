@@ -5,8 +5,9 @@
     <p class="card-header-title">SKU alias mapping</p>
   </header>
   <div class="card-content">
-    <div class="field mb-4">
+    <div class="search-group mb-4">
       <input type="text" id="searchBox" class="input" placeholder="Search SKUs and aliases">
+      <button type="button" id="clearSearch" class="mdc-button">Clear</button>
     </div>
     <nav class="buttons tab-buttons mb-4" id="mapTabs">
       <button type="button" class="mdc-button mdc-button--raised is-active" data-target="all">All ({{ all_count }})</button>
@@ -15,7 +16,7 @@
       <button type="button" class="mdc-button mdc-button--raised" data-target="merged">Merged ({{ merged|length }})</button>
     </nav>
     <section id="unmapped" class="tab-pane">
-      <form method="POST">
+      <form method="POST" class="sku-list">
         <input type="hidden" id="merge_target" class="merge-target" name="merge_target" value="">
         {% for entry in grouped %}
         <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
@@ -115,7 +116,7 @@
       </form>
     </section>
     <section id="mapped" class="tab-pane is-hidden">
-      <form method="POST">
+      <form method="POST" class="sku-list">
         <input type="hidden" name="merge_target" value="" class="merge-target">
         {% for entry in mapped %}
         <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
@@ -191,6 +192,7 @@
       </form>
     </section>
     <section id="merged" class="tab-pane is-hidden">
+      <div class="sku-list">
       {% for entry in merged %}
       <div class="mdc-card sku-card" data-canonical="{{ entry.canonical }}" data-aliases="{{ entry.aliases }}">
         <div class="card-content">
@@ -249,6 +251,7 @@
         </div>
       </div>
       {% endfor %}
+      </div>
     </section>
   </div>
 </div>
@@ -290,6 +293,7 @@
   });
 
   const search = document.getElementById('searchBox');
+  const clearBtn = document.getElementById('clearSearch');
   function isFiltering(){
     return search && search.value.trim() !== '';
   }
@@ -314,6 +318,12 @@
   if (search) {
     search.addEventListener('input', filterSearch);
     filterSearch();
+  }
+  if (clearBtn && search) {
+    clearBtn.addEventListener('click', () => {
+      search.value = '';
+      filterSearch();
+    });
   }
 
   function updateTargets(){
