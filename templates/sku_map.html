@@ -27,10 +27,12 @@
                   <label for="target_{{ loop.index0 }}">Parent</label>
                 </span>
               </div>
-              <label class="label mb-0 mr-1">SKU</label>
-              <strong>{{ entry.canonical }}</strong>
-              <input type="hidden" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}">
-            </div>
+</div>
+<div class="field is-flex is-align-items-center mb-2">
+  <label class="label mb-0 mr-1">SKU</label>
+  <strong>{{ entry.canonical }}</strong>
+  <input type="hidden" name="canonical_{{ loop.index0 }}" value="{{ entry.canonical }}">
+</div>
             <div class="columns is-vcentered sku-row">
               <div class="column is-narrow">
                 <div class="field is-flex is-align-items-center">
@@ -125,7 +127,9 @@
                   <label for="target_m{{ loop.index0 }}">Parent</label>
                 </span>
               </div>
-              <label class="label mb-0 mr-1">{% if entry.alias_count > 0 %}Parent SKU{% else %}SKU{% endif %}</label>
+</div>
+<div class="field is-flex is-align-items-center mb-2">
+  <label class="label mb-0 mr-1">{% if entry.alias_count > 0 %}Parent SKU{% else %}SKU{% endif %}</label>
             {% if entry.aliases.strip() %}
             <div class="select">
               <select class="parent-select">
@@ -430,6 +434,8 @@
               <label for="target_${idx}">Parent</label>
             </span>
           </div>
+          </div>
+        <div class="field is-flex is-align-items-center mb-2">
           <label class="label mb-0 mr-1">SKU</label>
           <strong>${canonical}</strong>
           <input type="hidden" name="canonical_${idx}" value="${canonical}">
@@ -517,7 +523,9 @@
               <label for="target_${nextIdx}">Parent</label>
             </span>
           </div>
-          <label class="label mb-0 mr-1">${label}</label>
+          </div>
+          <div class="field is-flex is-align-items-center mb-2">
+            <label class="label mb-0 mr-1">${label}</label>
           ${parent}
         </div>
         <div class="columns is-vcentered sku-row">

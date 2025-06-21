@@ -1,4 +1,6 @@
 .alias-badges {
+  max-width: 100%;
+  word-break: break-word;
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
@@ -8,6 +10,7 @@
 }
 
 .alias-field {
+  width: 100%;
   display: flex;
   flex-direction: column;
 }
