@@ -502,8 +502,9 @@ input.switch:checked::before {
     padding: 0.75rem 1rem;
     color: var(--mdc-theme-on-primary);
   }
+  /* keep tables wide enough for long content */
   .table-responsive table {
-    min-width: 100%;
+    min-width: 600px;
   }
   .page-card {
     padding: 0.75rem;
