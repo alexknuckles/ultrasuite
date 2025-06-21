@@ -1677,6 +1677,16 @@ def transactions_page():
         }
         for p in month_periods
     ]
+    current_quarter = (datetime.now().month - 1) // 3 + 1
+    current_year = datetime.now().year
+    quarter_options = []
+    for i in range(4):
+        q = current_quarter - i
+        y = current_year
+        if q <= 0:
+            q += 4
+            y -= 1
+        quarter_options.append({'value': f"quarter-{y}-Q{q}", 'label': f"Q{q} {y}"})
 
     period_type = ''
     period_year_val = ''
@@ -1818,6 +1828,7 @@ def transactions_page():
         end=end,
         years=years,
         month_options=month_options,
+        quarter_options=quarter_options,
         period=period,
         period_type=period_type,
         period_year=period_year_val,
