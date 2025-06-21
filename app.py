@@ -60,6 +60,29 @@ THEMES = {
     },
 }
 
+def _hex_to_rgb(value):
+    """Return (r, g, b) for a hex color string."""
+    value = value.lstrip('#')
+    if len(value) == 3:
+        value = ''.join(c * 2 for c in value)
+    try:
+        r, g, b = [int(value[i:i + 2], 16) for i in (0, 2, 4)]
+    except Exception:
+        return 0, 0, 0
+    return r, g, b
+
+
+def _is_dark_color(value):
+    """Return True if the color is dark based on luminance."""
+    r, g, b = _hex_to_rgb(value)
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return luminance < 128
+
+
+def _chart_style():
+    bg = get_setting('theme_background', DEFAULT_THEME_BACKGROUND)
+    return 'dark_background' if _is_dark_color(bg) else 'default'
+
 def _try_read_csv(data: bytes, encodings=None):
     """Try reading CSV bytes with a series of encodings."""
     encodings = encodings or ["utf-8", "utf-8-sig", "utf-16", "latin-1", "cp1252"]
@@ -1285,19 +1308,20 @@ def generate_year_chart_base64(year):
     y1 = [this_year['total'].get(m, 0) for m in MONTHS_ORDER]
     y2 = [last_year['total'].get(m, 0) for m in MONTHS_ORDER]
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(MONTHS_ORDER, y1, label=str(year), marker='o')
-    ax.plot(MONTHS_ORDER, y2, label=str(year-1), linestyle='--', marker='x')
-    ax.set_title('Monthly Sales Comparison')
-    ax.set_ylabel('Total Sales ($)')
-    ax.legend()
-    ax.grid(True)
+    with plt.style.context(_chart_style()):
+        fig, ax = plt.subplots(figsize=(10, 4))
+        ax.plot(MONTHS_ORDER, y1, label=str(year), marker='o')
+        ax.plot(MONTHS_ORDER, y2, label=str(year-1), linestyle='--', marker='x')
+        ax.set_title('Monthly Sales Comparison')
+        ax.set_ylabel('Total Sales ($)')
+        ax.legend()
+        ax.grid(True)
 
-    output = BytesIO()
-    fig.tight_layout()
-    plt.savefig(output, format='png')
-    plt.close(fig)
-    output.seek(0)
+        output = BytesIO()
+        fig.tight_layout()
+        plt.savefig(output, format='png')
+        plt.close(fig)
+        output.seek(0)
     return base64.b64encode(output.read()).decode('utf-8')
 
 
@@ -1363,23 +1387,24 @@ def generate_last_month_chart_base64(year, month_param=None):
     y2 = [prev['total'].get(cat, 0) for cat in categories]
     xlabels = [labels.get(cat, cat) for cat in categories]
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    idx = range(len(categories))
-    width = 0.35
-    ax.bar([i - width / 2 for i in idx], y1, width=width, label=f'{last_year}-{last_month:02d}')
-    ax.bar([i + width / 2 for i in idx], y2, width=width, label=f'{last_year - 1}-{last_month:02d}')
-    ax.set_xticks(list(idx))
-    ax.set_xticklabels(xlabels, rotation=30, ha='right')
-    ax.set_ylabel('Total Sales ($)')
-    ax.set_title('Last Month Sales by Type')
-    ax.legend()
-    ax.grid(axis='y')
+    with plt.style.context(_chart_style()):
+        fig, ax = plt.subplots(figsize=(10, 4))
+        idx = range(len(categories))
+        width = 0.35
+        ax.bar([i - width / 2 for i in idx], y1, width=width, label=f'{last_year}-{last_month:02d}')
+        ax.bar([i + width / 2 for i in idx], y2, width=width, label=f'{last_year - 1}-{last_month:02d}')
+        ax.set_xticks(list(idx))
+        ax.set_xticklabels(xlabels, rotation=30, ha='right')
+        ax.set_ylabel('Total Sales ($)')
+        ax.set_title('Last Month Sales by Type')
+        ax.legend()
+        ax.grid(axis='y')
 
-    output = BytesIO()
-    fig.tight_layout()
-    plt.savefig(output, format='png')
-    plt.close(fig)
-    output.seek(0)
+        output = BytesIO()
+        fig.tight_layout()
+        plt.savefig(output, format='png')
+        plt.close(fig)
+        output.seek(0)
     return base64.b64encode(output.read()).decode('utf-8')
 
 
@@ -1500,19 +1525,20 @@ def report_chart():
     y1 = [this_year['total'].get(m, 0) for m in MONTHS_ORDER]
     y2 = [last_year['total'].get(m, 0) for m in MONTHS_ORDER]
 
-    fig, ax = plt.subplots(figsize=(10,4))
-    ax.plot(MONTHS_ORDER, y1, label=str(year), marker='o')
-    ax.plot(MONTHS_ORDER, y2, label=str(year-1), linestyle='--', marker='x')
-    ax.set_title('Monthly Sales Comparison')
-    ax.set_ylabel('Total Sales ($)')
-    ax.legend()
-    ax.grid(True)
+    with plt.style.context(_chart_style()):
+        fig, ax = plt.subplots(figsize=(10,4))
+        ax.plot(MONTHS_ORDER, y1, label=str(year), marker='o')
+        ax.plot(MONTHS_ORDER, y2, label=str(year-1), linestyle='--', marker='x')
+        ax.set_title('Monthly Sales Comparison')
+        ax.set_ylabel('Total Sales ($)')
+        ax.legend()
+        ax.grid(True)
 
-    output = BytesIO()
-    fig.tight_layout()
-    plt.savefig(output, format='png')
-    plt.close(fig)
-    output.seek(0)
+        output = BytesIO()
+        fig.tight_layout()
+        plt.savefig(output, format='png')
+        plt.close(fig)
+        output.seek(0)
     return send_file(output, mimetype='image/png')
 
 
@@ -1777,23 +1803,24 @@ def last_month_chart():
     y2 = [prev['total'].get(cat, 0) for cat in categories]
     xlabels = [labels.get(cat, cat) for cat in categories]
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    idx = range(len(categories))
-    width = 0.35
-    ax.bar([i - width / 2 for i in idx], y1, width=width, label=f'{last_year}-{last_month:02d}')
-    ax.bar([i + width / 2 for i in idx], y2, width=width, label=f'{last_year - 1}-{last_month:02d}')
-    ax.set_xticks(list(idx))
-    ax.set_xticklabels(xlabels, rotation=30, ha='right')
-    ax.set_ylabel('Total Sales ($)')
-    ax.set_title('Last Month Sales by Type')
-    ax.legend()
-    ax.grid(axis='y')
+    with plt.style.context(_chart_style()):
+        fig, ax = plt.subplots(figsize=(10, 4))
+        idx = range(len(categories))
+        width = 0.35
+        ax.bar([i - width / 2 for i in idx], y1, width=width, label=f'{last_year}-{last_month:02d}')
+        ax.bar([i + width / 2 for i in idx], y2, width=width, label=f'{last_year - 1}-{last_month:02d}')
+        ax.set_xticks(list(idx))
+        ax.set_xticklabels(xlabels, rotation=30, ha='right')
+        ax.set_ylabel('Total Sales ($)')
+        ax.set_title('Last Month Sales by Type')
+        ax.legend()
+        ax.grid(axis='y')
 
-    output = BytesIO()
-    fig.tight_layout()
-    plt.savefig(output, format='png')
-    plt.close(fig)
-    output.seek(0)
+        output = BytesIO()
+        fig.tight_layout()
+        plt.savefig(output, format='png')
+        plt.close(fig)
+        output.seek(0)
     return send_file(output, mimetype='image/png')
 
 
