@@ -2216,6 +2216,8 @@ def settings_page():
     reports_start_tab = get_setting('reports_start_tab', 'by-month')
     year_limit = int(get_setting('reports_year_limit', '5') or 5)
     dup_action = get_setting('duplicate_action', 'review')
+    tx_source_default = get_setting('transactions_default_source', 'both')
+    tx_period_default = get_setting('transactions_default_period', 'last30')
     types_default = get_setting('default_detail_types', ','.join(CATEGORIES))
     detail_types = [t for t in types_default.split(',') if t]
     detail_types_all = len(detail_types) == len(CATEGORIES)
