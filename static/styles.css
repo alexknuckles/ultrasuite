@@ -450,6 +450,8 @@ input.switch:checked::before {
 .sku-card .sku-row {
   align-items: center;
   justify-content: flex-start;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 
