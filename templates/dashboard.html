@@ -1,9 +1,8 @@
 
 {% extends "layout.html" %}
 {% block content %}
-<div class="columns">
-  <div class="column is-half mb-5">
-    <div class="mdc-card page-card">
+<div class="mb-5">
+  <div class="mdc-card page-card">
       <header class="card-header">
         <p class="card-header-title">📊 Status</p>
       </header>
@@ -26,8 +25,9 @@
       </div>
     </div>
   </div>
-  <div class="column is-half mb-5">
-    <div class="mdc-card page-card">
+</div>
+<div class="mb-5">
+  <div class="mdc-card page-card">
       <header class="card-header">
         <p class="card-header-title">🛒 SKU summary</p>
       </header>
@@ -46,7 +46,7 @@
     </div>
   </div>
 </div>
-<div class="has-text-centered">
+<div class="has-text-centered mt-4">
 <a href="/monthly-report" class="mdc-button mdc-button--raised">📊 View reports</a>
 </div>
 {% endblock %}
