@@ -619,8 +619,35 @@ input.switch:checked::before {
   max-width: 600px;
   width: 100%;
   display: flex;
+  flex-direction: column;
   gap: var(--spacing-md);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.date-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+.date-modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: inherit;
+}
+
+.date-modal-body {
+  display: flex;
+  gap: var(--spacing-md);
 }
 .date-modal-left {
   width: 8rem;
@@ -637,6 +664,8 @@ input.switch:checked::before {
   cursor: pointer;
   margin-bottom: 0.25rem;
   border-radius: var(--radius-sm);
+  font-weight: 500;
+  transition: background-color 0.2s;
 }
 .date-modal-left li.is-active,
 .date-modal-left li:hover {

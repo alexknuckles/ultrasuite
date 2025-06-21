@@ -39,17 +39,22 @@
     </form>
     <div id="dateModal" class="date-modal is-hidden">
       <div class="date-modal-content">
-        <div class="date-modal-left">
-          <ul id="dateTabs">
-            <li data-type="" class="is-active">All</li>
-            <li data-type="last30">Last 30 days</li>
-            <li data-type="day">Day</li>
-            <li data-type="month">Month</li>
-            <li data-type="year">Year</li>
-            <li data-type="range">Range</li>
-          </ul>
+        <div class="date-modal-header">
+          <h2>Select Date</h2>
+          <button id="closeDateModal" type="button" class="icon-button" aria-label="Close">&times;</button>
         </div>
-        <div class="date-modal-right">
+        <div class="date-modal-body">
+          <div class="date-modal-left">
+            <ul id="dateTabs">
+              <li data-type="" class="is-active">All</li>
+              <li data-type="last30">Last 30 days</li>
+              <li data-type="day">Day</li>
+              <li data-type="month">Month</li>
+              <li data-type="year">Year</li>
+              <li data-type="range">Range</li>
+            </ul>
+          </div>
+          <div class="date-modal-right">
           <div id="pane-all" class="date-pane"></div>
           <div id="pane-last30" class="date-pane is-hidden"></div>
           <div id="pane-day" class="date-pane is-hidden">
@@ -107,6 +112,7 @@
           <div class="buttons mt-2">
             <button id="applyDate" type="button" class="mdc-button mdc-button--raised">Apply</button>
             <button id="cancelDate" type="button" class="mdc-button">Cancel</button>
+          </div>
           </div>
         </div>
       </div>
@@ -321,6 +327,7 @@
     var endRange = document.getElementById('endInput2');
     var apply = document.getElementById('applyDate');
     var cancel = document.getElementById('cancelDate');
+    var closeBtn = document.getElementById('closeDateModal');
     var activeType = '';
 
     var init = periodInput.value;
@@ -376,6 +383,7 @@
 
     btn.addEventListener('click', showModal);
     cancel.addEventListener('click', hideModal);
+    if(closeBtn){ closeBtn.addEventListener('click', hideModal); }
 
     tabs.forEach(function(t){
       t.addEventListener('click', function(){
