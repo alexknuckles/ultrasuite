@@ -391,6 +391,11 @@ input.switch:checked::before {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* allow horizontal scrolling when content is wider than the screen */
+.table-responsive table {
+  min-width: 600px;
+}
 .tab-pane.is-hidden {
   display: none;
 }
@@ -416,6 +421,12 @@ input.switch:checked::before {
 }
 .no-wrap {
   white-space: nowrap;
+  word-break: normal;
+}
+
+/* ensure description columns wrap nicely */
+.desc-cell {
+  white-space: normal;
   word-break: normal;
 }
 
