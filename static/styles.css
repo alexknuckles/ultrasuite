@@ -225,7 +225,8 @@ input.switch:checked::before {
   border-radius: var(--radius-md);
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   margin: 0.75rem 0 var(--spacing-md);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 .page-card.centered {
   max-width: 700px;
@@ -234,6 +235,9 @@ input.switch:checked::before {
 }
 .page-card.wide {
   max-width: 1100px;
+}
+.page-card > .card-content {
+  white-space: nowrap;
 }
 .card-header {
   background-color: var(--ultra-primary);
