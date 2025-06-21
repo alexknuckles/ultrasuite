@@ -292,6 +292,13 @@ input.switch:checked::before {
   max-width: none;
 }
 
+@media (min-width: 601px) {
+  .column.is-half {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
 .column.is-narrow {
   flex: 0 0 auto;
   max-width: none;
@@ -494,6 +501,12 @@ input.switch:checked::before {
   .nav-links a {
     padding: 0.75rem 1rem;
     color: var(--mdc-theme-on-primary);
+  }
+  .table-responsive table {
+    min-width: 100%;
+  }
+  .page-card {
+    padding: 0.75rem;
   }
 }
 
