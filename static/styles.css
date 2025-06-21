@@ -418,6 +418,10 @@ input.switch:checked::before {
 .sku-card .field {
   margin-bottom: 0.25rem;
 }
+/* allow labels and selects to wrap on small screens */
+.sku-card .field.is-flex {
+  flex-wrap: wrap;
+}
 .sku-card.selected {
   border-color: var(--ultra-primary);
   background-color: var(--ultra-highlight);
@@ -452,6 +456,11 @@ input.switch:checked::before {
   justify-content: flex-start;
   margin-left: 0;
   margin-right: 0;
+}
+/* prevent long parent dropdowns from expanding cards */
+.parent-select {
+  max-width: 100%;
+  min-width: 0;
 }
 
 
