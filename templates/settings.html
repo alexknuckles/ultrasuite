@@ -8,9 +8,9 @@
     <nav class="buttons tab-buttons mb-4" id="settingsTabs">
       <button type="button" class="mdc-button mdc-button--raised is-active" data-target="generalSettings">General</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="exportSettings">Export</button>
-      <button type="button" class="mdc-button mdc-button--raised" data-target="reportSettings">Reports</button>
-      <button type="button" class="mdc-button mdc-button--raised" data-target="transactionSettings">Transactions</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="skuSettings">SKUs</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="transactionSettings">Transactions</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="reportSettings">Reports</button>
     </nav>
     <form method="post" enctype="multipart/form-data">
     <div id="generalSettings" class="tab-pane">
@@ -173,7 +173,14 @@
         </div>
         <div class="field mb-4 is-flex is-align-items-center">
           <label class="label mr-2">Years to show</label>
-          <input class="input" type="number" name="reports_year_limit" min="1" value="{{ reports_year_limit }}">
+          <div class="select">
+            <select name="reports_year_limit">
+              <option value="1" {% if reports_year_limit == 1 %}selected{% endif %}>This year</option>
+              <option value="2" {% if reports_year_limit == 2 %}selected{% endif %}>Last 2 years</option>
+              <option value="5" {% if reports_year_limit == 5 %}selected{% endif %}>Last 5 years</option>
+              <option value="10" {% if reports_year_limit == 10 %}selected{% endif %}>Last 10 years</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
