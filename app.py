@@ -1515,6 +1515,17 @@ def export_report():
         if not detail_types:
             detail_types = CATEGORIES
         data = calculate_report_data(year, month)
+        year_limit = int(get_setting('reports_year_limit', '5') or 5)
+        data['years'] = sorted(data['years'], reverse=True)[:year_limit]
+        if year not in data['years']:
+            data['years'].append(year)
+            data['years'] = sorted(data['years'], reverse=True)
+        data['shopify_years'] = data['shopify_years'][:year_limit]
+        for row in data['shopify_rows']:
+            row['values'] = row['values'][:len(data['shopify_years'])]
+        data['shopify_totals'] = data['shopify_totals'][:len(data['shopify_years'])]
+        for row in data['shopify_quarters']:
+            row['values'] = row['values'][:len(data['shopify_years'])]
         selected = [t for t in detail_types if t in CATEGORIES]
         data['sku_details'] = {t: data['sku_details'].get(t, []) for t in selected}
         data['has_month_details'] = any(len(v) > 0 for v in data['sku_details'].values())
