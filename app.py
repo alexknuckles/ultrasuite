@@ -1566,10 +1566,14 @@ def report_chart():
 def transactions_page():
     """Show transactions and totals for a SKU across uploads."""
     sku = request.args.get('sku', '').lower().strip()
-    source = request.args.get('source', 'both').lower()
+    source = request.args.get('source', '').lower()
     period = request.args.get('period', '')
     start = request.args.get('start')
     end = request.args.get('end')
+    tx_source_default = get_setting('transactions_default_source', 'both')
+    tx_period_default = get_setting('transactions_default_period', 'last30')
+    if not source:
+        source = tx_source_default
     if start in (None, '', 'None'):
         start = None
     if end in (None, '', 'None'):
@@ -1651,7 +1655,16 @@ def transactions_page():
             year_num, month_num = map(int, period.split('-')[1:])
             start = f"{year_num}-{month_num:02d}-01"
             end = f"{year_num}-{month_num:02d}-{monthrange(year_num, month_num)[1]:02d}"
-        else:
+        elif not period:
+            if tx_period_default == 'last30':
+                end_dt_def = datetime.now().date()
+                start_dt_def = end_dt_def - timedelta(days=29)
+                start = start_dt_def.isoformat()
+                end = end_dt_def.isoformat()
+                period = 'last30'
+            else:
+                period = ''
+        elif period != 'all':
             end_dt_def = datetime.now().date()
             start_dt_def = end_dt_def - timedelta(days=29)
             start = start_dt_def.isoformat()
@@ -2135,6 +2148,8 @@ def settings_page():
             year_limit = 5
         prev_dup_action = get_setting('duplicate_action', 'review')
         dup_action = request.form.get('dup_action', 'review')
+        tx_source_default = request.form.get('tx_source_default', 'both')
+        tx_period_default = request.form.get('tx_period_default', 'last30')
         detail_types = request.form.getlist('detail_types')
         set_setting('default_detail_types', ','.join(detail_types))
         set_setting('default_include_month_summary', '1' if include_month_summary else '0')
@@ -2147,6 +2162,8 @@ def settings_page():
         default_month = request.form.get('default_month', '')
         set_setting('default_export_month', default_month)
         set_setting('duplicate_action', dup_action)
+        set_setting('transactions_default_source', tx_source_default)
+        set_setting('transactions_default_period', tx_period_default)
         if dup_action in {'shopify', 'qbo', 'both'} and dup_action != prev_dup_action:
             conn = get_db()
             _resolve_duplicates(conn, dup_action)
@@ -2233,6 +2250,8 @@ def settings_page():
         theme_text=theme_text,
         active_theme=active_theme,
         dup_action=dup_action,
+        tx_source_default=tx_source_default,
+        tx_period_default=tx_period_default,
         reports_start_tab=reports_start_tab,
         reports_year_limit=year_limit,
     )
