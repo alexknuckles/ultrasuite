@@ -251,7 +251,9 @@ def trend(value, compare=None):
             else:
                 return value
         inline = '#0f9d58' if color == 'has-text-success' else '#d93025'
-        return Markup(f"<span class='{color}' style='color:{inline}'>{arrow} {value}</span>")
+        return Markup(
+            f"<span class='no-wrap {color}' style='color:{inline}'>{arrow} {value}</span>"
+        )
     except Exception:
         return value
 
