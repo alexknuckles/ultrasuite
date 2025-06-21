@@ -593,6 +593,27 @@ input.switch:checked::before {
   .page-card {
     padding: 0.75rem;
   }
+
+  /* stack date modal contents on small screens */
+  .date-modal-content {
+    max-width: none;
+    width: 95%;
+  }
+  .date-modal-body {
+    flex-direction: column;
+  }
+  .date-modal-left {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--ultra-highlight);
+    margin-bottom: var(--spacing-md);
+  }
+  .date-modal-right {
+    min-width: auto;
+  }
+  .date-inputs {
+    flex-direction: column;
+  }
 }
 
 /* shared modal styles */
