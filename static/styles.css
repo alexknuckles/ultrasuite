@@ -1,6 +1,5 @@
 .alias-badges {
   max-width: 100%;
-  word-break: break-word;
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
@@ -30,9 +29,6 @@
   align-items: center;
   border-radius: var(--radius-pill);
   padding: 0 0.5rem;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
 }
 
 .delete.is-small {
@@ -233,7 +229,7 @@ input.switch:checked::before {
 .page-content > .page-card {
   margin-top: 0.75rem; /* align spacing with dashboard columns */
 }
-.sku-map-card {
+.page-card.centered {
   max-width: 700px;
   margin-left: auto;
   margin-right: auto;
@@ -270,7 +266,6 @@ input.switch:checked::before {
 .table td {
   padding: 0.5rem;
   border: 1px solid var(--ultra-highlight);
-  word-break: break-word;
 }
 .table th {
   background-color: var(--ultra-primary);
