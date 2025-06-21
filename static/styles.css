@@ -615,7 +615,9 @@ input.switch:checked::before {
     min-width: 0;
   }
   .date-inputs {
+    display: flex;
     flex-direction: row;
+    flex-wrap: nowrap;
     gap: var(--spacing-sm);
   }
   /* keep inputs narrow so both fit side by side */
@@ -729,6 +731,8 @@ input.switch:checked::before {
 }
 .date-inputs {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   gap: var(--spacing-md);
 }
 .date-input {
