@@ -618,6 +618,18 @@ input.switch:checked::before {
     flex-direction: row;
     gap: var(--spacing-sm);
   }
+  /* keep inputs narrow so both fit side by side */
+  .date-input input {
+    width: 8rem;
+  }
+  /* reduce calendar padding for smaller screens */
+  #dateModal .flatpickr-calendar {
+    padding: var(--spacing-xs);
+  }
+  /* ensure room for calendar tabs */
+  .date-pane {
+    margin-bottom: var(--spacing-sm);
+  }
   .cal-tabs {
     display: flex;
     margin-top: var(--spacing-xs);
