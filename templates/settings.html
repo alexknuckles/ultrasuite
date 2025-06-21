@@ -92,8 +92,8 @@
       </div>
       <div class="box mb-4">
         <h3 class="title is-5 mb-3">Defaults</h3>
-        <div class="field mb-4">
-          <label class="label">Default month for exports</label>
+        <div class="field mb-4 is-flex is-align-items-center">
+          <label class="label mr-2">Default month</label>
           <div class="select">
             <select name="default_month">
               <option value="" {% if not default_month %}selected{% endif %}>Last full month</option>
@@ -161,8 +161,8 @@
     <div id="duplicateSettings" class="tab-pane is-hidden">
       <div class="box mb-4">
         <h3 class="title is-5 mb-3">Duplicate handling</h3>
-        <div class="field mb-4">
-          <label class="label">Default action</label>
+        <div class="field mb-4 is-flex is-align-items-center">
+          <label class="label mr-2">Default action</label>
           <div class="select">
             <select name="dup_action">
               <option value="review" {% if dup_action == 'review' %}selected{% endif %}>Review manually</option>
