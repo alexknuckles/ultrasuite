@@ -72,12 +72,18 @@
               <div class="date-input">
                 <label for="startBox">Start</label>
                 <input id="startBox" type="text">
+                <div id="startPane" class="date-pane"></div>
               </div>
               <div class="date-input">
                 <label for="endBox">End</label>
                 <input id="endBox" type="text">
+                <div id="endPane" class="date-pane"></div>
               </div>
             </div>
+            <nav id="calTabs" class="buttons tab-buttons mb-2">
+              <button type="button" class="mdc-button mdc-button--raised is-active" data-target="startPane">Start</button>
+              <button type="button" class="mdc-button mdc-button--raised" data-target="endPane">End</button>
+            </nav>
           </div>
         </div>
         <div class="date-modal-footer">
@@ -289,6 +295,11 @@
     var endInput = document.getElementById('endInput');
     var startBox = document.getElementById('startBox');
     var endBox = document.getElementById('endBox');
+    var startPane = document.getElementById('startPane');
+    var endPane = document.getElementById('endPane');
+    var calTabs = document.getElementById('calTabs');
+    var calButtons = calTabs ? calTabs.querySelectorAll('button') : null;
+    var activeCal = 'startPane';
     var quarterMenu = document.getElementById('quarterMenu');
     var quarterToggle = document.getElementById('quarterToggle');
     var apply = document.getElementById('applyDate');
@@ -372,14 +383,35 @@
       if(endBox._flatpickr){ endBox._flatpickr.setDate(r.end, true); }
     }
 
-    flatpickr(startBox,{dateFormat:'Y-m-d', inline:true});
-    flatpickr(endBox,{dateFormat:'Y-m-d', inline:true});
+    flatpickr(startBox,{dateFormat:'Y-m-d', inline:true, appendTo:startPane});
+    flatpickr(endBox,{dateFormat:'Y-m-d', inline:true, appendTo:endPane});
 
     if(startInput.value && endInput.value){
       updateBoxes({start:startInput.value, end:endInput.value});
     } else {
       updateBoxes(computeRange(activeType));
     }
+
+    function updateLayout(){
+      if(!calTabs) return;
+      if(window.matchMedia('(max-width: 600px)').matches){
+        calTabs.style.display = 'flex';
+        if(activeCal === 'startPane'){
+          startPane.classList.remove('is-hidden');
+          endPane.classList.add('is-hidden');
+        } else {
+          startPane.classList.add('is-hidden');
+          endPane.classList.remove('is-hidden');
+        }
+      } else {
+        calTabs.style.display = 'none';
+        startPane.classList.remove('is-hidden');
+        endPane.classList.remove('is-hidden');
+      }
+    }
+
+    updateLayout();
+    window.addEventListener('resize', updateLayout);
 
     tabs.forEach(function(x){
       var type = x.dataset.type;
@@ -391,7 +423,7 @@
     });
     if(activeType === 'quarter'){ quarterToggle.classList.add('is-active'); }
 
-    function showModal(){ modal.classList.remove('is-hidden'); }
+    function showModal(){ modal.classList.remove('is-hidden'); updateLayout(); }
     function hideModal(){ modal.classList.add('is-hidden'); }
 
     modal.addEventListener('click', function(e){
@@ -438,6 +470,17 @@
           quarterMenu.classList.add('is-hidden');
           updateBoxes(computeRange('quarter'));
           setButtonLabel();
+        });
+      });
+    }
+
+    if(calButtons){
+      calButtons.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          calButtons.forEach(function(b){ b.classList.remove('is-active'); });
+          btn.classList.add('is-active');
+          activeCal = btn.dataset.target;
+          updateLayout();
         });
       });
     }
