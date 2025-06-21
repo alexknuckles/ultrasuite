@@ -85,7 +85,7 @@
       <tr{% if r.type == 'Total' %} class="has-background-light has-text-weight-bold"{% endif %}>
         <td>{{ r.type }}</td>
         <td class="has-text-right">${{ "%.2f"|format(r.total) }}</td>
-        <td class="has-text-right">{{ r.vs_last | trend }}</td>
+        <td class="has-text-right">{{ r.vs_last | trend(r.vs_last_sign) }}</td>
         <td class="has-text-right">{{ ("$%.2f"|format(r.avg_month)) | trend(r.avg_month_sign) }}</td>
         <td class="has-text-right">{{ ("$%.2f"|format(r.best_month)) | trend(r.best_month_sign) }}</td>
       </tr>
@@ -141,12 +141,12 @@
       <tr><th>Month</th><th>{{ selected_year }} $</th><th>{{ selected_year - 1 }} $</th><th>% Change</th></tr>
     </thead>
     <tbody>
-    {% for month, current, previous, pct in rows %}
+    {% for month, current, previous, pct, sign in rows %}
       <tr>
         <td>{{ month }}</td>
         <td class="has-text-right">${{ "%.2f"|format(current or 0) }}</td>
         <td class="has-text-right">${{ "%.2f"|format(previous or 0) }}</td>
-        <td class="has-text-right">{{ pct | trend }}</td>
+        <td class="has-text-right">{{ pct | trend(sign) }}</td>
       </tr>
     {% endfor %}
     </tbody>
@@ -161,12 +161,12 @@
       <tr><th>Quarter</th><th>{{ selected_year }} $</th><th>{{ selected_year - 1 }} $</th><th>% Change</th></tr>
     </thead>
     <tbody>
-    {% for q, current, previous, pct in quarter_rows %}
+    {% for q, current, previous, pct, sign in quarter_rows %}
       <tr>
         <td>{{ q }}</td>
         <td class="has-text-right">${{ "%.2f"|format(current or 0) }}</td>
         <td class="has-text-right">${{ "%.2f"|format(previous or 0) }}</td>
-        <td class="has-text-right">{{ pct | trend }}</td>
+        <td class="has-text-right">{{ pct | trend(sign) }}</td>
       </tr>
     {% endfor %}
     </tbody>
@@ -185,7 +185,7 @@
       <tr>
         <td>{{ r.type }}</td>
         <td class="has-text-right">${{ "%.2f"|format(r.total) }}</td>
-        <td class="has-text-right">{{ r.vs_last | trend }}</td>
+        <td class="has-text-right">{{ r.vs_last | trend(r.vs_last_sign) }}</td>
         <td class="has-text-right">{{ ("$%.2f"|format(r.avg_month)) | trend }}</td>
         <td class="has-text-right">{{ ("$%.2f"|format(r.best_month)) | trend }}</td>
         <td class="has-text-right">{{ ("%.2f"|format(r.avg_qty)) | trend }}</td>
