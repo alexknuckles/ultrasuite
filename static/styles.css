@@ -349,17 +349,7 @@ input.switch:checked::before {
   flex-wrap: wrap;
   align-items: flex-end;
   gap: var(--spacing-sm);
-
 }
-#datePickerBtn {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-#datePickerBtn span:first-child {
-  font-size: 1.2rem;
-}
-
 
 /* button-style tabs */
 .tab-buttons {
