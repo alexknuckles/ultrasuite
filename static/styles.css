@@ -331,8 +331,6 @@ input.switch:checked::before {
 /* button-style tabs */
 .tab-buttons {
   margin-bottom: 1rem;
-  display: flex;
-  justify-content: center;
 }
 
 .tab-buttons .mdc-button {
@@ -354,7 +352,7 @@ input.switch:checked::before {
   text-align: left;
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
@@ -366,16 +364,12 @@ input.switch:checked::before {
 }
 .sku-card {
   margin-bottom: 0.25rem;
-  text-align: center;
 }
 .sku-card .card-content {
   padding: 0.2rem 0.5rem;
 }
 .sku-card .field {
   margin-bottom: 0.1rem;
-}
-.sku-card .field.is-flex {
-  justify-content: center;
 }
 .sku-card.selected {
   border-color: var(--ultra-primary);
@@ -394,7 +388,7 @@ input.switch:checked::before {
 
 .sku-card .sku-row {
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 
