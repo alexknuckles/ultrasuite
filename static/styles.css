@@ -638,6 +638,16 @@ input.switch:checked::before {
   }
 }
 
+/* ensure date inputs stay side by side on wider mobile screens */
+@media (max-width: 768px) {
+  .date-modal-right {
+    min-width: 0;
+  }
+  .date-inputs {
+    flex-wrap: nowrap;
+  }
+}
+
 /* shared modal styles */
 .date-modal {
   position: fixed;
