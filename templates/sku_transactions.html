@@ -37,7 +37,7 @@
         <tr>
           <td>{{ row.created_at|format_dt }}</td>
           <td>{{ row.sku }}</td>
-          <td>{{ row.description }}</td>
+          <td class="desc-cell">{{ row.description }}</td>
           <td>{{ "%.2f"|format(row.price) }}</td>
           <td>{{ "%.2f"|format(row.quantity) }}</td>
           <td>${{ "%.2f"|format(row.total) }}</td>

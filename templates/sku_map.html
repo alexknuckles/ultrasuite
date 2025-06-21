@@ -259,6 +259,7 @@
     } else {
       document.getElementById(active.dataset.target).classList.remove('is-hidden');
     }
+    updateMergeButtons();
   }
   document.querySelectorAll('#mapTabs button').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -278,6 +279,7 @@
         refreshParentSelect(card);
       });
       filterSearch();
+      updateMergeButtons();
     });
   });
 
@@ -288,6 +290,11 @@
   function isAllTabActive(){
     const btn = document.querySelector('#mapTabs .is-active');
     return btn && btn.dataset.target === 'all';
+  }
+
+  function updateMergeButtons(){
+    const mappedBtn = document.querySelector('#mapped form .buttons');
+    if (mappedBtn) mappedBtn.style.display = isAllTabActive() ? 'none' : '';
   }
   function filterSearch(){
     if (!search) return;
