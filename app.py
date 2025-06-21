@@ -1258,22 +1258,33 @@ def get_last_month_details(year, month=None):
 
 
 def get_shopify_monthly():
-    """Return Shopify monthly totals across years."""
+    """Return Shopify monthly totals across years respecting the year limit."""
     data = calculate_report_data(datetime.now().year)
+    year_limit = int(get_setting('reports_year_limit', '5') or 5)
+    years = data['shopify_years'][:year_limit]
+    rows = []
+    for r in data['shopify_rows']:
+        rows.append({'month': r['month'], 'values': r['values'][:len(years)], 'avg': r['avg']})
+    totals = data['shopify_totals'][:len(years)]
     return {
-        'years': data['shopify_years'],
-        'rows': data['shopify_rows'],
-        'totals': data['shopify_totals'],
+        'years': years,
+        'rows': rows,
+        'totals': totals,
         'average_total': data['shopify_avg_total'],
     }
 
 
 def get_shopify_quarterly():
-    """Return Shopify quarterly totals across years."""
+    """Return Shopify quarterly totals across years respecting the year limit."""
     data = calculate_report_data(datetime.now().year)
+    year_limit = int(get_setting('reports_year_limit', '5') or 5)
+    years = data['shopify_years'][:year_limit]
+    rows = []
+    for r in data['shopify_quarters']:
+        rows.append({'quarter': r['quarter'], 'values': r['values'][:len(years)], 'avg': r['avg']})
     return {
-        'years': data['shopify_years'],
-        'rows': data['shopify_quarters'],
+        'years': years,
+        'rows': rows,
     }
 
 
@@ -1432,6 +1443,12 @@ def monthly_report():
     if year not in data['years']:
         data['years'].append(year)
         data['years'] = sorted(data['years'], reverse=True)
+    data['shopify_years'] = data['shopify_years'][:year_limit]
+    for row in data['shopify_rows']:
+        row['values'] = row['values'][:len(data['shopify_years'])]
+    data['shopify_totals'] = data['shopify_totals'][:len(data['shopify_years'])]
+    for row in data['shopify_quarters']:
+        row['values'] = row['values'][:len(data['shopify_years'])]
     data['default_tab'] = get_setting('reports_start_tab', 'by-month')
     default_month = get_setting('default_export_month', '')
     month_int = int(default_month) if str(default_month).isdigit() else None

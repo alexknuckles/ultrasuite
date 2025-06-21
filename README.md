@@ -13,7 +13,7 @@ Ultrasuite is a Flask application for aggregating sales data. Upload transaction
 - **SKU Mapping** – Map alias SKUs to canonical SKUs and categorize them by type.
 - **Reports** – Interactive charts for monthly trends and yearly comparisons, with optional PDF export.
 - **Settings** – Customize reports and appearance.
-- **Report Options** – Choose the default tab and limit the number of years shown.
+- **Report Options** – Choose the default tab and how many recent years to display.
 
 Data is stored locally and charts are generated with Matplotlib.
 
@@ -51,8 +51,8 @@ Helper functions in `app.py` expose the underlying report data for integration i
 - `get_year_summary(year)` – totals by sales type for the year.
 - `get_last_month_summary(year, month=None)` – last full month totals by type.
 - `get_last_month_details(year, month=None)` – detailed SKU breakdown for the last full month.
-- `get_shopify_monthly()` – Shopify income by month across all years.
-- `get_shopify_quarterly()` – Shopify income by quarter across all years.
+- `get_shopify_monthly()` – Shopify income by month across recent years.
+- `get_shopify_quarterly()` – Shopify income by quarter across recent years.
 
 ### Programmatic PDF Export
 
