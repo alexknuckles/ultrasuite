@@ -59,10 +59,12 @@ Helper functions in `app.py` expose the underlying report data for integration i
 Call `/export-report` with query parameters to download a PDF:
 
 ```
-/export-report?year=2025&month=4&include_month_summary=1&include_year_overall=1
+/export-report?year=2025&month=4
 ```
 
-Omit `month` to use the last full month. Options accept `1`/`true` or can be left out to disable a section.
+If a parameter is omitted the value saved in **Settings → Reports** will be used.
+Options such as `include_month_summary` and `include_year_overall` override those
+defaults when present.
 
 ## License
 

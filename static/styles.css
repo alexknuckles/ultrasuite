@@ -581,8 +581,7 @@ input.switch:checked::before {
 }
 
 /* shared modal styles */
-.date-modal,
-.export-modal {
+.date-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -594,12 +593,10 @@ input.switch:checked::before {
   justify-content: center;
   z-index: 2000;
 }
-.date-modal.is-hidden,
-.export-modal.is-hidden {
+.date-modal.is-hidden {
   display: none;
 }
-.date-modal-content,
-.export-modal-content {
+.date-modal-content {
   background-color: var(--ultra-background);
   color: var(--ultra-text);
   padding: var(--spacing-md);

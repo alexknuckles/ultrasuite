@@ -1476,20 +1476,7 @@ def monthly_report():
     for row in data['shopify_quarters']:
         row['values'] = row['values'][:len(data['shopify_years'])]
     data['default_tab'] = get_setting('reports_start_tab', 'by-month')
-    default_month = get_setting('default_export_month', '')
-    month_int = int(default_month) if str(default_month).isdigit() else None
-    exp_types = [t for t in get_setting('default_detail_types', ','.join(CATEGORIES)).split(',') if t]
-    data.update({
-        'exp_selected_month': month_int,
-        'exp_include_month_summary': get_setting('default_include_month_summary', '1') == '1',
-        'exp_include_month_details': get_setting('default_include_month_details', '1') == '1',
-        'exp_include_year_overall': get_setting('default_include_year_overall', '1') == '1',
-        'exp_include_year_summary': get_setting('default_include_year_summary', '1') == '1',
-        'exp_include_shopify': get_setting('default_include_shopify', '1') == '1',
-        'exp_detail_types': exp_types,
-        'exp_all_types': len(exp_types) == len(CATEGORIES),
-        'categories': CATEGORIES,
-    })
+    data['categories'] = CATEGORIES
     return render_template('report.html', **data)
 
 
@@ -1498,22 +1485,26 @@ def export_report():
     values = request.values
     if request.method == 'POST' or request.args:
         year = int(values.get('year', datetime.now().year))
-        month_val = values.get('month')
-        month = int(month_val) if month_val and month_val.isdigit() else None
-        def _check(name):
-            val = values.get(name, '')
+        month_val = values.get('month') or get_setting('default_export_month', '')
+        month = int(month_val) if month_val and str(month_val).isdigit() else None
+
+        def _check(name, setting):
+            val = values.get(name)
+            if val is None:
+                return get_setting(setting, '1') == '1'
             return str(val).lower() in {'on', '1', 'true', 'yes'}
 
-        include_month_summary = _check('include_month_summary')
-        include_month_details = _check('include_month_details')
-        include_year_overall = _check('include_year_overall')
-        include_year_summary = _check('include_year_summary')
-        include_shopify = _check('include_shopify')
+        include_month_summary = _check('include_month_summary', 'default_include_month_summary')
+        include_month_details = _check('include_month_details', 'default_include_month_details')
+        include_year_overall = _check('include_year_overall', 'default_include_year_overall')
+        include_year_summary = _check('include_year_summary', 'default_include_year_summary')
+        include_shopify = _check('include_shopify', 'default_include_shopify')
         detail_types = values.getlist('detail_types')
         if len(detail_types) == 1:
             detail_types = [t.strip() for t in detail_types[0].split(',') if t.strip()]
         if not detail_types:
-            detail_types = CATEGORIES
+            default_types = get_setting('default_detail_types', ','.join(CATEGORIES))
+            detail_types = [t for t in default_types.split(',') if t]
         data = calculate_report_data(year, month)
         year_limit = int(get_setting('reports_year_limit', '5') or 5)
         data['years'] = sorted(data['years'], reverse=True)[:year_limit]
@@ -1553,24 +1544,6 @@ def export_report():
 
     abort(404)
 
-
-@app.route('/save-export-settings', methods=['POST'])
-def save_export_settings():
-    include_month_summary = 'include_month_summary' in request.form
-    include_month_details = 'include_month_details' in request.form
-    include_year_overall = 'include_year_overall' in request.form
-    include_year_summary = 'include_year_summary' in request.form
-    include_shopify = 'include_shopify' in request.form
-    detail_types = request.form.getlist('detail_types')
-    set_setting('default_detail_types', ','.join(detail_types))
-    set_setting('default_include_month_summary', '1' if include_month_summary else '0')
-    set_setting('default_include_month_details', '1' if include_month_details else '0')
-    set_setting('default_include_year_overall', '1' if include_year_overall else '0')
-    set_setting('default_include_year_summary', '1' if include_year_summary else '0')
-    set_setting('default_include_shopify', '1' if include_shopify else '0')
-    month = request.form.get('month', '')
-    set_setting('default_export_month', month)
-    return jsonify(success=True)
 
 
 @app.route('/report-chart')
