@@ -27,7 +27,7 @@
             </select>
           </div>
         </div>
-        <div id="customThemeColors">
+        <div id="customThemeColors" class="form-grid">
           <div class="field mb-2">
             <label class="label">Primary color</label>
             <input class="input color-input" type="color" name="theme_primary" value="{{ theme_primary }}">
@@ -76,13 +76,15 @@
           <label class="label">Branding text</label>
           <input class="input" type="text" name="branding" value="{{ branding }}">
         </div>
-        <div class="field mb-4">
-          <label class="label">Primary color</label>
-          <input class="input color-input" type="color" name="primary_color" value="{{ primary_color }}">
-        </div>
-        <div class="field mb-4">
-          <label class="label">Highlight color</label>
-          <input class="input color-input" type="color" name="highlight_color" value="{{ highlight_color }}">
+        <div class="form-grid">
+          <div class="field mb-4">
+            <label class="label">Primary color</label>
+            <input class="input color-input" type="color" name="primary_color" value="{{ primary_color }}">
+          </div>
+          <div class="field mb-4">
+            <label class="label">Highlight color</label>
+            <input class="input color-input" type="color" name="highlight_color" value="{{ highlight_color }}">
+          </div>
         </div>
       </div>
       <div class="box mb-4">
