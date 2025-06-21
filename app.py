@@ -990,22 +990,34 @@ def calculate_report_data(year, month_param=None):
         .fillna(0)
     )
     shopify_avg = shopify_pivot.replace(0, math.nan).mean(axis=1)
+    now = datetime.now()
+    current_year = now.year
+    current_month = now.month
     shopify_rows = []
     for m in range(1, 13):
         month_name = MONTHS_ORDER[m - 1]
         raw_vals = [float(shopify_pivot.at[m, y]) if y in shopify_pivot.columns else 0.0 for y in shopify_years]
         avg_val = shopify_avg.get(m)
         avg_val = 0.0 if pd.isna(avg_val) else float(avg_val)
-        values = [{'val': raw_vals[i], 'diff': raw_vals[i] - avg_val} for i in range(len(raw_vals))]
+        values = []
+        for i, y in enumerate(shopify_years):
+            val = raw_vals[i]
+            if y == current_year and m > current_month:
+                values.append({'val': None, 'diff': None})
+            else:
+                values.append({'val': val, 'diff': val - avg_val})
         shopify_rows.append({'month': month_name, 'values': values, 'avg': avg_val})
 
     raw_totals = [float(shopify_pivot[y].sum()) if y in shopify_pivot.columns else 0.0 for y in shopify_years]
     nonzero_totals = [t for t in raw_totals if t != 0]
     shopify_avg_total = float(sum(nonzero_totals) / len(nonzero_totals)) if nonzero_totals else 0.0
-    shopify_totals = [
-        {'val': raw_totals[i], 'diff': raw_totals[i] - shopify_avg_total}
-        for i in range(len(raw_totals))
-    ]
+    shopify_totals = []
+    for i, y in enumerate(shopify_years):
+        val = raw_totals[i]
+        diff = val - shopify_avg_total
+        if y == current_year and current_month < 12:
+            diff = None
+        shopify_totals.append({'val': val, 'diff': diff})
 
     # Shopify totals by quarter
     shopify_quarters = []
@@ -1013,10 +1025,19 @@ def calculate_report_data(year, month_param=None):
         vals = []
         for y in shopify_years:
             val = shopify_summary[(shopify_summary['year'] == y) & shopify_summary['month_num'].isin(months)]['total'].sum()
-            vals.append(float(val))
-        nonzero = [v for v in vals if v != 0]
+            if y == current_year and max(months) > current_month:
+                vals.append(None)
+            else:
+                vals.append(float(val))
+        nonzero = [v for v in vals if v not in (None, 0)]
         avg_val = sum(nonzero) / len(nonzero) if nonzero else 0.0
-        values = [{'val': vals[i], 'diff': vals[i] - avg_val} for i in range(len(vals))]
+        values = []
+        for i, y in enumerate(shopify_years):
+            v = vals[i]
+            if v is None:
+                values.append({'val': None, 'diff': None})
+            else:
+                values.append({'val': v, 'diff': v - avg_val})
         shopify_quarters.append({'quarter': f'Q{q}', 'values': values, 'avg': avg_val})
 
 
