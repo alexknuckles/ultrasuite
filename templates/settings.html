@@ -14,6 +14,20 @@
     <form method="post" enctype="multipart/form-data">
     <div id="generalSettings" class="tab-pane">
       <div class="box mb-4">
+        <h3 class="title is-6 mb-3">Application</h3>
+        <div class="field mb-4">
+          <label class="label">Application logo</label>
+          {% if app_logo_path %}
+          <img src="{{ url_for('logo') }}" alt="logo" style="max-height:3rem;" class="mb-2">
+          {% endif %}
+          <input class="input" type="file" name="app_logo" accept="image/*">
+        </div>
+        <div class="field mb-4">
+          <label class="label">Application title</label>
+          <input class="input" type="text" name="app_title" value="{{ app_title }}">
+        </div>
+      </div>
+      <div class="box mb-4">
         <h3 class="title is-6 mb-3">Appearance</h3>
         <div class="field mb-2 is-flex is-align-items-center">
           <label class="label mr-2">Theme</label>
@@ -27,7 +41,7 @@
             </select>
           </div>
         </div>
-        <div id="customThemeColors" class="form-grid">
+        <div id="customThemeColors" class="form-grid color-grid">
           <div class="field mb-2">
             <label class="label">Primary color</label>
             <input class="input color-input" type="color" name="theme_primary" value="{{ theme_primary }}">
@@ -45,17 +59,6 @@
             <input class="input color-input" type="color" name="theme_text" value="{{ theme_text }}">
           </div>
         </div>
-      </div>
-      <div class="field mb-4">
-        <label class="label">Application title</label>
-        <input class="input" type="text" name="app_title" value="{{ app_title }}">
-      </div>
-      <div class="field mb-4">
-        <label class="label">Application logo</label>
-        {% if app_logo_path %}
-        <img src="{{ url_for('logo') }}" alt="logo" style="max-height:3rem;" class="mb-2">
-        {% endif %}
-        <input class="input" type="file" name="app_logo" accept="image/*">
       </div>
     </div>
     <div id="exportSettings" class="tab-pane is-hidden">
@@ -76,7 +79,7 @@
           <label class="label">Branding text</label>
           <input class="input" type="text" name="branding" value="{{ branding }}">
         </div>
-        <div class="form-grid">
+        <div class="form-grid color-grid">
           <div class="field mb-4">
             <label class="label">Primary color</label>
             <input class="input color-input" type="color" name="primary_color" value="{{ primary_color }}">
@@ -175,15 +178,14 @@
     </form>
     <div id="skuSettings" class="tab-pane is-hidden">
       <div class="box mb-4">
-        <h3 class="title is-5 mb-3">Export SKU map</h3>
-        <a class="mdc-button mdc-button--raised" href="{{ url_for('export_sku_map') }}">Export</a>
-      </div>
-      <div class="box mb-4">
-        <h3 class="title is-5 mb-3">Import SKU map</h3>
-        <form id="importSkuForm" method="post" enctype="multipart/form-data" action="{{ url_for('import_sku_map') }}">
-          <input id="skuFileInput" class="is-hidden" type="file" name="sku_file" accept=".csv,.xls,.xlsx" required hidden>
-          <button id="importSkuBtn" type="button" class="mdc-button mdc-button--raised">Import</button>
-        </form>
+        <h3 class="title is-5 mb-3">SKU Map File</h3>
+        <div class="is-flex is-align-items-center">
+          <a class="mdc-button mdc-button--raised mr-2" href="{{ url_for('export_sku_map') }}">Export</a>
+          <form id="importSkuForm" method="post" enctype="multipart/form-data" action="{{ url_for('import_sku_map') }}" class="is-inline-block">
+            <input id="skuFileInput" class="is-hidden" type="file" name="sku_file" accept=".csv,.xls,.xlsx" required hidden>
+            <button id="importSkuBtn" type="button" class="mdc-button mdc-button--raised">Import</button>
+          </form>
+        </div>
       </div>
     </div>
   </div>

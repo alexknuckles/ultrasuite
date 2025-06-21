@@ -371,6 +371,12 @@ input.switch:checked::before {
   align-items: flex-end;
 }
 
+/* tighter layout for color selectors */
+.color-grid {
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.5rem;
+}
+
 
 /* sku mapping cards */
 .sku-card .merge-col {
