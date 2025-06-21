@@ -433,6 +433,12 @@ input.switch:checked::before {
 .p-0 { padding: 0 !important; }
 
 @media (max-width: 600px) {
+  :root {
+    --base-font-size: 0.9rem;
+  }
+  .container {
+    padding: 0 0.5rem;
+  }
   .columns {
     flex-direction: column;
     margin-left: 0;
@@ -459,9 +465,9 @@ input.switch:checked::before {
     flex-direction: column;
     position: absolute;
     top: 3.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
+    left: 0;
+    right: 0;
+    width: 100%;
     background-color: var(--ultra-primary);
     margin-left: 0;
   }
