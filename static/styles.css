@@ -594,25 +594,29 @@ input.switch:checked::before {
     padding: 0.75rem;
   }
 
-  /* stack date modal contents on small screens */
+  /* mobile layout for date modal */
   .date-modal-content {
     max-width: none;
     width: 95%;
   }
   .date-modal-body {
-    flex-direction: column;
+    flex-direction: row;
+    align-items: flex-start;
   }
   .date-modal-left {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--ultra-highlight);
-    margin-bottom: var(--spacing-md);
+    width: 7rem;
+    border-right: 1px solid var(--ultra-highlight);
+    border-bottom: none;
+    margin-bottom: 0;
   }
   .date-modal-right {
     min-width: auto;
   }
   .date-inputs {
     flex-direction: column;
+  }
+  .cal-tabs {
+    display: flex;
   }
 }
 
@@ -729,6 +733,11 @@ input.switch:checked::before {
 }
 .date-pane.is-hidden {
   display: none;
+}
+.cal-tabs {
+  display: none;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
 }
 .date-input .flatpickr-calendar {
   margin-top: var(--spacing-sm);
