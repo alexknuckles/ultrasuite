@@ -681,8 +681,16 @@ input.switch:checked::before {
   justify-content: flex-end;
   gap: var(--spacing-sm);
 }
+.date-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
 .date-pane.is-hidden {
   display: none;
+}
+.date-pane .flatpickr-calendar {
+  margin-top: var(--spacing-sm);
 }
 
 
