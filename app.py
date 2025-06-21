@@ -939,12 +939,13 @@ def calculate_report_data(year, month_param=None):
     for i, month in enumerate(MONTHS_ORDER[:cutoff_month], start=1):
         current = this_year["total"].get(month, 0)
         previous = last_year["total"].get(month, 0)
-        pct = '-'
+        pct = "-"
         if previous > 0:
-            pct = f"{((current-previous)/previous)*100:.1f}%"
+            pct = f"{((current - previous) / previous) * 100:.1f}%"
         elif current > 0:
-            pct = '∞'
-        rows.append((month, current, previous, pct))
+            pct = "∞"
+        pct_sign = current - previous
+        rows.append((month, current, previous, pct, pct_sign))
 
     # aggregate sales by quarter for the overall report
     quarter_rows = []
@@ -959,12 +960,13 @@ def calculate_report_data(year, month_param=None):
             (summary['year'] == year - 1)
             & summary['month_num'].isin(months_in_range)
         ]['total'].sum()
-        pct = '-'
+        pct = "-"
         if prev_total > 0:
             pct = f"{((cur_total - prev_total) / prev_total) * 100:.1f}%"
         elif cur_total > 0:
-            pct = '∞'
-        quarter_rows.append((f'Q{q}', cur_total, prev_total, pct))
+            pct = "∞"
+        pct_sign = cur_total - prev_total
+        quarter_rows.append((f"Q{q}", cur_total, prev_total, pct, pct_sign))
 
     categories = CATEGORIES
     labels = CATEGORY_LABELS
@@ -1034,11 +1036,12 @@ def calculate_report_data(year, month_param=None):
         totals = totals['total']
         total_cur = totals.sum()
         total_prev = prev['total'].sum()
-        vs_last = '-'
+        vs_last = "-"
         if total_prev > 0:
             vs_last = f"{((total_cur - total_prev) / total_prev) * 100:.1f}%"
         elif total_cur > 0:
-            vs_last = '∞'
+            vs_last = "∞"
+        vs_last_sign = total_cur - total_prev
         overall_cat = summary_type[summary_type['type'] == cat]
         avg_month = overall_cat['total'].mean() if len(overall_cat) else 0
         best_month = overall_cat['total'].max() if len(overall_cat) else 0
@@ -1048,6 +1051,7 @@ def calculate_report_data(year, month_param=None):
             'type': labels.get(cat, cat),
             'total': total_cur,
             'vs_last': vs_last,
+            'vs_last_sign': vs_last_sign,
             'avg_month': avg_month,
             'best_month': best_month,
             'avg_qty': avg_qty,
@@ -1089,11 +1093,12 @@ def calculate_report_data(year, month_param=None):
         ]
         cur_total = cur_month['total'].sum()
         prev_total = prev_month['total'].sum()
-        vs_last = '-'
+        vs_last = "-"
         if prev_total > 0:
             vs_last = f"{((cur_total - prev_total) / prev_total) * 100:.1f}%"
         elif cur_total > 0:
-            vs_last = '∞'
+            vs_last = "∞"
+        vs_last_sign = cur_total - prev_total
         prev_same = summary_type[
             (summary_type['type'] == cat)
             & (summary_type['month_num'] == last_month_num)
@@ -1107,6 +1112,7 @@ def calculate_report_data(year, month_param=None):
             'type': labels.get(cat, cat),
             'total': cur_total,
             'vs_last': vs_last,
+            'vs_last_sign': vs_last_sign,
             'avg_month': avg_month,
             'avg_month_sign': avg_month_sign,
             'best_month': best_month,
@@ -1138,6 +1144,7 @@ def calculate_report_data(year, month_param=None):
         'type': 'Total',
         'total': total_val,
         'vs_last': vs_last,
+        'vs_last_sign': total_val - prev_total_cur,
         'avg_month': avg_month,
         'avg_month_sign': total_val - avg_month,
         'best_month': best_month,
