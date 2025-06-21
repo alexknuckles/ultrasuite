@@ -405,6 +405,11 @@ input.switch:checked::before {
 .table-responsive table {
   min-width: 600px;
 }
+
+/* allow smaller tables to size naturally */
+.table-responsive.is-auto table {
+  min-width: 0;
+}
 .tab-pane.is-hidden {
   display: none;
 }
