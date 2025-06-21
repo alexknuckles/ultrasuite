@@ -616,13 +616,15 @@ input.switch:checked::before {
   color: var(--ultra-text);
   padding: var(--spacing-md);
   border-radius: var(--radius-md);
-  max-width: 500px;
+  max-width: 600px;
   width: 100%;
+  display: flex;
+  gap: var(--spacing-md);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 .date-modal-left {
-  width: 6rem;
+  width: 8rem;
   border-right: 1px solid var(--ultra-highlight);
-  margin-right: 1rem;
   overflow-y: auto;
 }
 .date-modal-left ul {
@@ -633,13 +635,22 @@ input.switch:checked::before {
 .date-modal-left li {
   padding: 0.5rem;
   cursor: pointer;
+  margin-bottom: 0.25rem;
+  border-radius: var(--radius-sm);
 }
 .date-modal-left li.is-active,
 .date-modal-left li:hover {
-  background-color: var(--ultra-highlight);
+  background-color: var(--ultra-primary);
+  color: #fff;
 }
 .date-modal-right {
   flex: 1;
+  min-width: 12rem;
+}
+.date-modal-right .buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
 }
 .date-pane.is-hidden {
   display: none;
