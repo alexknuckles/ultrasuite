@@ -367,14 +367,11 @@ input.switch:checked::before {
 .sku-card .merge-col {
   text-align: left;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: flex-start;
-  align-items: flex-start;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.5rem;
   cursor: pointer;
-  position: absolute;
-  top: 0.25rem;
-  left: 0.25rem;
 }
 
 /* avoid text selection highlighting on merge label */
@@ -383,10 +380,9 @@ input.switch:checked::before {
 }
 .sku-card {
   margin-bottom: 0.25rem;
-  position: relative;
 }
 .sku-card .card-content {
-  padding: 0.2rem 0.5rem 0.2rem 6rem;
+  padding: 0.2rem 0.5rem;
 }
 .sku-card .field {
   margin-bottom: 0.1rem;
