@@ -231,6 +231,10 @@
           <label class="label">Access token</label>
           <input class="input" type="password" name="shopify_token" value="{{ shopify_token }}">
         </div>
+          <div class="field mb-4">
+            <button id="testConnectionBtn" type="button" class="mdc-button mdc-button--raised">Test connection</button>
+            <span id="connResult" class="help ml-2"></span>
+          </div>
         <p class="help">Provide an admin API access token for your Shopify store.</p>
       </div>
     </div>
@@ -323,6 +327,25 @@
   if(allCb){
     allCb.addEventListener('change', toggleAll);
     toggleAll();
+  }
+  const testBtn = document.getElementById('testConnectionBtn');
+  const connSpan = document.getElementById('connResult');
+  if(testBtn && connSpan){
+    testBtn.addEventListener('click', () => {
+      const domain = document.querySelector('input[name="shopify_domain"]').value;
+      const token = document.querySelector('input[name="shopify_token"]').value;
+      fetch('{{ url_for('test_shopify_connection') }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `domain=${encodeURIComponent(domain)}&token=${encodeURIComponent(token)}`
+      }).then(r => r.json()).then(res => {
+        connSpan.textContent = res.success ? 'Connection successful' : 'Connection failed';
+        connSpan.style.color = res.success ? 'green' : 'red';
+      }).catch(() => {
+        connSpan.textContent = 'Connection failed';
+        connSpan.style.color = 'red';
+      });
+    });
   }
 </script>
 {% endblock %}
