@@ -601,12 +601,13 @@ input.switch:checked::before {
   .date-modal-content {
     max-width: none;
     width: 95%;
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs);
+    gap: var(--spacing-xs);
   }
   .date-modal-body {
     flex-direction: row;
     align-items: flex-start;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
   }
   .date-modal-left {
     width: 6rem;
@@ -636,7 +637,7 @@ input.switch:checked::before {
   }
   /* ensure room for calendar tabs */
   .date-pane {
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
   }
   .cal-tabs {
     display: flex;
@@ -682,13 +683,13 @@ input.switch:checked::before {
 .date-modal-content {
   background-color: var(--ultra-background);
   color: var(--ultra-text);
-  padding: var(--spacing-sm);
+  padding: var(--spacing-xs);
   border-radius: var(--radius-md);
   max-width: 660px;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   max-height: 90vh;
   overflow-y: auto;
@@ -715,7 +716,7 @@ input.switch:checked::before {
 
 .date-modal-body {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
 }
 .date-modal-left {
   width: 8rem;
@@ -758,7 +759,7 @@ input.switch:checked::before {
 .date-inputs {
   display: flex;
   flex-direction: row;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
 }
 .date-input {
   flex: 1 1 0;
@@ -768,31 +769,32 @@ input.switch:checked::before {
 }
 .calendars {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
 }
 .calendars .date-pane {
   flex: 1;
 }
 .date-modal-right .buttons {
   display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+  width: 100%;
 }
 .date-modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
 }
 .date-pane.is-hidden {
   display: none;
 }
 .cal-tabs {
   display: none;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-sm);
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
 }
 .calendars .flatpickr-calendar {
-  margin-top: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
 }
 
 
