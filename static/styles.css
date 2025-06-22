@@ -103,6 +103,7 @@ textarea {
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-pill: 1rem;
+  --date-modal-width: 260px;
 }
 
 a,
@@ -618,26 +619,25 @@ input.switch:checked::before {
     margin-bottom: 0;
   }
   .date-modal-right {
-    min-width: 0;
+    min-width: var(--date-modal-width);
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: max-content;
+    width: var(--date-modal-width);
     margin-left: auto;
     margin-right: auto;
   }
   .date-inputs {
-    display: inline-flex;
-    flex-direction: row;
-    gap: var(--spacing-sm);
-    width: max-content;
-    margin: 0 auto var(--spacing-xs);
+    display: flex;
+    justify-content: space-between;
+    width: var(--date-modal-width);
+    margin: 0 auto var(--spacing-sm);
   }
   .date-input {
     flex: none;
   }
   .date-input input {
-    width: 10ch;
+    width: 120px;
   }
   /* reduce calendar padding and scale calendar for small screens */
   #dateModal .flatpickr-calendar {
@@ -652,15 +652,15 @@ input.switch:checked::before {
   .cal-tabs {
     display: flex;
     margin-top: var(--spacing-xs);
-    width: max-content;
+    width: var(--date-modal-width);
     margin-left: auto;
     margin-right: auto;
   }
   .calendars {
     flex-direction: column;
     align-items: center;
-    width: max-content;
-    margin: 0 auto var(--spacing-xs);
+    width: var(--date-modal-width);
+    margin: 0 auto var(--spacing-sm);
   }
 }
 
@@ -770,45 +770,45 @@ input.switch:checked::before {
 }
 .date-modal-right {
   flex: none;
-  min-width: 12rem;
+  min-width: var(--date-modal-width);
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: max-content;
+  width: var(--date-modal-width);
 }
 .date-inputs {
-  display: inline-flex;
-  flex-direction: row;
-  gap: var(--spacing-xs);
-  width: max-content;
-  margin: 0 auto var(--spacing-xs);
+  display: flex;
+  justify-content: space-between;
+  width: var(--date-modal-width);
+  margin: 0 auto var(--spacing-sm);
 }
 .date-input {
   flex: none;
 }
 .date-input input {
-  width: 10ch;
+  width: 120px;
 }
 .calendars {
   display: flex;
-  gap: var(--spacing-xs);
-  justify-content: center;
-  width: max-content;
-  margin: 0 auto var(--spacing-xs);
+  flex-direction: column;
+  align-items: center;
+  width: var(--date-modal-width);
+  margin: 0 auto var(--spacing-sm);
 }
 .calendars .date-pane {
-  flex: 1;
+  flex: none;
+  width: var(--date-modal-width);
 }
 .date-modal-right .buttons {
-  display: inline-flex;
+  display: flex;
   justify-content: space-between;
-  gap: var(--spacing-xs);
-  margin: 0 auto var(--spacing-xs);
-  width: max-content;
+  width: var(--date-modal-width);
+  margin: 0 auto var(--spacing-sm);
+  gap: 0;
 }
 #calTabs .mdc-button {
   flex: none;
-  width: 10ch;
+  width: 120px;
 }
 .date-modal-footer {
   display: flex;
@@ -822,7 +822,7 @@ input.switch:checked::before {
   display: none;
   gap: var(--spacing-xs);
   margin-top: var(--spacing-xs);
-  width: max-content;
+  width: var(--date-modal-width);
   margin-left: auto;
   margin-right: auto;
 }
