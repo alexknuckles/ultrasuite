@@ -378,6 +378,8 @@
       if(li){ selectedQuarterText = li.textContent; }
     } else if(init){
       activeType = init;
+    } else if(startInput.value && endInput.value){
+      activeType = '';
     }
 
     function updateBoxes(r){
