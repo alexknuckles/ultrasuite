@@ -381,12 +381,22 @@
     }
 
     function updateBoxes(r){
-      if(startBox._flatpickr){ startBox._flatpickr.setDate(r.start, true); }
-      if(endBox._flatpickr){ endBox._flatpickr.setDate(r.end, true); }
+      if(startBox._flatpickr){ startBox._flatpickr.setDate(r.start, false); }
+      if(endBox._flatpickr){ endBox._flatpickr.setDate(r.end, false); }
     }
 
-    flatpickr(startBox,{dateFormat:'Y-m-d', inline:true, appendTo:startPane});
-    flatpickr(endBox,{dateFormat:'Y-m-d', inline:true, appendTo:endPane});
+    flatpickr(startBox,{
+      dateFormat:'Y-m-d',
+      inline:true,
+      appendTo:startPane,
+      onChange:function(){ activeType=''; setButtonLabel(); }
+    });
+    flatpickr(endBox,{
+      dateFormat:'Y-m-d',
+      inline:true,
+      appendTo:endPane,
+      onChange:function(){ activeType=''; setButtonLabel(); }
+    });
 
     if(startInput.value && endInput.value){
       updateBoxes({start:startInput.value, end:endInput.value});
