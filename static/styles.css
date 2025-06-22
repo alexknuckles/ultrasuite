@@ -620,7 +620,6 @@ input.switch:checked::before {
     margin-bottom: 0;
   }
   .date-modal-right {
-    min-width: var(--date-modal-width);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -636,6 +635,7 @@ input.switch:checked::before {
   }
   .date-input {
     flex: none;
+    width: 120px;
   }
   .date-input input {
     width: 120px;
@@ -661,7 +661,7 @@ input.switch:checked::before {
     flex-direction: column;
     align-items: center;
     width: var(--date-modal-width);
-    margin: 0 auto var(--spacing-sm);
+    margin: 0 auto var(--spacing-xs);
   }
 }
 
@@ -772,7 +772,6 @@ input.switch:checked::before {
 }
 .date-modal-right {
   flex: none;
-  min-width: var(--date-modal-width);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -783,7 +782,6 @@ input.switch:checked::before {
 .date-inputs {
   display: flex;
   justify-content: space-between;
-  gap: 0.75rem;
   width: var(--date-modal-width);
   margin: 0 auto var(--spacing-sm);
 }
@@ -799,7 +797,7 @@ input.switch:checked::before {
   flex-direction: column;
   align-items: center;
   width: var(--date-modal-width);
-  margin: 0 auto var(--spacing-sm);
+  margin: 0 auto var(--spacing-xs);
 }
 .calendars .date-pane {
   flex: none;
@@ -811,7 +809,6 @@ input.switch:checked::before {
   justify-content: space-between;
   width: var(--date-modal-width);
   margin: 0 auto var(--spacing-sm);
-  gap: 0.75rem;
 }
 
 #calTabs .mdc-button,
@@ -836,7 +833,7 @@ input.switch:checked::before {
   margin-right: auto;
 }
 .calendars .flatpickr-calendar {
-  margin-top: var(--spacing-xs);
+  margin-top: 0;
 }
 
 
