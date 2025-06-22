@@ -215,7 +215,7 @@
         <td>{{ row['month'] }}</td>
         <td class="has-text-right">${{ "%.2f"|format(row['avg']) }}</td>
         {% for val in row['values'] %}
-        <td class="has-text-right">{{ ("$%.2f"|format(val.val)) | trend(val.diff) }}</td>
+        <td class="has-text-right">{% if val.val is none %}-{% else %}{{ ("$%.2f"|format(val.val)) | trend(val.diff) }}{% endif %}</td>
         {% endfor %}
       </tr>
     {% endfor %}
@@ -246,7 +246,7 @@
         <td>{{ row['quarter'] }}</td>
         <td class="has-text-right">${{ "%.2f"|format(row['avg']) }}</td>
         {% for val in row['values'] %}
-        <td class="has-text-right">{{ ("$%.2f"|format(val.val)) | trend(val.diff) }}</td>
+        <td class="has-text-right">{% if val.val is none %}-{% else %}{{ ("$%.2f"|format(val.val)) | trend(val.diff) }}{% endif %}</td>
         {% endfor %}
       </tr>
     {% endfor %}
