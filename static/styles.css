@@ -599,6 +599,8 @@ input.switch:checked::before {
 
   /* mobile layout for date modal */
   .date-modal-content {
+    background-color: var(--ultra-background);
+    color: var(--ultra-text);
     max-width: none;
     width: 95%;
     padding: var(--spacing-xs);
@@ -620,19 +622,22 @@ input.switch:checked::before {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: max-content;
+    margin-left: auto;
+    margin-right: auto;
   }
   .date-inputs {
     display: inline-flex;
     flex-direction: row;
     gap: var(--spacing-sm);
-    margin-left: auto;
-    margin-right: auto;
+    width: max-content;
+    margin: 0 auto var(--spacing-xs);
   }
   .date-input {
     flex: none;
   }
   .date-input input {
-    width: 8rem;
+    width: 10ch;
   }
   /* reduce calendar padding and scale calendar for small screens */
   #dateModal .flatpickr-calendar {
@@ -647,10 +652,15 @@ input.switch:checked::before {
   .cal-tabs {
     display: flex;
     margin-top: var(--spacing-xs);
+    width: max-content;
+    margin-left: auto;
+    margin-right: auto;
   }
   .calendars {
     flex-direction: column;
     align-items: center;
+    width: max-content;
+    margin: 0 auto var(--spacing-xs);
   }
 }
 
@@ -759,29 +769,32 @@ input.switch:checked::before {
   display: none;
 }
 .date-modal-right {
-  flex: 1;
+  flex: none;
   min-width: 12rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: max-content;
 }
 .date-inputs {
   display: inline-flex;
   flex-direction: row;
   gap: var(--spacing-xs);
-  margin-left: auto;
-  margin-right: auto;
+  width: max-content;
+  margin: 0 auto var(--spacing-xs);
 }
 .date-input {
   flex: none;
 }
 .date-input input {
-  width: 8rem;
+  width: 10ch;
 }
 .calendars {
   display: flex;
   gap: var(--spacing-xs);
   justify-content: center;
+  width: max-content;
+  margin: 0 auto var(--spacing-xs);
 }
 .calendars .date-pane {
   flex: 1;
@@ -790,14 +803,12 @@ input.switch:checked::before {
   display: inline-flex;
   justify-content: space-between;
   gap: var(--spacing-xs);
-  margin-top: var(--spacing-xs);
-  width: auto;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto var(--spacing-xs);
+  width: max-content;
 }
 #calTabs .mdc-button {
   flex: none;
-  width: 8rem;
+  width: 10ch;
 }
 .date-modal-footer {
   display: flex;
@@ -811,6 +822,9 @@ input.switch:checked::before {
   display: none;
   gap: var(--spacing-xs);
   margin-top: var(--spacing-xs);
+  width: max-content;
+  margin-left: auto;
+  margin-right: auto;
 }
 .calendars .flatpickr-calendar {
   margin-top: var(--spacing-xs);
