@@ -711,6 +711,14 @@ def _find_duplicates(conn, sku=None, start=None, end=None):
         )
     return rows
 
+
+def _safe_concat(frames, **kwargs):
+    """Concatenate frames, skipping empties and all-NA data."""
+    valid = [df for df in frames if not df.empty and not df.isna().all().all()]
+    if not valid:
+        return pd.DataFrame()
+    return pd.concat(valid, **kwargs)
+
 @app.route('/sku-map', methods=['GET', 'POST'])
 def sku_map_page():
     conn = get_db()
@@ -787,7 +795,7 @@ def sku_map_page():
     qbo = pd.read_sql_query('SELECT created_at, sku FROM qbo', conn)
     conn.close()
 
-    all_txn = pd.concat([shopify, qbo], ignore_index=True)
+    all_txn = _safe_concat([shopify, qbo], ignore_index=True)
     all_txn['created_at'] = (
         pd.to_datetime(
             all_txn['created_at'].astype(str),
@@ -987,7 +995,7 @@ def calculate_report_data(year, month_param=None):
     mapping = pd.read_sql_query('SELECT alias, canonical_sku, type FROM sku_map', conn)
     conn.close()
 
-    all_data = pd.concat([shopify, qbo], ignore_index=True)
+    all_data = _safe_concat([shopify, qbo], ignore_index=True)
 
     # ensure numeric totals for reliable aggregation
     all_data['total'] = pd.to_numeric(all_data['total'], errors='coerce').fillna(0)
@@ -1454,7 +1462,7 @@ def generate_year_chart_base64(year, *, light=False):
     qbo = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM qbo', conn)
     conn.close()
 
-    all_data = pd.concat([shopify, qbo])
+    all_data = _safe_concat([shopify, qbo])
     all_data["quantity"] = pd.to_numeric(all_data["quantity"], errors="coerce").fillna(0)
     all_data["total"] = pd.to_numeric(all_data["total"], errors="coerce").fillna(0)
     all_data['created_at'] = (
@@ -1508,7 +1516,7 @@ def generate_last_month_chart_base64(year, month_param=None, *, light=False):
     mapping = pd.read_sql_query('SELECT alias, canonical_sku, type FROM sku_map', conn)
     conn.close()
 
-    all_data = pd.concat([shopify, qbo], ignore_index=True)
+    all_data = _safe_concat([shopify, qbo], ignore_index=True)
     all_data['total'] = pd.to_numeric(all_data['total'], errors='coerce').fillna(0)
     all_data['created_at'] = (
         pd.to_datetime(all_data['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
@@ -1679,7 +1687,7 @@ def report_chart():
     qbo = pd.read_sql_query('SELECT created_at, sku, quantity, total FROM qbo', conn)
     conn.close()
 
-    all_data = pd.concat([shopify, qbo])
+    all_data = _safe_concat([shopify, qbo])
     all_data["quantity"] = pd.to_numeric(all_data["quantity"], errors="coerce").fillna(0)
     all_data["total"] = pd.to_numeric(all_data["total"], errors="coerce").fillna(0)
     all_data['created_at'] = (
@@ -1762,7 +1770,7 @@ def transactions_page():
     shopify = parse_dates(shopify)
     qbo = parse_dates(qbo)
 
-    all_dates = pd.concat([shopify[['created_at']], qbo[['created_at']]])['created_at'].dropna()
+    all_dates = _safe_concat([shopify[['created_at']], qbo[['created_at']]])['created_at'].dropna()
     years = sorted(all_dates.dt.year.dropna().unique(), reverse=True)
     month_periods = sorted(all_dates.dt.to_period('M').unique(), reverse=True)
     month_options = [
@@ -1879,7 +1887,7 @@ def transactions_page():
     if show_qbo:
         frames.append(qbo.assign(source_title='QBO'))
     if frames:
-        df_all = pd.concat(frames, ignore_index=True).sort_values('created_at')
+        df_all = _safe_concat(frames, ignore_index=True).sort_values('created_at')
     else:
         df_all = pd.DataFrame(columns=shopify.columns.tolist() + ['source_title'])
 
@@ -1945,7 +1953,7 @@ def last_month_chart():
     mapping = pd.read_sql_query('SELECT alias, canonical_sku, type FROM sku_map', conn)
     conn.close()
 
-    all_data = pd.concat([shopify, qbo], ignore_index=True)
+    all_data = _safe_concat([shopify, qbo], ignore_index=True)
     all_data['total'] = pd.to_numeric(all_data['total'], errors='coerce').fillna(0)
     all_data['created_at'] = (
         pd.to_datetime(all_data['created_at'].astype(str), errors='coerce', format='mixed', utc=True)
