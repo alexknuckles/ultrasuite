@@ -65,6 +65,7 @@
                   {% endfor %}
                 </ul>
               </li>
+              <li data-type="all">All</li>
             </ul>
           </div>
           <div class="date-modal-right">
@@ -354,6 +355,8 @@
         case 'ytd':
           start = fmt(new Date(now.getFullYear(),0,1));
           end = fmt(now); break;
+        case 'all':
+          start = ''; end = ''; break;
         case 'quarter':
           if(selectedQuarter){
             var parts = selectedQuarter.split('-');
@@ -519,7 +522,8 @@
         wtd: 'Week to date',
         mtd: 'Month to date',
         qtd: 'Quarter to date',
-        ytd: 'Year to date'
+        ytd: 'Year to date',
+        all: 'All'
       };
       var label = labels[activeType] || '';
       if(activeType === 'quarter'){
