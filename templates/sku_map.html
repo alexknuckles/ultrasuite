@@ -463,7 +463,7 @@
     sel.addEventListener('change', () => {
       const card = sel.closest('.sku-card');
       if (!card) return;
-      if (sel.value !== 'unmapped') moveToMapped(card, sel.value);
+      changeType(card, sel.value);
     });
   }
 
