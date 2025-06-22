@@ -725,9 +725,10 @@ input.switch:checked::before {
   padding: 0;
 }
 .date-modal-left li {
-  padding: 0.5rem;
+  /* tighter spacing so all quick selects fit on small screens */
+  padding: 0.25rem 0.5rem;
   cursor: pointer;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
   border-radius: var(--radius-sm);
   font-weight: 500;
   transition: background-color 0.2s;
