@@ -2330,10 +2330,12 @@ def settings_page():
         qbo_client_secret = request.form.get('qbo_client_secret', '').strip()
         qbo_refresh_token = request.form.get('qbo_refresh_token', '').strip()
         qbo_realm_id = request.form.get('qbo_realm_id', '').strip()
+        hubspot_token = request.form.get('hubspot_token', '').strip()
         set_setting('qbo_client_id', qbo_client_id)
         set_setting('qbo_client_secret', qbo_client_secret)
         set_setting('qbo_refresh_token', qbo_refresh_token)
         set_setting('qbo_realm_id', qbo_realm_id)
+        set_setting('hubspot_token', hubspot_token)
         default_month = request.form.get('default_month', '')
         set_setting('default_export_month', default_month)
         set_setting('duplicate_action', dup_action)
@@ -2397,10 +2399,12 @@ def settings_page():
     shopify_token = get_setting('shopify_token', '')
     shopify_last_sync = get_setting('shopify_last_sync', '')
     qbo_last_sync = get_setting('qbo_last_sync', '')
+    hubspot_last_sync = get_setting('hubspot_last_sync', '')
     qbo_client_id = get_setting('qbo_client_id', '')
     qbo_client_secret = get_setting('qbo_client_secret', '')
     qbo_refresh_token = get_setting('qbo_refresh_token', '')
     qbo_realm_id = get_setting('qbo_realm_id', '')
+    hubspot_token = get_setting('hubspot_token', '')
     types_default = get_setting('default_detail_types', ','.join(CATEGORIES))
     detail_types = [t for t in types_default.split(',') if t]
     detail_types_all = len(detail_types) == len(CATEGORIES)
@@ -2447,6 +2451,8 @@ def settings_page():
         qbo_client_secret=qbo_client_secret,
         qbo_refresh_token=qbo_refresh_token,
         qbo_realm_id=qbo_realm_id,
+        hubspot_token=hubspot_token,
+        hubspot_last_sync=hubspot_last_sync,
     )
 @app.route("/test-shopify", methods=["POST"])
 def test_shopify_connection():
@@ -2576,6 +2582,42 @@ def sync_qbo_data():
     if new_refresh and new_refresh != refresh_token:
         set_setting("qbo_refresh_token", new_refresh)
     set_setting("qbo_last_sync", now)
+    return jsonify(success=True)
+
+
+@app.route("/test-hubspot", methods=["POST"])
+def test_hubspot_connection():
+    token = request.form.get("token", "").strip()
+    if not token:
+        return jsonify(success=False), 400
+    try:
+        resp = requests.get(
+            "https://api.hubapi.com/integrations/v1/me",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=5,
+        )
+        ok = resp.status_code == 200
+    except Exception:
+        ok = False
+    return jsonify(success=ok)
+
+
+@app.route("/sync-hubspot", methods=["POST"])
+def sync_hubspot_data():
+    token = get_setting("hubspot_token", "")
+    if not token:
+        return jsonify(success=False, error="Missing credentials"), 400
+    try:
+        resp = requests.get(
+            "https://api.hubapi.com/integrations/v1/me",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=10,
+        )
+        resp.raise_for_status()
+    except Exception as exc:
+        return jsonify(success=False, error=str(exc)), 500
+    now = datetime.now(timezone.utc).isoformat()
+    set_setting("hubspot_last_sync", now)
     return jsonify(success=True)
 
 

@@ -269,6 +269,22 @@
         {% endif %}
         <p class="help">OAuth credentials are used to sync your QuickBooks transactions.</p>
       </div>
+      <div class="box mb-4">
+        <h3 class="title is-5 mb-3">HubSpot</h3>
+        <div class="field mb-4">
+          <label class="label">Access token</label>
+          <input class="input" type="password" name="hubspot_token" value="{{ hubspot_token }}">
+        </div>
+        <div class="field mb-4">
+          <button id="testHubspotBtn" type="button" class="mdc-button mdc-button--raised mr-2">Test connection</button>
+          <button id="syncHubspotBtn" type="button" class="mdc-button mdc-button--raised">Sync now</button>
+          <span id="hubspotConnResult" class="help ml-2"></span>
+        </div>
+        {% if hubspot_last_sync %}
+        <p class="help">Last sync: {{ hubspot_last_sync|format_dt }}</p>
+        {% endif %}
+        <p class="help">Provide a private app token to access HubSpot data.</p>
+      </div>
     </div>
     <button id="saveSettingsBtn" type="submit" class="mdc-button mdc-button--raised">Save</button>
     </form>
@@ -435,7 +451,44 @@
         .catch(() => {
           syncQbo.textContent = 'Sync failed';
           syncQbo.style.backgroundColor = '#d93025';
-          syncQbo.disabled = false;
+        syncQbo.disabled = false;
+      });
+    });
+  }
+  const testHs = document.getElementById('testHubspotBtn');
+  const hsSpan = document.getElementById('hubspotConnResult');
+  if(testHs && hsSpan){
+    testHs.addEventListener('click', () => {
+      const token = document.querySelector('input[name="hubspot_token"]').value;
+      fetch('{{ url_for('test_hubspot_connection') }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `token=${encodeURIComponent(token)}`
+      }).then(r => r.json()).then(res => {
+        hsSpan.textContent = res.success ? 'Connection successful' : 'Connection failed';
+        hsSpan.style.color = res.success ? 'green' : 'red';
+      }).catch(() => {
+        hsSpan.textContent = 'Connection failed';
+        hsSpan.style.color = 'red';
+      });
+    });
+  }
+  const syncHs = document.getElementById('syncHubspotBtn');
+  if(syncHs){
+    syncHs.addEventListener('click', () => {
+      syncHs.disabled = true;
+      syncHs.textContent = 'Syncing...';
+      fetch('{{ url_for('sync_hubspot_data') }}', {method: 'POST'})
+        .then(r => r.json())
+        .then(res => {
+          syncHs.textContent = res.success ? 'Synced' : 'Sync failed';
+          syncHs.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
+          if(!res.success) syncHs.disabled = false;
+        })
+        .catch(() => {
+          syncHs.textContent = 'Sync failed';
+          syncHs.style.backgroundColor = '#d93025';
+          syncHs.disabled = false;
         });
     });
   }
