@@ -760,6 +760,11 @@ input.switch:checked::before {
   background-color: var(--ultra-primary);
   color: #fff;
 }
+.date-modal-left ul ul li.is-active,
+.date-modal-left ul ul li:hover {
+  background-color: transparent;
+  color: inherit;
+}
 .date-modal-left li.has-dropdown .arrow {
   float: right;
 }
