@@ -378,7 +378,10 @@
       activeType = 'quarter';
       selectedQuarter = init;
       var li = quarterMenu ? quarterMenu.querySelector('[data-value="'+init+'"]') : null;
-      if(li){ selectedQuarterText = li.textContent; }
+      if(li){
+        selectedQuarterText = li.textContent;
+        li.classList.add('is-active');
+      }
     } else if(init){
       activeType = init;
     } else if(startInput.value && endInput.value){
@@ -486,6 +489,8 @@
     if(quarterMenu){
       quarterMenu.querySelectorAll('li').forEach(function(li){
         li.addEventListener('click', function(){
+          quarterMenu.querySelectorAll('li').forEach(function(x){ x.classList.remove('is-active'); });
+          li.classList.add('is-active');
           selectedQuarter = li.dataset.value;
           selectedQuarterText = li.textContent;
           activeType = 'quarter';
