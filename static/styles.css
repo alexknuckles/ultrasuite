@@ -765,6 +765,18 @@ input.switch:checked::before {
   background-color: transparent;
   color: inherit;
 }
+/* ensure quarter options sit over active parent background */
+.date-modal-left #quarterMenu {
+  background-color: var(--ultra-background);
+  padding: 0;
+}
+.date-modal-left #quarterMenu li {
+  background-color: var(--ultra-background);
+}
+.date-modal-left #quarterMenu li.is-active {
+  background-color: var(--ultra-primary);
+  color: #fff;
+}
 .date-modal-left li.has-dropdown .arrow {
   float: right;
 }
