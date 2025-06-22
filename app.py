@@ -2397,6 +2397,8 @@ def sync_shopify_data():
     """Fetch Shopify orders via API and update the database."""
     domain = get_setting("shopify_domain", "")
     token = get_setting("shopify_token", "")
+    # Retrieve duplicate handling preference before any write operations
+    action = get_setting("duplicate_action", "review")
     if not domain or not token:
         return jsonify(success=False, error="Missing credentials"), 400
     try:
@@ -2414,7 +2416,6 @@ def sync_shopify_data():
             (o.get("id"), json.dumps(o)),
         )
     _update_sku_map(conn, df["sku"], "shopify")
-    action = get_setting("duplicate_action", "review")
     if action in {"shopify", "qbo", "both"}:
         _resolve_duplicates(conn, action)
     created = pd.to_datetime(df["created_at"].astype(str), errors="coerce", format="mixed", utc=True).dt.tz_localize(None)
