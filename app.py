@@ -2273,6 +2273,14 @@ def settings_page():
         shopify_token = request.form.get('shopify_token', '').strip()
         set_setting('shopify_domain', shopify_domain)
         set_setting('shopify_token', shopify_token)
+        qbo_client_id = request.form.get('qbo_client_id', '').strip()
+        qbo_client_secret = request.form.get('qbo_client_secret', '').strip()
+        qbo_refresh_token = request.form.get('qbo_refresh_token', '').strip()
+        qbo_realm_id = request.form.get('qbo_realm_id', '').strip()
+        set_setting('qbo_client_id', qbo_client_id)
+        set_setting('qbo_client_secret', qbo_client_secret)
+        set_setting('qbo_refresh_token', qbo_refresh_token)
+        set_setting('qbo_realm_id', qbo_realm_id)
         default_month = request.form.get('default_month', '')
         set_setting('default_export_month', default_month)
         set_setting('duplicate_action', dup_action)
@@ -2335,6 +2343,10 @@ def settings_page():
     shopify_domain = get_setting('shopify_domain', '')
     shopify_token = get_setting('shopify_token', '')
     shopify_last_sync = get_setting('shopify_last_sync', '')
+    qbo_client_id = get_setting('qbo_client_id', '')
+    qbo_client_secret = get_setting('qbo_client_secret', '')
+    qbo_refresh_token = get_setting('qbo_refresh_token', '')
+    qbo_realm_id = get_setting('qbo_realm_id', '')
     types_default = get_setting('default_detail_types', ','.join(CATEGORIES))
     detail_types = [t for t in types_default.split(',') if t]
     detail_types_all = len(detail_types) == len(CATEGORIES)
@@ -2376,6 +2388,10 @@ def settings_page():
         shopify_domain=shopify_domain,
         shopify_token=shopify_token,
         shopify_last_sync=shopify_last_sync,
+        qbo_client_id=qbo_client_id,
+        qbo_client_secret=qbo_client_secret,
+        qbo_refresh_token=qbo_refresh_token,
+        qbo_realm_id=qbo_realm_id,
     )
 @app.route("/test-shopify", methods=["POST"])
 def test_shopify_connection():

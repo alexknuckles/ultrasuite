@@ -241,6 +241,26 @@
         {% endif %}
         <p class="help">Provide an admin API access token for your Shopify store.</p>
       </div>
+      <div class="box mb-4">
+        <h3 class="title is-5 mb-3">QuickBooks Online</h3>
+        <div class="field mb-4">
+          <label class="label">Client ID</label>
+          <input class="input" type="text" name="qbo_client_id" value="{{ qbo_client_id }}">
+        </div>
+        <div class="field mb-4">
+          <label class="label">Client secret</label>
+          <input class="input" type="password" name="qbo_client_secret" value="{{ qbo_client_secret }}">
+        </div>
+        <div class="field mb-4">
+          <label class="label">Refresh token</label>
+          <input class="input" type="password" name="qbo_refresh_token" value="{{ qbo_refresh_token }}">
+        </div>
+        <div class="field mb-4">
+          <label class="label">Realm ID</label>
+          <input class="input" type="text" name="qbo_realm_id" value="{{ qbo_realm_id }}">
+        </div>
+        <p class="help">OAuth credentials are used to sync your QuickBooks transactions.</p>
+      </div>
     </div>
     <button id="saveSettingsBtn" type="submit" class="mdc-button mdc-button--raised">Save</button>
     </form>
