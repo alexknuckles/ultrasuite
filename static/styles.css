@@ -789,6 +789,7 @@ input.switch:checked::before {
 }
 .date-input {
   flex: none;
+  width: 120px;
 }
 .date-input input {
   width: 120px;
@@ -804,6 +805,7 @@ input.switch:checked::before {
   flex: none;
   width: var(--date-modal-width);
 }
+#calTabs,
 .date-modal-right .buttons {
   display: flex;
   justify-content: space-between;
@@ -811,7 +813,9 @@ input.switch:checked::before {
   margin: 0 auto var(--spacing-sm);
   gap: 0.75rem;
 }
-#calTabs .mdc-button {
+
+#calTabs .mdc-button,
+.date-modal-right .buttons .mdc-button {
   flex: none;
   width: 120px;
 }
