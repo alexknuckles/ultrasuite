@@ -2541,7 +2541,7 @@ def qbo_connect():
     client_secret = get_setting("qbo_client_secret", "")
     if not client_id or not client_secret:
         flash("Client ID and secret are required", "error")
-        return redirect(url_for("settings"))
+        return redirect(url_for("settings_page"))
     state = base64.urlsafe_b64encode(os.urandom(16)).decode()
     session["qbo_state"] = state
     redirect_uri = url_for("qbo_callback", _external=True)
@@ -2561,7 +2561,7 @@ def qbo_callback():
     realm_id = request.args.get("realmId", "")
     if not code or state != session.pop("qbo_state", None):
         flash("OAuth failed", "error")
-        return redirect(url_for("settings"))
+        return redirect(url_for("settings_page"))
     client_id = get_setting("qbo_client_id", "")
     client_secret = get_setting("qbo_client_secret", "")
     redirect_uri = url_for("qbo_callback", _external=True)
@@ -2582,14 +2582,14 @@ def qbo_callback():
         tokens = resp.json()
     except Exception:
         flash("OAuth token exchange failed", "error")
-        return redirect(url_for("settings"))
+        return redirect(url_for("settings_page"))
     refresh = tokens.get("refresh_token")
     if refresh:
         set_setting("qbo_refresh_token", refresh)
     if realm_id:
         set_setting("qbo_realm_id", realm_id)
     flash("QuickBooks connected", "success")
-    return redirect(url_for("settings"))
+    return redirect(url_for("settings_page"))
 
 
 @app.route("/test-qbo", methods=["POST"])
