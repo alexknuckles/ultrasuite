@@ -617,17 +617,22 @@ input.switch:checked::before {
   }
   .date-modal-right {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   .date-inputs {
-    display: flex;
+    display: inline-flex;
     flex-direction: row;
     gap: var(--spacing-sm);
+    margin-left: auto;
+    margin-right: auto;
   }
   .date-input {
-    flex: 1 1 0;
+    flex: none;
   }
   .date-input input {
-    width: 100%;
+    width: 8rem;
   }
   /* reduce calendar padding and scale calendar for small screens */
   #dateModal .flatpickr-calendar {
@@ -645,6 +650,7 @@ input.switch:checked::before {
   }
   .calendars {
     flex-direction: column;
+    align-items: center;
   }
 }
 
@@ -755,34 +761,43 @@ input.switch:checked::before {
 .date-modal-right {
   flex: 1;
   min-width: 12rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .date-inputs {
-  display: flex;
+  display: inline-flex;
   flex-direction: row;
   gap: var(--spacing-xs);
+  margin-left: auto;
+  margin-right: auto;
 }
 .date-input {
-  flex: 1 1 0;
+  flex: none;
 }
 .date-input input {
-  width: 100%;
+  width: 8rem;
 }
 .calendars {
   display: flex;
   gap: var(--spacing-xs);
+  justify-content: center;
 }
 .calendars .date-pane {
   flex: 1;
 }
 .date-modal-right .buttons {
-  display: flex;
+  display: inline-flex;
   justify-content: space-between;
   gap: var(--spacing-xs);
   margin-top: var(--spacing-xs);
-  width: 100%;
+  width: auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 #calTabs .mdc-button {
-  flex: 1 1 0;
+  flex: none;
+  width: 8rem;
 }
 .date-modal-footer {
   display: flex;
