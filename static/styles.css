@@ -765,7 +765,7 @@ input.switch:checked::before {
   flex: 1 1 0;
 }
 .date-input input {
-  width: 8rem;
+  width: 100%;
 }
 .calendars {
   display: flex;
@@ -778,7 +778,11 @@ input.switch:checked::before {
   display: flex;
   justify-content: space-between;
   gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
   width: 100%;
+}
+#calTabs .mdc-button {
+  flex: 1 1 0;
 }
 .date-modal-footer {
   display: flex;
