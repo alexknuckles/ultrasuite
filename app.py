@@ -28,7 +28,14 @@ from flask import (
 )
 from markupsafe import Markup
 from werkzeug.utils import secure_filename
-from database import UPLOAD_FOLDER, get_db, get_setting, set_setting
+from database import (
+    UPLOAD_FOLDER,
+    get_db,
+    get_setting,
+    set_setting,
+    add_log,
+    get_logs,
+)
 
 # default theme colors
 DEFAULT_THEME_PRIMARY = '#1976d2'
@@ -372,6 +379,13 @@ def fetch_resources(uri, rel):
     if uri.startswith('/static'):
         return os.path.join(app.root_path, uri.lstrip('/'))
     return uri
+
+def log_error(message):
+    """Record a message in the application log."""
+    try:
+        add_log(message)
+    except Exception:
+        pass
 
 
 @app.route('/favicon.ico')
@@ -2483,7 +2497,8 @@ def test_shopify_connection():
     try:
         resp = requests.get(url, headers={"X-Shopify-Access-Token": token}, timeout=5)
         ok = resp.status_code == 200
-    except Exception:
+    except Exception as exc:
+        log_error(f"Test Shopify connection error: {exc}")
         ok = False
     return jsonify(success=ok)
 
@@ -2500,6 +2515,7 @@ def sync_shopify_data():
     try:
         df, orders = _fetch_shopify_api(domain, token)
     except Exception as exc:
+        log_error(f"Shopify sync error: {exc}")
         return jsonify(success=False, error=str(exc)), 500
     if df.empty:
         return jsonify(success=False, error="No data returned"), 400
@@ -2613,7 +2629,8 @@ def test_qbo_connection():
         ok = resp.status_code == 200
         if ok and new_refresh and new_refresh != refresh_token:
             set_setting("qbo_refresh_token", new_refresh)
-    except Exception:
+    except Exception as exc:
+        log_error(f"Test QBO connection error: {exc}")
         ok = False
     return jsonify(success=ok)
 
@@ -2632,6 +2649,7 @@ def sync_qbo_data():
             client_id, client_secret, refresh_token, realm_id
         )
     except Exception as exc:
+        log_error(f"QBO sync error: {exc}")
         return jsonify(success=False, error=str(exc)), 500
     if df.empty:
         return jsonify(success=False, error="No data returned"), 400
@@ -2674,7 +2692,8 @@ def test_hubspot_connection():
             timeout=5,
         )
         ok = resp.status_code == 200
-    except Exception:
+    except Exception as exc:
+        log_error(f"Test HubSpot connection error: {exc}")
         ok = False
     return jsonify(success=ok)
 
@@ -2692,9 +2711,26 @@ def sync_hubspot_data():
         )
         resp.raise_for_status()
     except Exception as exc:
+        log_error(f"HubSpot sync error: {exc}")
         return jsonify(success=False, error=str(exc)), 500
     now = datetime.now(timezone.utc).isoformat()
     set_setting("hubspot_last_sync", now)
+    return jsonify(success=True)
+
+
+@app.route("/logs")
+def get_app_logs():
+    rows = get_logs(200)
+    text = "\n".join(f"[{r['logged_at']}] {r['message']}" for r in rows)
+    return text, 200, {"Content-Type": "text/plain; charset=utf-8"}
+
+
+@app.route("/clear-logs", methods=["POST"])
+def clear_app_logs():
+    conn = get_db()
+    conn.execute("DELETE FROM app_log")
+    conn.commit()
+    conn.close()
     return jsonify(success=True)
 
 

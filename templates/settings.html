@@ -11,6 +11,7 @@
       <button type="button" class="mdc-button mdc-button--raised" data-target="transactionSettings">Transactions</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="syncSettings">Sync</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="reportSettings">Reports</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="logsSettings">Logs</button>
     </nav>
     <form method="post" enctype="multipart/form-data">
     <div id="generalSettings" class="tab-pane">
@@ -303,6 +304,16 @@
         </div>
       </div>
     </div>
+    <div id="logsSettings" class="tab-pane is-hidden">
+      <div class="box mb-4">
+        <h3 class="title is-5 mb-3">Application Logs</h3>
+        <div class="field mb-2">
+          <button id="refreshLogsBtn" type="button" class="mdc-button mdc-button--raised mr-2">Refresh</button>
+          <button id="clearLogsBtn" type="button" class="mdc-button mdc-button--raised">Clear</button>
+        </div>
+        <pre id="logOutput" class="log-output"></pre>
+      </div>
+    </div>
   </div>
 </div>
 <script>
@@ -491,9 +502,28 @@
         .catch(() => {
           syncHs.textContent = 'Sync failed';
           syncHs.style.backgroundColor = '#d93025';
-          syncHs.disabled = false;
-        });
-    });
-  }
+        syncHs.disabled = false;
+      });
+  });
+}
+const logPre = document.getElementById('logOutput');
+const refreshLogs = document.getElementById('refreshLogsBtn');
+const clearLogs = document.getElementById('clearLogsBtn');
+function loadLogs(){
+  if(!logPre) return;
+  fetch('{{ url_for('get_app_logs') }}')
+    .then(r => r.text())
+    .then(t => { logPre.textContent = t || 'No logs'; });
+}
+if(refreshLogs){
+  refreshLogs.addEventListener('click', loadLogs);
+}
+if(clearLogs){
+  clearLogs.addEventListener('click', () => {
+    fetch('{{ url_for('clear_app_logs') }}', {method:'POST'})
+      .then(() => loadLogs());
+  });
+}
+document.addEventListener('DOMContentLoaded', loadLogs);
 </script>
 {% endblock %}
