@@ -232,9 +232,13 @@
           <input class="input" type="password" name="shopify_token" value="{{ shopify_token }}">
         </div>
           <div class="field mb-4">
-            <button id="testConnectionBtn" type="button" class="mdc-button mdc-button--raised">Test connection</button>
+            <button id="testConnectionBtn" type="button" class="mdc-button mdc-button--raised mr-2">Test connection</button>
+            <button id="syncShopifyBtn" type="button" class="mdc-button mdc-button--raised">Sync now</button>
             <span id="connResult" class="help ml-2"></span>
           </div>
+        {% if shopify_last_sync %}
+        <p class="help">Last sync: {{ shopify_last_sync|format_dt }}</p>
+        {% endif %}
         <p class="help">Provide an admin API access token for your Shopify store.</p>
       </div>
     </div>
@@ -345,6 +349,25 @@
         connSpan.textContent = 'Connection failed';
         connSpan.style.color = 'red';
       });
+    });
+  }
+  const syncBtn = document.getElementById('syncShopifyBtn');
+  if(syncBtn){
+    syncBtn.addEventListener('click', () => {
+      syncBtn.disabled = true;
+      syncBtn.textContent = 'Syncing...';
+      fetch('{{ url_for('sync_shopify_data') }}', {method: 'POST'})
+        .then(r => r.json())
+        .then(res => {
+          syncBtn.textContent = res.success ? 'Synced' : 'Sync failed';
+          syncBtn.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
+          if(!res.success) syncBtn.disabled = false;
+        })
+        .catch(() => {
+          syncBtn.textContent = 'Sync failed';
+          syncBtn.style.backgroundColor = '#d93025';
+          syncBtn.disabled = false;
+        });
     });
   }
 </script>

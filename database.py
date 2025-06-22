@@ -26,7 +26,8 @@ def init_db():
         "source TEXT PRIMARY KEY, "
         "last_updated TEXT, "
         "last_transaction TEXT, "
-        "first_transaction TEXT"
+        "first_transaction TEXT, "
+        "last_synced TEXT"
         ")"
     )
     c.execute(
@@ -78,6 +79,9 @@ def migrate_meta():
         conn.commit()
     if 'first_transaction' not in cols:
         conn.execute('ALTER TABLE meta ADD COLUMN first_transaction TEXT')
+        conn.commit()
+    if 'last_synced' not in cols:
+        conn.execute('ALTER TABLE meta ADD COLUMN last_synced TEXT')
         conn.commit()
     conn.close()
 
