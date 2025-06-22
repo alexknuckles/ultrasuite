@@ -714,10 +714,20 @@ def _find_duplicates(conn, sku=None, start=None, end=None):
 
 def _safe_concat(frames, **kwargs):
     """Concatenate frames, skipping empties and all-NA data."""
-    valid = [df for df in frames if not df.empty and not df.isna().all().all()]
-    if not valid:
+    if not frames:
         return pd.DataFrame()
-    return pd.concat(valid, **kwargs)
+
+    valid = [df for df in frames if not df.empty and not df.isna().all().all()]
+    if valid:
+        return pd.concat(valid, **kwargs)
+
+    # All frames are empty or all-NA; preserve union of columns
+    columns = []
+    for df in frames:
+        for col in df.columns:
+            if col not in columns:
+                columns.append(col)
+    return pd.DataFrame(columns=columns)
 
 @app.route('/sku-map', methods=['GET', 'POST'])
 def sku_map_page():
