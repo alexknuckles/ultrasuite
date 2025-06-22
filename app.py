@@ -5,6 +5,7 @@ from io import BytesIO
 import base64
 from calendar import monthrange
 import requests
+import json
 
 import pandas as pd
 import math
@@ -166,10 +167,10 @@ def _parse_qbo(file_storage):
 
 
 def _fetch_shopify_api(domain, token):
-    """Return a DataFrame of Shopify orders via API."""
+    """Return a DataFrame of Shopify orders via API and raw JSON data."""
     headers = {"X-Shopify-Access-Token": token}
     url = f"https://{domain}/admin/api/2023-07/orders.json"
-    params = {"status": "any", "limit": 250, "fields": "created_at,line_items"}
+    params = {"status": "any", "limit": 250}
     orders = []
     while url:
         resp = requests.get(url, headers=headers, params=params, timeout=10)
@@ -199,7 +200,7 @@ def _fetch_shopify_api(domain, token):
                 "total": (float(line.get("price", 0)) * float(line.get("quantity", 0))),
             })
     df = pd.DataFrame(rows, columns=["created_at", "sku", "description", "quantity", "price", "total"])
-    return df
+    return df, orders
 
 app = Flask(__name__)
 app.secret_key = 'secret'
@@ -2399,13 +2400,23 @@ def sync_shopify_data():
     if not domain or not token:
         return jsonify(success=False, error="Missing credentials"), 400
     try:
-        df = _fetch_shopify_api(domain, token)
+        df, orders = _fetch_shopify_api(domain, token)
     except Exception as exc:
         return jsonify(success=False, error=str(exc)), 500
     if df.empty:
         return jsonify(success=False, error="No data returned"), 400
     conn = get_db()
     df.to_sql("shopify", conn, if_exists="replace", index=False)
+    conn.execute("DELETE FROM shopify_orders")
+    for o in orders:
+        conn.execute(
+            "INSERT INTO shopify_orders(order_id, data) VALUES (?, ?)",
+            (o.get("id"), json.dumps(o)),
+        )
+    _update_sku_map(conn, df["sku"], "shopify")
+    action = get_setting("duplicate_action", "review")
+    if action in {"shopify", "qbo", "both"}:
+        _resolve_duplicates(conn, action)
     created = pd.to_datetime(df["created_at"].astype(str), errors="coerce", format="mixed", utc=True).dt.tz_localize(None)
     last_txn = created.max()
     first_txn = created.min()

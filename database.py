@@ -34,6 +34,9 @@ def init_db():
         "CREATE TABLE IF NOT EXISTS shopify (created_at TEXT, sku TEXT, description TEXT, quantity REAL, price REAL, total REAL)"
     )
     c.execute(
+        "CREATE TABLE IF NOT EXISTS shopify_orders (order_id INTEGER PRIMARY KEY, data TEXT)"
+    )
+    c.execute(
         "CREATE TABLE IF NOT EXISTS qbo (created_at TEXT, sku TEXT, description TEXT, quantity REAL, price REAL, total REAL)"
     )
     c.execute(
@@ -145,6 +148,14 @@ def migrate_duplicate_log():
     conn.commit()
     conn.close()
 
+def migrate_shopify_orders():
+    """Ensure table for raw Shopify orders exists."""
+    conn = get_db()
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS shopify_orders (order_id INTEGER PRIMARY KEY, data TEXT)"
+    )
+    conn.close()
+
 def get_setting(key, default=""):
     conn = get_db()
     row = conn.execute('SELECT value FROM settings WHERE key=?', (key,)).fetchone()
@@ -163,3 +174,4 @@ migrate_meta()
 migrate_sku_source()
 migrate_sku_changed()
 migrate_duplicate_log()
+migrate_shopify_orders()
