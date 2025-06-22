@@ -9,6 +9,7 @@
       <button type="button" class="mdc-button mdc-button--raised is-active" data-target="generalSettings">General</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="skuSettings">SKUs</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="transactionSettings">Transactions</button>
+      <button type="button" class="mdc-button mdc-button--raised" data-target="syncSettings">Sync</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="reportSettings">Reports</button>
     </nav>
     <form method="post" enctype="multipart/form-data">
@@ -217,6 +218,20 @@
             </select>
           </div>
         </div>
+      </div>
+    </div>
+    <div id="syncSettings" class="tab-pane is-hidden">
+      <div class="box mb-4">
+        <h3 class="title is-5 mb-3">Shopify API</h3>
+        <div class="field mb-4">
+          <label class="label">Store domain</label>
+          <input class="input" type="text" name="shopify_domain" value="{{ shopify_domain }}">
+        </div>
+        <div class="field mb-4">
+          <label class="label">Access token</label>
+          <input class="input" type="password" name="shopify_token" value="{{ shopify_token }}">
+        </div>
+        <p class="help">Provide an admin API access token for your Shopify store.</p>
       </div>
     </div>
     <button id="saveSettingsBtn" type="submit" class="mdc-button mdc-button--raised">Save</button>

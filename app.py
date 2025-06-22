@@ -2227,6 +2227,10 @@ def settings_page():
         set_setting('default_include_shopify', '1' if include_shopify else '0')
         set_setting('reports_start_tab', reports_start_tab)
         set_setting('reports_year_limit', str(max(1, year_limit)))
+        shopify_domain = request.form.get('shopify_domain', '').strip()
+        shopify_token = request.form.get('shopify_token', '').strip()
+        set_setting('shopify_domain', shopify_domain)
+        set_setting('shopify_token', shopify_token)
         default_month = request.form.get('default_month', '')
         set_setting('default_export_month', default_month)
         set_setting('duplicate_action', dup_action)
@@ -2286,6 +2290,8 @@ def settings_page():
     dup_action = get_setting('duplicate_action', 'review')
     tx_source_default = get_setting('transactions_default_source', 'both')
     tx_period_default = get_setting('transactions_default_period', 'last30')
+    shopify_domain = get_setting('shopify_domain', '')
+    shopify_token = get_setting('shopify_token', '')
     types_default = get_setting('default_detail_types', ','.join(CATEGORIES))
     detail_types = [t for t in types_default.split(',') if t]
     detail_types_all = len(detail_types) == len(CATEGORIES)
@@ -2324,6 +2330,8 @@ def settings_page():
         tx_period_default=tx_period_default,
         reports_start_tab=reports_start_tab,
         reports_year_limit=year_limit,
+        shopify_domain=shopify_domain,
+        shopify_token=shopify_token,
     )
 
 if __name__ == '__main__':
