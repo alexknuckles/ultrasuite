@@ -164,6 +164,43 @@ def _parse_qbo(file_storage):
     cleaned.columns = ["created_at", "sku", "description", "quantity", "price", "total"]
     return cleaned
 
+
+def _fetch_shopify_api(domain, token):
+    """Return a DataFrame of Shopify orders via API."""
+    headers = {"X-Shopify-Access-Token": token}
+    url = f"https://{domain}/admin/api/2023-07/orders.json"
+    params = {"status": "any", "limit": 250, "fields": "created_at,line_items"}
+    orders = []
+    while url:
+        resp = requests.get(url, headers=headers, params=params, timeout=10)
+        resp.raise_for_status()
+        data = resp.json().get("orders", [])
+        orders.extend(data)
+        link = resp.headers.get("Link", "")
+        next_url = None
+        for part in link.split(','):
+            if 'rel="next"' in part:
+                start = part.find('<') + 1
+                end = part.find('>')
+                next_url = part[start:end]
+                break
+        url = next_url
+        params = None
+    rows = []
+    for order in orders:
+        created = order.get("created_at")
+        for line in order.get("line_items", []):
+            rows.append({
+                "created_at": created,
+                "sku": line.get("sku"),
+                "description": line.get("name"),
+                "quantity": line.get("quantity"),
+                "price": line.get("price"),
+                "total": (float(line.get("price", 0)) * float(line.get("quantity", 0))),
+            })
+    df = pd.DataFrame(rows, columns=["created_at", "sku", "description", "quantity", "price", "total"])
+    return df
+
 app = Flask(__name__)
 app.secret_key = 'secret'
 
@@ -397,13 +434,16 @@ def upload():
                 ).dt.tz_localize(None)
                 last_txn = created.max()
                 first_txn = created.min()
+                row = conn.execute('SELECT last_synced FROM meta WHERE source=?', (source,)).fetchone()
+                last_synced = row['last_synced'] if row else None
                 conn.execute(
-                    'REPLACE INTO meta (source, last_updated, last_transaction, first_transaction) VALUES (?, ?, ?, ?)',
+                    'REPLACE INTO meta (source, last_updated, last_transaction, first_transaction, last_synced) VALUES (?, ?, ?, ?, ?)',
                     (
                         source,
                         datetime.now().isoformat(),
                         last_txn.isoformat() if pd.notna(last_txn) else None,
                         first_txn.isoformat() if pd.notna(first_txn) else None,
+                        last_synced,
                     )
                 )
                 _update_sku_map(conn, cleaned['sku'], source)
@@ -2293,6 +2333,7 @@ def settings_page():
     tx_period_default = get_setting('transactions_default_period', 'last30')
     shopify_domain = get_setting('shopify_domain', '')
     shopify_token = get_setting('shopify_token', '')
+    shopify_last_sync = get_setting('shopify_last_sync', '')
     types_default = get_setting('default_detail_types', ','.join(CATEGORIES))
     detail_types = [t for t in types_default.split(',') if t]
     detail_types_all = len(detail_types) == len(CATEGORIES)
@@ -2333,6 +2374,7 @@ def settings_page():
         reports_year_limit=year_limit,
         shopify_domain=shopify_domain,
         shopify_token=shopify_token,
+        shopify_last_sync=shopify_last_sync,
     )
 @app.route("/test-shopify", methods=["POST"])
 def test_shopify_connection():
@@ -2347,6 +2389,41 @@ def test_shopify_connection():
     except Exception:
         ok = False
     return jsonify(success=ok)
+
+
+@app.route("/sync-shopify", methods=["POST"])
+def sync_shopify_data():
+    """Fetch Shopify orders via API and update the database."""
+    domain = get_setting("shopify_domain", "")
+    token = get_setting("shopify_token", "")
+    if not domain or not token:
+        return jsonify(success=False, error="Missing credentials"), 400
+    try:
+        df = _fetch_shopify_api(domain, token)
+    except Exception as exc:
+        return jsonify(success=False, error=str(exc)), 500
+    if df.empty:
+        return jsonify(success=False, error="No data returned"), 400
+    conn = get_db()
+    df.to_sql("shopify", conn, if_exists="replace", index=False)
+    created = pd.to_datetime(df["created_at"].astype(str), errors="coerce", format="mixed", utc=True).dt.tz_localize(None)
+    last_txn = created.max()
+    first_txn = created.min()
+    now = datetime.now(timezone.utc).isoformat()
+    conn.execute(
+        "REPLACE INTO meta (source, last_updated, last_transaction, first_transaction, last_synced) VALUES (?, ?, ?, ?, ?)",
+        (
+            "shopify",
+            now,
+            last_txn.isoformat() if pd.notna(last_txn) else None,
+            first_txn.isoformat() if pd.notna(first_txn) else None,
+            now,
+        ),
+    )
+    conn.commit()
+    conn.close()
+    set_setting("shopify_last_sync", now)
+    return jsonify(success=True)
 
 
 if __name__ == '__main__':
