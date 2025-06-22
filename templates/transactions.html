@@ -425,8 +425,15 @@
     });
     if(activeType === 'quarter'){ quarterToggle.classList.add('is-active'); }
 
-    function showModal(){ modal.classList.remove('is-hidden'); updateLayout(); }
-    function hideModal(){ modal.classList.add('is-hidden'); }
+    function showModal(){
+      modal.classList.remove('is-hidden');
+      document.body.classList.add('modal-open');
+      updateLayout();
+    }
+    function hideModal(){
+      modal.classList.add('is-hidden');
+      document.body.classList.remove('modal-open');
+    }
 
     modal.addEventListener('click', function(e){
       if(e.target === modal){

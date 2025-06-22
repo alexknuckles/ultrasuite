@@ -63,6 +63,9 @@ body {
   display: flex;
   flex-direction: column;
 }
+body.modal-open {
+  overflow: hidden;
+}
 
 button,
 input,
@@ -679,13 +682,13 @@ input.switch:checked::before {
 .date-modal-content {
   background-color: var(--ultra-background);
   color: var(--ultra-text);
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   border-radius: var(--radius-md);
   max-width: 660px;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   max-height: 90vh;
   overflow-y: auto;
@@ -712,7 +715,7 @@ input.switch:checked::before {
 
 .date-modal-body {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 .date-modal-left {
   width: 8rem;
@@ -755,7 +758,7 @@ input.switch:checked::before {
 .date-inputs {
   display: flex;
   flex-direction: row;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 .date-input {
   flex: 1 1 0;
@@ -765,7 +768,7 @@ input.switch:checked::before {
 }
 .calendars {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 .calendars .date-pane {
   flex: 1;
