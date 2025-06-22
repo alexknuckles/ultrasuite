@@ -260,6 +260,9 @@
           <input class="input" type="text" name="qbo_realm_id" value="{{ qbo_realm_id }}">
         </div>
         <div class="field mb-4">
+          <a class="mdc-button mdc-button--raised" href="{{ url_for('qbo_connect') }}">Connect QuickBooks</a>
+        </div>
+        <div class="field mb-4">
           <button id="testQboBtn" type="button" class="mdc-button mdc-button--raised mr-2">Test connection</button>
           <button id="syncQboBtn" type="button" class="mdc-button mdc-button--raised">Sync now</button>
           <span id="qboConnResult" class="help ml-2"></span>
@@ -267,7 +270,7 @@
         {% if qbo_last_sync %}
         <p class="help">Last sync: {{ qbo_last_sync|format_dt }}</p>
         {% endif %}
-        <p class="help">OAuth credentials are used to sync your QuickBooks transactions.</p>
+        <p class="help">Use the button above to authorize QuickBooks and generate the refresh token and realm ID.</p>
       </div>
       <div class="box mb-4">
         <h3 class="title is-5 mb-3">HubSpot</h3>

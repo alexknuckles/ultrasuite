@@ -24,6 +24,7 @@ from flask import (
     send_from_directory,
     abort,
     jsonify,
+    session,
 )
 from markupsafe import Markup
 from werkzeug.utils import secure_filename
@@ -2531,6 +2532,64 @@ def sync_shopify_data():
     conn.close()
     set_setting("shopify_last_sync", now)
     return jsonify(success=True)
+
+
+@app.route("/qbo/connect")
+def qbo_connect():
+    """Begin QuickBooks OAuth flow."""
+    client_id = get_setting("qbo_client_id", "")
+    client_secret = get_setting("qbo_client_secret", "")
+    if not client_id or not client_secret:
+        flash("Client ID and secret are required", "error")
+        return redirect(url_for("settings"))
+    state = base64.urlsafe_b64encode(os.urandom(16)).decode()
+    session["qbo_state"] = state
+    redirect_uri = url_for("qbo_callback", _external=True)
+    auth_url = (
+        "https://appcenter.intuit.com/connect/oauth2"
+        f"?client_id={client_id}&response_type=code&scope=com.intuit.quickbooks.accounting"
+        f"&redirect_uri={redirect_uri}&state={state}"
+    )
+    return redirect(auth_url)
+
+
+@app.route("/qbo/callback")
+def qbo_callback():
+    """Handle QuickBooks OAuth redirect."""
+    state = request.args.get("state", "")
+    code = request.args.get("code", "")
+    realm_id = request.args.get("realmId", "")
+    if not code or state != session.pop("qbo_state", None):
+        flash("OAuth failed", "error")
+        return redirect(url_for("settings"))
+    client_id = get_setting("qbo_client_id", "")
+    client_secret = get_setting("qbo_client_secret", "")
+    redirect_uri = url_for("qbo_callback", _external=True)
+    auth = requests.auth.HTTPBasicAuth(client_id, client_secret)
+    data = {
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": redirect_uri,
+    }
+    try:
+        resp = requests.post(
+            "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
+            auth=auth,
+            data=data,
+            timeout=10,
+        )
+        resp.raise_for_status()
+        tokens = resp.json()
+    except Exception:
+        flash("OAuth token exchange failed", "error")
+        return redirect(url_for("settings"))
+    refresh = tokens.get("refresh_token")
+    if refresh:
+        set_setting("qbo_refresh_token", refresh)
+    if realm_id:
+        set_setting("qbo_realm_id", realm_id)
+    flash("QuickBooks connected", "success")
+    return redirect(url_for("settings"))
 
 
 @app.route("/test-qbo", methods=["POST"])
