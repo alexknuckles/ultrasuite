@@ -495,6 +495,16 @@ input.switch:checked::before {
   display: none;
 }
 
+.log-output {
+  background-color: #fff;
+  color: #000;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--ultra-highlight);
+  max-height: 20rem;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
 /* titles should also adapt to text color */
 .title {
   color: var(--ultra-text);

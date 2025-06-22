@@ -2,6 +2,7 @@ import os
 import sqlite3
 
 import sys
+from datetime import datetime, timezone
 
 
 if getattr(sys, 'frozen', False):
@@ -156,6 +157,14 @@ def migrate_shopify_orders():
     )
     conn.close()
 
+def migrate_app_log():
+    """Ensure table for application logs exists."""
+    conn = get_db()
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS app_log (logged_at TEXT, message TEXT)"
+    )
+    conn.close()
+
 def get_setting(key, default=""):
     conn = get_db()
     row = conn.execute('SELECT value FROM settings WHERE key=?', (key,)).fetchone()
@@ -168,6 +177,24 @@ def set_setting(key, value):
     conn.commit()
     conn.close()
 
+def add_log(message):
+    conn = get_db()
+    conn.execute(
+        'INSERT INTO app_log(logged_at, message) VALUES (?, ?)',
+        (datetime.now(timezone.utc).isoformat(), message),
+    )
+    conn.commit()
+    conn.close()
+
+def get_logs(limit=100):
+    conn = get_db()
+    rows = conn.execute(
+        'SELECT logged_at, message FROM app_log ORDER BY logged_at DESC LIMIT ?',
+        (limit,),
+    ).fetchall()
+    conn.close()
+    return rows
+
 init_db()
 migrate_types()
 migrate_meta()
@@ -175,3 +202,5 @@ migrate_sku_source()
 migrate_sku_changed()
 migrate_duplicate_log()
 migrate_shopify_orders()
+migrate_app_log()
+
