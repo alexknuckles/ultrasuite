@@ -609,6 +609,7 @@ input.switch:checked::before {
   }
   .date-modal-body {
     flex-direction: row;
+    justify-content: center;
     align-items: flex-start;
     gap: var(--spacing-xs);
   }
@@ -732,6 +733,7 @@ input.switch:checked::before {
 
 .date-modal-body {
   display: flex;
+  justify-content: center;
   gap: var(--spacing-xs);
 }
 .date-modal-left {
@@ -775,10 +777,13 @@ input.switch:checked::before {
   flex-direction: column;
   align-items: center;
   width: var(--date-modal-width);
+  margin-left: auto;
+  margin-right: auto;
 }
 .date-inputs {
   display: flex;
   justify-content: space-between;
+  gap: 0.75rem;
   width: var(--date-modal-width);
   margin: 0 auto var(--spacing-sm);
 }
@@ -804,7 +809,7 @@ input.switch:checked::before {
   justify-content: space-between;
   width: var(--date-modal-width);
   margin: 0 auto var(--spacing-sm);
-  gap: 0;
+  gap: 0.75rem;
 }
 #calTabs .mdc-button {
   flex: none;
