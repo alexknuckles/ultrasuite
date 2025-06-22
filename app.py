@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from io import BytesIO
 import base64
 from calendar import monthrange
+import requests
 
 import pandas as pd
 import math
@@ -2333,6 +2334,20 @@ def settings_page():
         shopify_domain=shopify_domain,
         shopify_token=shopify_token,
     )
+@app.route("/test-shopify", methods=["POST"])
+def test_shopify_connection():
+    domain = request.form.get("domain", "").strip()
+    token = request.form.get("token", "").strip()
+    if not domain or not token:
+        return jsonify(success=False), 400
+    url = f"https://{domain}/admin/api/2023-07/shop.json"
+    try:
+        resp = requests.get(url, headers={"X-Shopify-Access-Token": token}, timeout=5)
+        ok = resp.status_code == 200
+    except Exception:
+        ok = False
+    return jsonify(success=ok)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
