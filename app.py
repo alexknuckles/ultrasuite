@@ -239,7 +239,7 @@ def _qbo_api_url(realm_id, path, environment="prod"):
 
 
 def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod"):
-    """Return list of line item dictionaries for the given QBO document."""
+    """Return line item dicts and raw documents for the given QBO document."""
     url = _qbo_api_url(realm_id, "query", environment)
     q = f"select TxnDate, Line from {doc_type}"
     if doc_type == "Invoice":
@@ -255,7 +255,9 @@ def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod"):
     data = resp.json().get("QueryResponse", {})
     txns = data.get(doc_type, [])
     rows = []
+    docs = []
     for tx in txns:
+        docs.append(tx)
         created_at = tx.get("TxnDate")
         for line in tx.get("Line", []):
             detail = line.get("SalesItemLineDetail")
@@ -281,7 +283,7 @@ def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod"):
                 "total": total,
                 "doc_type": doc_type,
             })
-    return rows
+    return rows, docs
 
 
 def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environment="prod"):
@@ -296,9 +298,12 @@ def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environmen
 
     # --- Transactions ---
     rows = []
+    docs = []
     for doc_type in ("SalesReceipt", "Invoice"):
         try:
-            rows.extend(_qbo_txn_lines(headers, realm_id, doc_type, environment))
+            line_rows, raw_docs = _qbo_txn_lines(headers, realm_id, doc_type, environment)
+            rows.extend(line_rows)
+            docs.extend(raw_docs)
         except Exception as exc:
             log_error(f"QBO {doc_type} fetch error: {exc}")
     txn_df = pd.DataFrame(
@@ -324,7 +329,7 @@ def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environmen
             item_rows.append({"sku": sku})
     items_df = pd.DataFrame(item_rows, columns=["sku"])
 
-    return txn_df, items_df, new_refresh
+    return txn_df, items_df, docs, new_refresh
 
 app = Flask(__name__)
 app.secret_key = 'secret'
@@ -2843,7 +2848,7 @@ def sync_qbo_data():
     if not client_id or not client_secret or not refresh_token or not realm_id:
         return jsonify(success=False, error="Missing credentials"), 400
     try:
-        df, items, new_refresh = _fetch_qbo_api(
+        df, items, docs, new_refresh = _fetch_qbo_api(
             client_id, client_secret, refresh_token, realm_id, environment
         )
     except Exception as exc:
@@ -2853,6 +2858,12 @@ def sync_qbo_data():
         return jsonify(success=False, error="No data returned"), 400
     conn = get_db()
     df.to_sql("qbo", conn, if_exists="replace", index=False)
+    conn.execute("DELETE FROM qbo_docs")
+    for d in docs:
+        conn.execute(
+            "INSERT INTO qbo_docs(doc_id, data) VALUES (?, ?)",
+            (str(d.get('Id') or d.get('DocNumber') or ''), json.dumps(d)),
+        )
     sku_series = pd.concat([df["sku"], items["sku"]], ignore_index=True)
     _update_sku_map(conn, sku_series, "qbo")
     if action in {"shopify", "qbo", "both"}:
@@ -2968,7 +2979,7 @@ def traffic_matrix_api():
 def clear_sync_data():
     """Remove all previously synced data from the database."""
     conn = get_db()
-    for table in ('shopify', 'shopify_orders', 'qbo', 'hubspot_traffic'):
+    for table in ('shopify', 'shopify_orders', 'qbo', 'qbo_docs', 'hubspot_traffic'):
         conn.execute(f'DELETE FROM {table}')
     conn.execute('DELETE FROM meta')
     conn.execute('DELETE FROM duplicate_log')
