@@ -277,7 +277,7 @@
       {% for row in table.rows %}
       <tr>
         <td>{{ row.source }}</td>
-        {% for val in row.values %}
+        {% for val in row['values'] %}
         <td class="has-text-right">{{ val.val|round(2) }}</td>
         {% endfor %}
       </tr>
