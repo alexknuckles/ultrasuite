@@ -181,6 +181,19 @@ def migrate_hubspot_traffic():
     )
     conn.close()
 
+def migrate_api_responses():
+    """Ensure table for storing API responses exists."""
+    conn = get_db()
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS api_response ("
+        "logged_at TEXT, "
+        "endpoint TEXT, "
+        "status INTEGER, "
+        "body TEXT"
+        ")"
+    )
+    conn.close()
+
 def get_setting(key, default=""):
     conn = get_db()
     row = conn.execute('SELECT value FROM settings WHERE key=?', (key,)).fetchone()
@@ -222,6 +235,24 @@ def get_logs(limit=100):
     conn.close()
     return rows
 
+def add_api_response(endpoint, status, body):
+    conn = get_db()
+    conn.execute(
+        'INSERT INTO api_response(logged_at, endpoint, status, body) VALUES (?, ?, ?, ?)',
+        (datetime.now(timezone.utc).isoformat(), endpoint, status, body),
+    )
+    conn.commit()
+    conn.close()
+
+def get_api_responses(limit=50):
+    conn = get_db()
+    rows = conn.execute(
+        'SELECT logged_at, endpoint, status, body FROM api_response ORDER BY logged_at DESC LIMIT ?',
+        (limit,),
+    ).fetchall()
+    conn.close()
+    return rows
+
 init_db()
 migrate_types()
 migrate_meta()
@@ -231,4 +262,5 @@ migrate_duplicate_log()
 migrate_shopify_orders()
 migrate_app_log()
 migrate_hubspot_traffic()
+migrate_api_responses()
 
