@@ -2627,7 +2627,10 @@ def test_qbo_connection():
             timeout=5,
         )
         ok = resp.status_code == 200
-        if ok and new_refresh and new_refresh != refresh_token:
+        if not ok:
+            snippet = resp.text[:200].replace("\n", " ")
+            log_error(f"Test QBO connection failed: HTTP {resp.status_code} - {snippet}")
+        elif new_refresh and new_refresh != refresh_token:
             set_setting("qbo_refresh_token", new_refresh)
     except Exception as exc:
         log_error(f"Test QBO connection error: {exc}")
