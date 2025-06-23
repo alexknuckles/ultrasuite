@@ -323,6 +323,7 @@
             <input id="skuFileInput" class="is-hidden" type="file" name="sku_file" accept=".csv,.xls,.xlsx" required hidden>
             <button id="importSkuBtn" type="button" class="mdc-button mdc-button--raised">Import</button>
           </form>
+          <button id="clearSkusBtn" type="button" class="mdc-button mdc-button--raised ml-2">Clear</button>
         </div>
       </div>
     </div>
@@ -369,6 +370,14 @@
     importBtn.addEventListener('click', () => importInput.click());
     importInput.addEventListener('change', () => {
       if(importInput.files.length) document.getElementById('importSkuForm').submit();
+    });
+  }
+  const clearSkus = document.getElementById('clearSkusBtn');
+  if(clearSkus){
+    clearSkus.addEventListener('click', () => {
+      if(!confirm('Delete all SKUs?')) return;
+      fetch('{{ url_for('clear_skus') }}', {method:'POST'})
+        .then(() => location.reload());
     });
   }
   const themes = {

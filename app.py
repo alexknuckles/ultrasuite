@@ -1078,6 +1078,16 @@ def import_sku_map():
     return redirect(request.referrer or url_for('settings_page'))
 
 
+@app.route('/clear-skus', methods=['POST'])
+def clear_skus():
+    """Delete all SKU mappings."""
+    conn = get_db()
+    conn.execute('DELETE FROM sku_map')
+    conn.commit()
+    conn.close()
+    return jsonify(success=True)
+
+
 @app.route('/update-parent', methods=['POST'])
 def update_parent():
     """Change the canonical SKU for an existing entry."""
