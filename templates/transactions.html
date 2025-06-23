@@ -123,7 +123,7 @@
     <table id="txnTable" class="table is-fullwidth is-striped is-narrow">
       <thead>
         <tr>
-          <th class="no-wrap">Date</th><th class="no-wrap">SKU</th><th>Description</th><th class="no-wrap">Price $</th><th class="no-wrap">Quantity</th><th class="no-wrap">Total $</th><th class="no-wrap">Source</th>
+          <th class="no-wrap">Date</th><th class="no-wrap">SKU</th><th>Description</th><th class="no-wrap">Price $</th><th class="no-wrap">Quantity</th><th class="no-wrap">Total $</th><th class="no-wrap">Source</th><th class="no-wrap">Type</th>
         </tr>
       </thead>
       <tbody>
@@ -136,6 +136,7 @@
           <td class="no-wrap">{{ "%.2f"|format(row.quantity) }}</td>
           <td class="no-wrap">${{ "%.2f"|format(row.total) }}</td>
           <td class="no-wrap">{{ row.source_title }}</td>
+          <td class="no-wrap">{{ row.doc_type }}</td>
         </tr>
         {% endfor %}
       </tbody>

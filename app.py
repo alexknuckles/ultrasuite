@@ -242,6 +242,9 @@ def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod"):
     """Return list of line item dictionaries for the given QBO document."""
     url = _qbo_api_url(realm_id, "query", environment)
     q = f"select TxnDate, Line from {doc_type}"
+    if doc_type == "Invoice":
+        q += " where Balance = 0"
+    q += " startposition 1 maxresults 1000"
     resp = requests.get(
         url,
         headers=headers,
@@ -276,6 +279,7 @@ def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod"):
                 "quantity": qty,
                 "price": price,
                 "total": total,
+                "doc_type": doc_type,
             })
     return rows
 
@@ -299,7 +303,7 @@ def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environmen
             log_error(f"QBO {doc_type} fetch error: {exc}")
     txn_df = pd.DataFrame(
         rows,
-        columns=["created_at", "sku", "description", "quantity", "price", "total"],
+        columns=["created_at", "sku", "description", "quantity", "price", "total", "doc_type"],
     )
 
     # --- Items ---
@@ -1939,10 +1943,18 @@ def transactions_page():
         'SELECT created_at, sku, description, quantity, price, total FROM shopify',
         conn,
     )
-    qbo = pd.read_sql_query(
-        'SELECT created_at, sku, description, quantity, price, total FROM qbo',
-        conn,
-    )
+    qbo_cols = [r['name'] for r in conn.execute('PRAGMA table_info(qbo)').fetchall()]
+    if 'doc_type' in qbo_cols:
+        qbo = pd.read_sql_query(
+            'SELECT created_at, sku, description, quantity, price, total, doc_type FROM qbo',
+            conn,
+        )
+    else:
+        qbo = pd.read_sql_query(
+            'SELECT created_at, sku, description, quantity, price, total FROM qbo',
+            conn,
+        )
+        qbo['doc_type'] = ''
     mapping = pd.read_sql_query('SELECT alias, canonical_sku, type FROM sku_map', conn)
 
     alias_map = mapping.set_index('alias')
@@ -2084,8 +2096,10 @@ def transactions_page():
         frames.append(qbo.assign(source_title='QBO'))
     if frames:
         df_all = _safe_concat(frames, ignore_index=True).sort_values('created_at')
+        if 'doc_type' in df_all.columns:
+            df_all['doc_type'] = df_all['doc_type'].fillna('')
     else:
-        df_all = pd.DataFrame(columns=shopify.columns.tolist() + ['source_title'])
+        df_all = pd.DataFrame(columns=shopify.columns.tolist() + ['source_title', 'doc_type'])
 
     dup_all = _find_duplicates(conn, sku=sku or None, start=start_dt, end=end_dt)
     duplicates = [d for d in dup_all if not d.get('ignored')]
