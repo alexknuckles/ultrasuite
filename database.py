@@ -177,6 +177,17 @@ def set_setting(key, value):
     conn.commit()
     conn.close()
 
+def get_qbo_environment(default="prod"):
+    """Return the configured QBO environment."""
+    env = get_setting("qbo_environment", default)
+    return env if env in {"prod", "sandbox"} else default
+
+def set_qbo_environment(value):
+    """Persist the QBO environment setting."""
+    if value not in {"prod", "sandbox"}:
+        raise ValueError("Invalid environment")
+    set_setting("qbo_environment", value)
+
 def add_log(message):
     conn = get_db()
     conn.execute(
