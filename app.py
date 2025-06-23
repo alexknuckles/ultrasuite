@@ -237,7 +237,7 @@ def _qbo_api_url(realm_id, path, environment="prod"):
 
 
 def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environment="prod"):
-    """Return a DataFrame of QBO transactions via API."""
+    """Return DataFrames of QBO transactions and items via API."""
     access_token, new_refresh = _refresh_qbo_access(
         client_id, client_secret, refresh_token
     )
@@ -245,6 +245,8 @@ def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environmen
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json",
     }
+
+    # --- Transactions ---
     url = _qbo_api_url(realm_id, "reports/TransactionList", environment)
     params = {"start_date": "2000-01-01"}
     resp = requests.get(url, headers=headers, params=params, timeout=10)
@@ -280,11 +282,30 @@ def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environmen
             "price": total,
             "total": total,
         })
-    df = pd.DataFrame(
+    txn_df = pd.DataFrame(
         rows,
         columns=["created_at", "sku", "description", "quantity", "price", "total"],
     )
-    return df, new_refresh
+
+    # --- Items ---
+    items_url = _qbo_api_url(realm_id, "query", environment)
+    q = "select Name, Sku from Item"
+    resp = requests.get(
+        items_url,
+        headers=headers,
+        params={"query": q, "minorversion": 65},
+        timeout=10,
+    )
+    resp.raise_for_status()
+    items_data = resp.json().get("QueryResponse", {})
+    item_rows = []
+    for item in items_data.get("Item", []):
+        sku = item.get("Sku") or item.get("Name")
+        if sku:
+            item_rows.append({"sku": sku})
+    items_df = pd.DataFrame(item_rows, columns=["sku"])
+
+    return txn_df, items_df, new_refresh
 
 app = Flask(__name__)
 app.secret_key = 'secret'
@@ -2789,7 +2810,7 @@ def sync_qbo_data():
     if not client_id or not client_secret or not refresh_token or not realm_id:
         return jsonify(success=False, error="Missing credentials"), 400
     try:
-        df, new_refresh = _fetch_qbo_api(
+        df, items, new_refresh = _fetch_qbo_api(
             client_id, client_secret, refresh_token, realm_id, environment
         )
     except Exception as exc:
@@ -2799,7 +2820,8 @@ def sync_qbo_data():
         return jsonify(success=False, error="No data returned"), 400
     conn = get_db()
     df.to_sql("qbo", conn, if_exists="replace", index=False)
-    _update_sku_map(conn, df["sku"], "qbo")
+    sku_series = pd.concat([df["sku"], items["sku"]], ignore_index=True)
+    _update_sku_map(conn, sku_series, "qbo")
     if action in {"shopify", "qbo", "both"}:
         _resolve_duplicates(conn, action)
     created = pd.to_datetime(df["created_at"].astype(str), errors="coerce", format="mixed", utc=True).dt.tz_localize(None)
@@ -2852,22 +2874,15 @@ def sync_hubspot_data():
     years = list(range(end_year - year_limit + 1, end_year + 1))
     conn = get_db()
     for year in years:
-        start_ts = int(datetime(year, 1, 1, tzinfo=timezone.utc).timestamp() * 1000)
-        end_ts = int(datetime(year, 12, 31, 23, 59, 59, tzinfo=timezone.utc).timestamp() * 1000)
+        start = f"{year}0101"
+        end = f"{year}1231"
         try:
             resp = requests.get(
-                "https://api.hubapi.com/analytics/v2/reports/traffic/sources",
+                "https://api.hubspot.com/analytics/v2/reports/sources/monthly",
                 headers={"Authorization": f"Bearer {token}"},
-                params={"start": start_ts, "end": end_ts, "granularity": "monthly"},
+                params={"start": start, "end": end},
                 timeout=15,
             )
-            if resp.status_code == 404:
-                resp = requests.get(
-                    "https://api.hubapi.com/marketing/v3/analytics/reports/sources/summary",
-                    headers={"Authorization": f"Bearer {token}"},
-                    params={"start": start_ts, "end": end_ts, "interval": "MONTHLY"},
-                    timeout=15,
-                )
             if resp.status_code == 404:
                 msg = "Traffic analytics endpoint not found (404). Check API version."
                 log_error(f"HubSpot sync error: {msg}")
@@ -2879,20 +2894,21 @@ def sync_hubspot_data():
             conn.close()
             return jsonify(success=False, error=str(exc)), 500
         data = resp.json()
-        sources = data.get("sources") or data.get("results", [])
-        for s in sources:
-            src = s.get("source") or s.get("sourceType")
-            if src is None:
-                continue
-            details = s.get("details") or s.get("breakdown") or []
-            for d in details:
-                ts = d.get("timestamp") or d.get("month")
-                if ts is None:
+        for key, details in data.items():
+            try:
+                dt = datetime.strptime(key, "%Y-%m")
+            except ValueError:
+                try:
+                    dt = datetime.strptime(key, "%Y-%m-%d")
+                except ValueError:
                     continue
-                dt = datetime.fromtimestamp(int(ts) / 1000, timezone.utc)
-                month = dt.month
-                sessions = d.get("sessions") or d.get("visits") or 0
-                avg_sec = d.get("avgSessionLength") or d.get("avgSessionLengthSeconds")
+            month = dt.month
+            for d in details:
+                src = d.get("breakdown") or d.get("source") or d.get("sourceType")
+                if not src:
+                    continue
+                sessions = d.get("visits") or d.get("sessions") or 0
+                avg_sec = d.get("avgSessionLengthSeconds") or d.get("avgSessionLength")
                 avg_min = (avg_sec / 60.0) if isinstance(avg_sec, (int, float)) else None
                 bounce = d.get("bounceRate")
                 conn.execute(
