@@ -165,6 +165,22 @@ def migrate_app_log():
     )
     conn.close()
 
+def migrate_hubspot_traffic():
+    """Ensure table for HubSpot traffic analytics exists."""
+    conn = get_db()
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS hubspot_traffic ("
+        "year INTEGER, "
+        "month INTEGER, "
+        "source TEXT, "
+        "sessions REAL, "
+        "avg_time REAL, "
+        "bounce_rate REAL, "
+        "PRIMARY KEY (year, month, source)"
+        ")"
+    )
+    conn.close()
+
 def get_setting(key, default=""):
     conn = get_db()
     row = conn.execute('SELECT value FROM settings WHERE key=?', (key,)).fetchone()
@@ -214,4 +230,5 @@ migrate_sku_changed()
 migrate_duplicate_log()
 migrate_shopify_orders()
 migrate_app_log()
+migrate_hubspot_traffic()
 

@@ -899,3 +899,11 @@ input.switch:checked::before {
   margin: 0 auto;
 }
 
+/* simple heatmap backgrounds */
+.bg-pos {
+  background-color: rgba(16, 185, 129, 0.15);
+}
+.bg-neg {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+

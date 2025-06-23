@@ -315,6 +315,22 @@ QUARTER_MAP = {
     4: [10, 11, 12],
 }
 
+TRAFFIC_SOURCES = [
+    'Email Marketing',
+    'Organic Search',
+    'Social Media',
+    'Referrals',
+    'Direct Traffic',
+    'Other Campaigns',
+    'Paid Search',
+]
+
+TRAFFIC_METRIC_LABELS = {
+    'sessions': 'Sessions',
+    'avg_time': 'Avg Time (min)',
+    'bounce_rate': 'Bounce Rate %',
+}
+
 def format_dt(value):
     """Format ISO timestamp into 'mm/dd/yy - h:mma/pm'."""
     try:
@@ -369,6 +385,32 @@ def trend(value, compare=None):
 
 app.jinja_env.filters['trend'] = trend
 
+def format_minutes(value):
+    """Format minutes with two decimals."""
+    try:
+        return f"{float(value):.2f}"
+    except Exception:
+        return value
+
+app.jinja_env.filters['format_minutes'] = format_minutes
+
+def heatmap_bg(diff):
+    """Return style attribute for heatmap cell based on diff."""
+    try:
+        val = float(diff)
+    except Exception:
+        return ''
+    if val > 0:
+        color = 'rgba(16,185,129,'
+    elif val < 0:
+        color = 'rgba(239,68,68,'
+    else:
+        return ''
+    intensity = min(0.8, abs(val) / 100)
+    return f"background-color:{color}{intensity});"
+
+app.jinja_env.filters['heatmap'] = heatmap_bg
+
 
 @app.context_processor
 def inject_globals():
@@ -381,6 +423,7 @@ def inject_globals():
     return {
         'app_name': get_setting('app_title', 'ultrasuite'),
         'theme': theme,
+        'MONTHS_ORDER': MONTHS_ORDER,
     }
 
 
@@ -1482,6 +1525,64 @@ def get_shopify_quarterly():
     }
 
 
+def get_traffic_matrix():
+    """Return HubSpot traffic metrics grouped by year."""
+    conn = get_db()
+    year_limit = int(get_setting('reports_year_limit', '5') or 5)
+    years = [r['year'] for r in conn.execute(
+        'SELECT DISTINCT year FROM hubspot_traffic ORDER BY year DESC'
+    ).fetchall()][:year_limit]
+    if not years:
+        conn.close()
+        return {}
+    df = pd.read_sql_query(
+        f"SELECT year, month, source, sessions, avg_time, bounce_rate FROM hubspot_traffic WHERE year >= ?",
+        conn,
+        params=(years[-1],),
+    )
+    conn.close()
+    result = {}
+    for year in years:
+        ydf = df[df['year'] == year]
+        year_data = {}
+        for metric in ['sessions', 'avg_time', 'bounce_rate']:
+            pivot = ydf.pivot_table(index='source', columns='month', values=metric, aggfunc='sum').reindex(TRAFFIC_SOURCES, fill_value=0)
+            rows = []
+            for src in TRAFFIC_SOURCES:
+                values = []
+                prev = None
+                for m in range(1, 13):
+                    val = float(pivot.loc[src, m]) if m in pivot.columns else 0.0
+                    diff = val - prev if prev is not None else None
+                    values.append({'val': val, 'diff': diff})
+                    prev = val
+                total = sum(v['val'] for v in values)
+                rows.append({'source': src, 'values': values, 'total': total})
+            totals = []
+            prev = None
+            for m in range(1, 13):
+                if m in pivot.columns:
+                    col = pivot[m]
+                    if metric == 'sessions':
+                        val = col.sum()
+                    else:
+                        sess = ydf[ydf['month'] == m]['sessions'].sum()
+                        val = (col * ydf[ydf['month'] == m]['sessions']).sum() / sess if sess else 0
+                else:
+                    val = 0
+                diff = val - prev if prev is not None else None
+                totals.append({'val': val, 'diff': diff})
+                prev = val
+            year_total = sum(t['val'] for t in totals) if metric == 'sessions' else (sum((t['val'] for t in totals)) / 12 if totals else 0)
+            year_data[metric] = {
+                'rows': rows,
+                'totals': totals,
+                'year_total': year_total,
+            }
+        result[year] = year_data
+    return result
+
+
 def generate_year_chart_base64(year, *, light=False):
     """Return base64 PNG for the year-over-year monthly sales chart.
 
@@ -1645,6 +1746,9 @@ def monthly_report():
         row['values'] = row['values'][:len(data['shopify_years'])]
     data['default_tab'] = get_setting('reports_start_tab', 'by-month')
     data['categories'] = CATEGORIES
+    data['traffic_matrix'] = get_traffic_matrix()
+    data['include_marketing'] = get_setting('default_include_marketing', '1') == '1'
+    data['traffic_metric_labels'] = TRAFFIC_METRIC_LABELS
     return render_template('report.html', **data)
 
 
@@ -1667,6 +1771,7 @@ def export_report():
         include_year_overall = _check('include_year_overall', 'default_include_year_overall')
         include_year_summary = _check('include_year_summary', 'default_include_year_summary')
         include_shopify = _check('include_shopify', 'default_include_shopify')
+        include_marketing = _check('include_marketing', 'default_include_marketing')
         detail_types = values.getlist('detail_types')
         if len(detail_types) == 1:
             detail_types = [t.strip() for t in detail_types[0].split(',') if t.strip()]
@@ -1694,6 +1799,7 @@ def export_report():
             'include_year_overall': include_year_overall,
             'include_year_summary': include_year_summary,
             'include_shopify': include_shopify,
+            'include_marketing': include_marketing,
             'detail_types': selected,
             'branding': get_setting('branding', ''),
             'report_title': get_setting('report_title', ''),
@@ -1703,6 +1809,8 @@ def export_report():
             'highlight_color': get_setting('branding_highlight', ''),
             'year_chart': generate_year_chart_base64(year, light=True) if include_year_overall else '',
             'last_month_chart': generate_last_month_chart_base64(year, month, light=True) if include_month_summary else '',
+            'traffic_matrix': get_traffic_matrix(),
+            'traffic_metric_labels': TRAFFIC_METRIC_LABELS,
         })
         html = render_template('report_pdf.html', **data, datetime=datetime)
         output = BytesIO()
@@ -2346,6 +2454,7 @@ def settings_page():
         include_year_overall = 'include_year_overall' in request.form
         include_year_summary = 'include_year_summary' in request.form
         include_shopify = 'include_shopify' in request.form
+        include_marketing = 'include_marketing' in request.form
         reports_start_tab = request.form.get('reports_start_tab', 'by-month')
         year_limit_val = request.form.get('reports_year_limit', '5')
         try:
@@ -2363,6 +2472,7 @@ def settings_page():
         set_setting('default_include_year_overall', '1' if include_year_overall else '0')
         set_setting('default_include_year_summary', '1' if include_year_summary else '0')
         set_setting('default_include_shopify', '1' if include_shopify else '0')
+        set_setting('default_include_marketing', '1' if include_marketing else '0')
         set_setting('reports_start_tab', reports_start_tab)
         set_setting('reports_year_limit', str(max(1, year_limit)))
         shopify_domain = request.form.get('shopify_domain', '').strip()
@@ -2435,6 +2545,7 @@ def settings_page():
     include_year_overall = get_setting('default_include_year_overall', '1') == '1'
     include_year_summary = get_setting('default_include_year_summary', '1') == '1'
     include_shopify = get_setting('default_include_shopify', '1') == '1'
+    include_marketing = get_setting('default_include_marketing', '1') == '1'
     reports_start_tab = get_setting('reports_start_tab', 'by-month')
     year_limit = int(get_setting('reports_year_limit', '5') or 5)
     dup_action = get_setting('duplicate_action', 'review')
@@ -2468,6 +2579,7 @@ def settings_page():
         include_year_overall=include_year_overall,
         include_year_summary=include_year_summary,
         include_shopify=include_shopify,
+        include_marketing=include_marketing,
         detail_types=detail_types,
         detail_types_all=detail_types_all,
         categories=CATEGORIES,
@@ -2722,19 +2834,58 @@ def sync_hubspot_data():
     token = get_setting("hubspot_token", "")
     if not token:
         return jsonify(success=False, error="Missing credentials"), 400
-    try:
-        resp = requests.get(
-            "https://api.hubapi.com/integrations/v1/me",
-            headers={"Authorization": f"Bearer {token}"},
-            timeout=10,
-        )
-        resp.raise_for_status()
-    except Exception as exc:
-        log_error(f"HubSpot sync error: {exc}")
-        return jsonify(success=False, error=str(exc)), 500
+    year_limit = int(get_setting("reports_year_limit", "5") or 5)
+    end_year = datetime.now().year
+    years = list(range(end_year - year_limit + 1, end_year + 1))
+    conn = get_db()
+    for year in years:
+        start_ts = int(datetime(year, 1, 1, tzinfo=timezone.utc).timestamp() * 1000)
+        end_ts = int(datetime(year, 12, 31, 23, 59, 59, tzinfo=timezone.utc).timestamp() * 1000)
+        try:
+            resp = requests.get(
+                "https://api.hubapi.com/analytics/v2/reports/traffic/sources",
+                headers={"Authorization": f"Bearer {token}"},
+                params={"start": start_ts, "end": end_ts, "granularity": "monthly"},
+                timeout=15,
+            )
+            resp.raise_for_status()
+        except Exception as exc:
+            log_error(f"HubSpot sync error: {exc}")
+            conn.close()
+            return jsonify(success=False, error=str(exc)), 500
+        data = resp.json()
+        sources = data.get("sources") or data.get("results", [])
+        for s in sources:
+            src = s.get("source") or s.get("sourceType")
+            if src is None:
+                continue
+            details = s.get("details") or s.get("breakdown") or []
+            for d in details:
+                ts = d.get("timestamp") or d.get("month")
+                if ts is None:
+                    continue
+                dt = datetime.fromtimestamp(int(ts) / 1000, timezone.utc)
+                month = dt.month
+                sessions = d.get("sessions") or d.get("visits") or 0
+                avg_sec = d.get("avgSessionLength") or d.get("avgSessionLengthSeconds")
+                avg_min = (avg_sec / 60.0) if isinstance(avg_sec, (int, float)) else None
+                bounce = d.get("bounceRate")
+                conn.execute(
+                    "REPLACE INTO hubspot_traffic(year, month, source, sessions, avg_time, bounce_rate) "
+                    "VALUES (?, ?, ?, ?, ?, ?)",
+                    (year, month, src, sessions, avg_min, bounce),
+                )
+    conn.commit()
+    conn.close()
     now = datetime.now(timezone.utc).isoformat()
     set_setting("hubspot_last_sync", now)
     return jsonify(success=True)
+
+
+@app.route('/traffic-matrix')
+def traffic_matrix_api():
+    """Return website traffic matrix as JSON."""
+    return jsonify(get_traffic_matrix())
 
 
 @app.route("/logs")

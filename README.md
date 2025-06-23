@@ -61,6 +61,7 @@ Helper functions in `app.py` expose the underlying report data for integration i
 - `get_last_month_details(year, month=None)` – detailed SKU breakdown for the last full month.
 - `get_shopify_monthly()` – Shopify income by month across recent years.
 - `get_shopify_quarterly()` – Shopify income by quarter across recent years.
+- `get_traffic_matrix()` – HubSpot website traffic metrics grouped by year.
 
 ### Programmatic PDF Export
 
@@ -73,6 +74,10 @@ Call `/export-report` with query parameters to download a PDF:
 If a parameter is omitted the value saved in **Settings → Reports** will be used.
 Options such as `include_month_summary` and `include_year_overall` override those
 defaults when present.
+
+### Traffic Matrix API
+
+Access aggregated website traffic data at `/traffic-matrix`.
 
 ## License
 

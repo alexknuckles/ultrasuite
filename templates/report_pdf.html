@@ -253,5 +253,43 @@
     </tbody>
   </table>
 {% endif %}
+
+{% if include_marketing %}
+  <div class="page-break"></div>
+  <h3 class="mt-5">Marketing Data – Website Traffic Matrix</h3>
+  {% for y, metrics in traffic_matrix.items() %}
+  <h4 class="mt-4">{{ y }}</h4>
+    {% for mkey, table in metrics.items() %}
+    <h5>{{ traffic_metric_labels[mkey] }}</h5>
+    <table class="table is-fullwidth is-bordered mb-5">
+      <thead>
+        <tr>
+          <th>Source</th>
+          {% for m in MONTHS_ORDER %}<th>{{ m }}</th>{% endfor %}
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in table.rows %}
+        <tr>
+          <td>{{ row.source }}</td>
+          {% for val in row.values %}
+          <td class="has-text-right">{{ val.val|round(2) }}</td>
+          {% endfor %}
+          <td class="has-text-right">{{ row.total|round(2) }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="has-background-light has-text-weight-bold">
+          <td>Total</td>
+          {% for val in table.totals %}
+          <td class="has-text-right">{{ val.val|round(2) }}</td>
+          {% endfor %}
+          <td class="has-text-right">{{ table.year_total|round(2) }}</td>
+        </tr>
+      </tbody>
+    </table>
+    {% endfor %}
+  {% endfor %}
+{% endif %}
 </body>
 </html>
