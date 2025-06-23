@@ -157,14 +157,6 @@ def migrate_shopify_orders():
     )
     conn.close()
 
-def migrate_qbo_docs():
-    """Ensure table for raw QBO documents exists."""
-    conn = get_db()
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS qbo_docs (doc_id TEXT PRIMARY KEY, data TEXT)"
-    )
-    conn.close()
-
 def migrate_app_log():
     """Ensure table for application logs exists."""
     conn = get_db()
@@ -214,17 +206,6 @@ def set_setting(key, value):
     conn.commit()
     conn.close()
 
-def get_qbo_environment(default="prod"):
-    """Return the configured QBO environment."""
-    env = get_setting("qbo_environment", default)
-    return env if env in {"prod", "sandbox"} else default
-
-def set_qbo_environment(value):
-    """Persist the QBO environment setting."""
-    if value not in {"prod", "sandbox"}:
-        raise ValueError("Invalid environment")
-    set_setting("qbo_environment", value)
-
 def add_log(message):
     conn = get_db()
     conn.execute(
@@ -268,7 +249,6 @@ migrate_sku_source()
 migrate_sku_changed()
 migrate_duplicate_log()
 migrate_shopify_orders()
-migrate_qbo_docs()
 migrate_app_log()
 migrate_hubspot_traffic()
 migrate_api_responses()

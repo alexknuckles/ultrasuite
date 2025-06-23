@@ -38,12 +38,6 @@ Download the latest release from the [releases page](https://github.com/alexknuc
 
 All data stays on your machine; no external services are required.
 
-## QuickBooks Online
-
-When entering your QuickBooks credentials under **Settings → Sync**, be sure to
-select the correct environment. Choose **Production** to connect with your live
-company data or **Sandbox** when testing against Intuit's sandbox API.
-
 ## Project Layout
 
 - `app.py` – main Flask application.
