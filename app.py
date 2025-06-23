@@ -213,123 +213,6 @@ def _fetch_shopify_api(domain, token):
     return df, orders
 
 
-def _refresh_qbo_access(client_id, client_secret, refresh_token):
-    """Return a new access token and refresh token for QuickBooks."""
-    auth = requests.auth.HTTPBasicAuth(client_id, client_secret)
-    data = {"grant_type": "refresh_token", "refresh_token": refresh_token}
-    resp = requests.post(
-        "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
-        auth=auth,
-        data=data,
-        timeout=10,
-    )
-    resp.raise_for_status()
-    tokens = resp.json()
-    return tokens.get("access_token"), tokens.get("refresh_token", refresh_token)
-
-
-def _qbo_api_url(realm_id, path, environment="prod"):
-    """Construct a QuickBooks API URL for the given environment."""
-    base = (
-        "https://sandbox-quickbooks.api.intuit.com"
-        if environment == "sandbox"
-        else "https://quickbooks.api.intuit.com"
-    )
-    return f"{base}/v3/company/{realm_id}/{path}"
-
-
-def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod"):
-    """Return line item dicts and raw documents for the given QBO document."""
-    url = _qbo_api_url(realm_id, "query", environment)
-    q = f"select TxnDate, Line from {doc_type}"
-    if doc_type == "Invoice":
-        q += " where Balance = 0"
-    q += " startposition 1 maxresults 1000"
-    resp = requests.get(
-        url,
-        headers=headers,
-        params={"query": q, "minorversion": 65},
-        timeout=10,
-    )
-    resp.raise_for_status()
-    data = resp.json().get("QueryResponse", {})
-    txns = data.get(doc_type, [])
-    rows = []
-    docs = []
-    for tx in txns:
-        docs.append(tx)
-        created_at = tx.get("TxnDate")
-        for line in tx.get("Line", []):
-            detail = line.get("SalesItemLineDetail")
-            if not detail:
-                continue
-            ref = detail.get("ItemRef") or {}
-            sku = ref.get("value") or ref.get("name")
-            desc = line.get("Description") or ref.get("name")
-            qty = detail.get("Qty") or 1
-            price = detail.get("UnitPrice") or 0
-            total = line.get("Amount")
-            if total is None:
-                try:
-                    total = float(price) * float(qty)
-                except Exception:
-                    total = 0
-            rows.append({
-                "created_at": created_at,
-                "sku": sku,
-                "description": desc,
-                "quantity": qty,
-                "price": price,
-                "total": total,
-                "doc_type": doc_type,
-            })
-    return rows, docs
-
-
-def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environment="prod"):
-    """Return DataFrames of QBO transactions and items via API."""
-    access_token, new_refresh = _refresh_qbo_access(
-        client_id, client_secret, refresh_token
-    )
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Accept": "application/json",
-    }
-
-    # --- Transactions ---
-    rows = []
-    docs = []
-    for doc_type in ("SalesReceipt", "Invoice"):
-        try:
-            line_rows, raw_docs = _qbo_txn_lines(headers, realm_id, doc_type, environment)
-            rows.extend(line_rows)
-            docs.extend(raw_docs)
-        except Exception as exc:
-            log_error(f"QBO {doc_type} fetch error: {exc}")
-    txn_df = pd.DataFrame(
-        rows,
-        columns=["created_at", "sku", "description", "quantity", "price", "total", "doc_type"],
-    )
-
-    # --- Items ---
-    items_url = _qbo_api_url(realm_id, "query", environment)
-    q = "select Name, Sku from Item"
-    resp = requests.get(
-        items_url,
-        headers=headers,
-        params={"query": q, "minorversion": 65},
-        timeout=10,
-    )
-    resp.raise_for_status()
-    items_data = resp.json().get("QueryResponse", {})
-    item_rows = []
-    for item in items_data.get("Item", []):
-        sku = item.get("Sku") or item.get("Name")
-        if sku:
-            item_rows.append({"sku": sku})
-    items_df = pd.DataFrame(item_rows, columns=["sku"])
-
-    return txn_df, items_df, docs, new_refresh
 
 app = Flask(__name__)
 app.secret_key = 'secret'
@@ -2567,17 +2450,7 @@ def settings_page():
         shopify_token = request.form.get('shopify_token', '').strip()
         set_setting('shopify_domain', shopify_domain)
         set_setting('shopify_token', shopify_token)
-        qbo_client_id = request.form.get('qbo_client_id', '').strip()
-        qbo_client_secret = request.form.get('qbo_client_secret', '').strip()
-        qbo_refresh_token = request.form.get('qbo_refresh_token', '').strip()
-        qbo_realm_id = request.form.get('qbo_realm_id', '').strip()
-        qbo_environment = request.form.get('qbo_environment', 'prod').strip() or 'prod'
         hubspot_token = request.form.get('hubspot_token', '').strip()
-        set_setting('qbo_client_id', qbo_client_id)
-        set_setting('qbo_client_secret', qbo_client_secret)
-        set_setting('qbo_refresh_token', qbo_refresh_token)
-        set_setting('qbo_realm_id', qbo_realm_id)
-        set_setting('qbo_environment', qbo_environment)
         set_setting('hubspot_token', hubspot_token)
         default_month = request.form.get('default_month', '')
         set_setting('default_export_month', default_month)
@@ -2642,13 +2515,7 @@ def settings_page():
     shopify_domain = get_setting('shopify_domain', '')
     shopify_token = get_setting('shopify_token', '')
     shopify_last_sync = get_setting('shopify_last_sync', '')
-    qbo_last_sync = get_setting('qbo_last_sync', '')
     hubspot_last_sync = get_setting('hubspot_last_sync', '')
-    qbo_client_id = get_setting('qbo_client_id', '')
-    qbo_client_secret = get_setting('qbo_client_secret', '')
-    qbo_refresh_token = get_setting('qbo_refresh_token', '')
-    qbo_realm_id = get_setting('qbo_realm_id', '')
-    qbo_environment = get_setting('qbo_environment', 'prod')
     hubspot_token = get_setting('hubspot_token', '')
     types_default = get_setting('default_detail_types', ','.join(CATEGORIES))
     detail_types = [t for t in types_default.split(',') if t]
@@ -2692,12 +2559,6 @@ def settings_page():
         shopify_domain=shopify_domain,
         shopify_token=shopify_token,
         shopify_last_sync=shopify_last_sync,
-        qbo_last_sync=qbo_last_sync,
-        qbo_client_id=qbo_client_id,
-        qbo_client_secret=qbo_client_secret,
-        qbo_refresh_token=qbo_refresh_token,
-        qbo_realm_id=qbo_realm_id,
-        qbo_environment=qbo_environment,
         hubspot_token=hubspot_token,
         hubspot_last_sync=hubspot_last_sync,
     )
@@ -2764,146 +2625,6 @@ def sync_shopify_data():
     return jsonify(success=True)
 
 
-@app.route("/qbo/connect")
-def qbo_connect():
-    """Begin QuickBooks OAuth flow."""
-    client_id = get_setting("qbo_client_id", "")
-    client_secret = get_setting("qbo_client_secret", "")
-    if not client_id or not client_secret:
-        flash("Client ID and secret are required", "error")
-        return redirect(url_for("settings_page"))
-    state = base64.urlsafe_b64encode(os.urandom(16)).decode()
-    session["qbo_state"] = state
-    redirect_uri = url_for("qbo_callback", _external=True)
-    auth_url = (
-        "https://appcenter.intuit.com/connect/oauth2"
-        f"?client_id={client_id}&response_type=code&scope=com.intuit.quickbooks.accounting"
-        f"&redirect_uri={redirect_uri}&state={state}"
-    )
-    return redirect(auth_url)
-
-
-@app.route("/qbo/callback")
-def qbo_callback():
-    """Handle QuickBooks OAuth redirect."""
-    state = request.args.get("state", "")
-    code = request.args.get("code", "")
-    realm_id = request.args.get("realmId", "")
-    if not code or state != session.pop("qbo_state", None):
-        flash("OAuth failed", "error")
-        return redirect(url_for("settings_page"))
-    client_id = get_setting("qbo_client_id", "")
-    client_secret = get_setting("qbo_client_secret", "")
-    redirect_uri = url_for("qbo_callback", _external=True)
-    auth = requests.auth.HTTPBasicAuth(client_id, client_secret)
-    data = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": redirect_uri,
-    }
-    try:
-        resp = requests.post(
-            "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
-            auth=auth,
-            data=data,
-            timeout=10,
-        )
-        resp.raise_for_status()
-        tokens = resp.json()
-    except Exception:
-        flash("OAuth token exchange failed", "error")
-        return redirect(url_for("settings_page"))
-    refresh = tokens.get("refresh_token")
-    if refresh:
-        set_setting("qbo_refresh_token", refresh)
-    if realm_id:
-        set_setting("qbo_realm_id", realm_id)
-    flash("QuickBooks connected", "success")
-    return redirect(url_for("settings_page"))
-
-
-@app.route("/test-qbo", methods=["POST"])
-def test_qbo_connection():
-    client_id = request.form.get("client_id", "").strip()
-    client_secret = request.form.get("client_secret", "").strip()
-    refresh_token = request.form.get("refresh_token", "").strip()
-    realm_id = request.form.get("realm_id", "").strip()
-    environment = request.form.get("environment", "prod").strip() or "prod"
-    if not client_id or not client_secret or not refresh_token or not realm_id:
-        return jsonify(success=False), 400
-    try:
-        access_token, new_refresh = _refresh_qbo_access(
-            client_id, client_secret, refresh_token
-        )
-        url = _qbo_api_url(realm_id, f"companyinfo/{realm_id}", environment)
-        resp = requests.get(
-            url,
-            headers={"Authorization": f"Bearer {access_token}", "Accept": "application/json"},
-            timeout=5,
-        )
-        ok = resp.status_code == 200
-        if not ok:
-            snippet = resp.text[:200].replace("\n", " ")
-            log_error(f"Test QBO connection failed: HTTP {resp.status_code} - {snippet}")
-        elif new_refresh and new_refresh != refresh_token:
-            set_setting("qbo_refresh_token", new_refresh)
-    except Exception as exc:
-        log_error(f"Test QBO connection error: {exc}")
-        ok = False
-    return jsonify(success=ok)
-
-
-@app.route("/sync-qbo", methods=["POST"])
-def sync_qbo_data():
-    client_id = get_setting("qbo_client_id", "")
-    client_secret = get_setting("qbo_client_secret", "")
-    refresh_token = get_setting("qbo_refresh_token", "")
-    realm_id = get_setting("qbo_realm_id", "")
-    environment = get_setting("qbo_environment", "prod")
-    action = get_setting("duplicate_action", "review")
-    if not client_id or not client_secret or not refresh_token or not realm_id:
-        return jsonify(success=False, error="Missing credentials"), 400
-    try:
-        df, items, docs, new_refresh = _fetch_qbo_api(
-            client_id, client_secret, refresh_token, realm_id, environment
-        )
-    except Exception as exc:
-        log_error(f"QBO sync error: {exc}")
-        return jsonify(success=False, error=str(exc)), 500
-    if df.empty:
-        return jsonify(success=False, error="No data returned"), 400
-    conn = get_db()
-    df.to_sql("qbo", conn, if_exists="replace", index=False)
-    conn.execute("DELETE FROM qbo_docs")
-    for d in docs:
-        conn.execute(
-            "INSERT INTO qbo_docs(doc_id, data) VALUES (?, ?)",
-            (str(d.get('Id') or d.get('DocNumber') or ''), json.dumps(d)),
-        )
-    sku_series = pd.concat([df["sku"], items["sku"]], ignore_index=True)
-    _update_sku_map(conn, sku_series, "qbo")
-    if action in {"shopify", "qbo", "both"}:
-        _resolve_duplicates(conn, action)
-    created = pd.to_datetime(df["created_at"].astype(str), errors="coerce", format="mixed", utc=True).dt.tz_localize(None)
-    last_txn = created.max()
-    first_txn = created.min()
-    now = datetime.now(timezone.utc).isoformat()
-    conn.execute(
-        "REPLACE INTO meta (source, last_updated, last_transaction, first_transaction, last_synced) VALUES (?, ?, ?, ?, ?)",
-        (
-            "qbo",
-            now,
-            last_txn.isoformat() if pd.notna(last_txn) else None,
-            first_txn.isoformat() if pd.notna(first_txn) else None,
-            now,
-        ),
-    )
-    conn.commit()
-    conn.close()
-    if new_refresh and new_refresh != refresh_token:
-        set_setting("qbo_refresh_token", new_refresh)
-    set_setting("qbo_last_sync", now)
-    return jsonify(success=True)
 
 
 @app.route("/test-hubspot", methods=["POST"])
@@ -2995,14 +2716,13 @@ def traffic_matrix_api():
 def clear_sync_data():
     """Remove all previously synced data from the database."""
     conn = get_db()
-    for table in ('shopify', 'shopify_orders', 'qbo', 'qbo_docs', 'hubspot_traffic'):
+    for table in ('shopify', 'shopify_orders', 'qbo', 'hubspot_traffic'):
         conn.execute(f'DELETE FROM {table}')
     conn.execute('DELETE FROM meta')
     conn.execute('DELETE FROM duplicate_log')
     conn.commit()
     conn.close()
     set_setting('shopify_last_sync', '')
-    set_setting('qbo_last_sync', '')
     set_setting('hubspot_last_sync', '')
     return jsonify(success=True)
 
