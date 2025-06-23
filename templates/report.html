@@ -242,6 +242,45 @@
       </table>
       </div>
 
+      {% if include_marketing %}
+      <h4 class="title is-5 mt-5">Marketing Data – Website Traffic Matrix</h4>
+      {% for y, metrics in traffic_matrix.items() %}
+      <h5 class="title is-6 mt-4">{{ y }}</h5>
+        {% for mkey, table in metrics.items() %}
+        <h6 class="title is-6">{{ traffic_metric_labels[mkey] }}</h6>
+        <div class="table-responsive">
+        <table class="table is-fullwidth is-bordered mb-5">
+          <thead>
+            <tr>
+              <th>Source</th>
+              {% for m in MONTHS_ORDER %}<th>{{ m }}</th>{% endfor %}
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in table.rows %}
+            <tr>
+              <td>{{ row.source }}</td>
+              {% for val in row.values %}
+              <td class="{% if val.diff is not none %}{% if val.diff > 0 %}bg-pos{% elif val.diff < 0 %}bg-neg{% endif %}{% endif %}" style="{{ val.diff|heatmap }}">{{ val.val|round(2) }}</td>
+              {% endfor %}
+              <td>{{ row.total|round(2) }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="has-background-light has-text-weight-bold">
+              <td>Total</td>
+              {% for val in table.totals %}
+              <td class="{% if val.diff is not none %}{% if val.diff > 0 %}bg-pos{% elif val.diff < 0 %}bg-neg{% endif %}{% endif %}" style="{{ val.diff|heatmap }}">{{ val.val|round(2) }}</td>
+              {% endfor %}
+              <td>{{ table.year_total|round(2) }}</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        {% endfor %}
+      {% endfor %}
+      {% endif %}
+
     </div> <!-- by-year -->
 
     <div class="has-text-right mt-4">
