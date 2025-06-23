@@ -35,6 +35,8 @@ from database import (
     set_setting,
     add_log,
     get_logs,
+    add_api_response,
+    get_api_responses,
 )
 
 # default theme colors
@@ -1560,7 +1562,7 @@ def get_shopify_quarterly():
 
 
 def get_traffic_matrix():
-    """Return HubSpot traffic metrics grouped by year."""
+    """Return HubSpot traffic metrics grouped for side-by-side years."""
     conn = get_db()
     year_limit = int(get_setting('reports_year_limit', '5') or 5)
     years = [r['year'] for r in conn.execute(
@@ -1568,53 +1570,57 @@ def get_traffic_matrix():
     ).fetchall()][:year_limit]
     if not years:
         conn.close()
-        return {}
+        return {'years': [], 'metrics': {}}
     df = pd.read_sql_query(
-        f"SELECT year, month, source, sessions, avg_time, bounce_rate FROM hubspot_traffic WHERE year >= ?",
+        'SELECT year, month, source, sessions, avg_time, bounce_rate FROM hubspot_traffic WHERE year >= ?',
         conn,
         params=(years[-1],),
     )
     conn.close()
-    result = {}
-    for year in years:
-        ydf = df[df['year'] == year]
-        year_data = {}
-        for metric in ['sessions', 'avg_time', 'bounce_rate']:
-            pivot = ydf.pivot_table(index='source', columns='month', values=metric, aggfunc='sum').reindex(TRAFFIC_SOURCES, fill_value=0)
-            rows = []
-            for src in TRAFFIC_SOURCES:
-                values = []
+
+    metrics = {}
+    for metric in ['sessions', 'avg_time', 'bounce_rate']:
+        rows = []
+        for src in TRAFFIC_SOURCES:
+            values = []
+            for year in years:
+                ydf = df[(df['year'] == year) & (df['source'] == src)]
                 prev = None
                 for m in range(1, 13):
-                    val = float(pivot.loc[src, m]) if m in pivot.columns else 0.0
+                    val = float(ydf[ydf['month'] == m][metric].sum())
                     diff = val - prev if prev is not None else None
                     values.append({'val': val, 'diff': diff})
                     prev = val
-                total = sum(v['val'] for v in values)
-                rows.append({'source': src, 'values': values, 'total': total})
-            totals = []
+                ytotal = sum(v['val'] for v in values[-12:])
+                if metric != 'sessions':
+                    ytotal = ytotal / 12 if values[-12:] else 0
+                values.append({'val': ytotal, 'diff': None})
+            rows.append({'source': src, 'values': values})
+
+        totals = []
+        for year in years:
+            ydf = df[df['year'] == year]
             prev = None
             for m in range(1, 13):
-                if m in pivot.columns:
-                    col = pivot[m]
-                    if metric == 'sessions':
-                        val = col.sum()
-                    else:
-                        sess = ydf[ydf['month'] == m]['sessions'].sum()
-                        val = (col * ydf[ydf['month'] == m]['sessions']).sum() / sess if sess else 0
+                if metric == 'sessions':
+                    val = ydf[ydf['month'] == m]['sessions'].sum()
                 else:
-                    val = 0
+                    sess = ydf[ydf['month'] == m]['sessions'].sum()
+                    val = (
+                        (ydf[ydf['month'] == m][metric] * ydf[ydf['month'] == m]['sessions']).sum() / sess
+                        if sess else 0
+                    )
                 diff = val - prev if prev is not None else None
-                totals.append({'val': val, 'diff': diff})
+                totals.append({'val': float(val), 'diff': diff})
                 prev = val
-            year_total = sum(t['val'] for t in totals) if metric == 'sessions' else (sum((t['val'] for t in totals)) / 12 if totals else 0)
-            year_data[metric] = {
-                'rows': rows,
-                'totals': totals,
-                'year_total': year_total,
-            }
-        result[year] = year_data
-    return result
+            ytotal = sum(t['val'] for t in totals[-12:])
+            if metric != 'sessions':
+                ytotal = ytotal / 12 if totals[-12:] else 0
+            totals.append({'val': ytotal, 'diff': None})
+
+        metrics[metric] = {'rows': rows, 'totals': totals}
+
+    return {'years': years, 'metrics': metrics}
 
 
 def generate_year_chart_base64(year, *, light=False):
@@ -2858,6 +2864,7 @@ def test_hubspot_connection():
             timeout=5,
         )
         ok = resp.status_code == 200
+        add_api_response('test_hubspot', resp.status_code, resp.text[:2000])
     except Exception as exc:
         log_error(f"Test HubSpot connection error: {exc}")
         ok = False
@@ -2889,6 +2896,7 @@ def sync_hubspot_data():
                 conn.close()
                 return jsonify(success=False, error=msg), 500
             resp.raise_for_status()
+            add_api_response('sync_hubspot', resp.status_code, resp.text[:2000])
         except Exception as exc:
             log_error(f"HubSpot sync error: {exc}")
             conn.close()
@@ -2956,6 +2964,24 @@ def get_app_logs():
 def clear_app_logs():
     conn = get_db()
     conn.execute("DELETE FROM app_log")
+    conn.commit()
+    conn.close()
+    return jsonify(success=True)
+
+
+@app.route('/api-responses')
+def get_api_responses_route():
+    rows = get_api_responses(50)
+    text = "\n---\n".join(
+        f"[{r['logged_at']}] {r['endpoint']} ({r['status']})\n{r['body']}" for r in rows
+    )
+    return text, 200, {"Content-Type": "text/plain; charset=utf-8"}
+
+
+@app.route('/clear-api-responses', methods=['POST'])
+def clear_api_responses_route():
+    conn = get_db()
+    conn.execute('DELETE FROM api_response')
     conn.commit()
     conn.close()
     return jsonify(success=True)

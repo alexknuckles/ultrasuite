@@ -335,6 +335,14 @@
         </div>
         <pre id="logOutput" class="log-output"></pre>
       </div>
+      <div class="box mb-4">
+        <h3 class="title is-5 mb-3">API Responses</h3>
+        <div class="field mb-2">
+          <button id="refreshResponsesBtn" type="button" class="mdc-button mdc-button--raised mr-2">Refresh</button>
+          <button id="clearResponsesBtn" type="button" class="mdc-button mdc-button--raised">Clear</button>
+        </div>
+        <pre id="apiResponseOutput" class="log-output"></pre>
+      </div>
     </div>
   </div>
 </div>
@@ -555,6 +563,24 @@ if(clearLogs){
       .then(() => loadLogs());
   });
 }
-document.addEventListener('DOMContentLoaded', loadLogs);
+const respPre = document.getElementById('apiResponseOutput');
+const refreshResp = document.getElementById('refreshResponsesBtn');
+const clearResp = document.getElementById('clearResponsesBtn');
+function loadResponses(){
+  if(!respPre) return;
+  fetch('{{ url_for('get_api_responses_route') }}')
+    .then(r => r.text())
+    .then(t => { respPre.textContent = t || 'No responses'; });
+}
+if(refreshResp){
+  refreshResp.addEventListener('click', loadResponses);
+}
+if(clearResp){
+  clearResp.addEventListener('click', () => {
+    fetch('{{ url_for('clear_api_responses_route') }}', {method:'POST'})
+      .then(() => loadResponses());
+  });
+}
+document.addEventListener('DOMContentLoaded', () => { loadLogs(); loadResponses(); });
 </script>
 {% endblock %}
