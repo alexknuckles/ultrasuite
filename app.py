@@ -1993,9 +1993,15 @@ def transactions_page():
     shopify = parse_dates(shopify)
     qbo = parse_dates(qbo)
 
-    all_dates = _safe_concat([shopify[['created_at']], qbo[['created_at']]])['created_at'].dropna()
-    years = sorted(all_dates.dt.year.dropna().unique(), reverse=True)
-    month_periods = sorted(all_dates.dt.to_period('M').unique(), reverse=True)
+    all_dates_raw = _safe_concat([
+        shopify[["created_at"]],
+        qbo[["created_at"]],
+    ])[
+        "created_at"
+    ]
+    all_dates = pd.to_datetime(all_dates_raw, errors="coerce").dropna()
+    years = sorted(all_dates.dt.year.unique(), reverse=True)
+    month_periods = sorted(all_dates.dt.to_period("M").unique(), reverse=True)
     month_options = [
         {
             'value': f"month-{p.year}-{p.month:02d}",
