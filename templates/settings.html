@@ -260,6 +260,15 @@
           <label class="label">Realm ID</label>
           <input class="input" type="text" name="qbo_realm_id" value="{{ qbo_realm_id }}">
         </div>
+        <div class="field mb-4 is-flex is-align-items-center">
+          <label class="label mr-2">Environment</label>
+          <div class="select">
+            <select name="qbo_environment">
+              <option value="prod" {% if qbo_environment != 'sandbox' %}selected{% endif %}>Production</option>
+              <option value="sandbox" {% if qbo_environment == 'sandbox' %}selected{% endif %}>Sandbox</option>
+            </select>
+          </div>
+        </div>
         <div class="field mb-4">
           <a class="mdc-button mdc-button--raised" href="{{ url_for('qbo_connect') }}">Connect QuickBooks</a>
         </div>
@@ -436,7 +445,8 @@
       const secret = document.querySelector('input[name="qbo_client_secret"]').value;
       const refresh = document.querySelector('input[name="qbo_refresh_token"]').value;
       const realm = document.querySelector('input[name="qbo_realm_id"]').value;
-      const body = `client_id=${encodeURIComponent(cid)}&client_secret=${encodeURIComponent(secret)}&refresh_token=${encodeURIComponent(refresh)}&realm_id=${encodeURIComponent(realm)}`;
+      const env = document.querySelector('select[name="qbo_environment"]').value;
+      const body = `client_id=${encodeURIComponent(cid)}&client_secret=${encodeURIComponent(secret)}&refresh_token=${encodeURIComponent(refresh)}&realm_id=${encodeURIComponent(realm)}&environment=${encodeURIComponent(env)}`;
       fetch('{{ url_for('test_qbo_connection') }}', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},

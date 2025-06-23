@@ -226,7 +226,17 @@ def _refresh_qbo_access(client_id, client_secret, refresh_token):
     return tokens.get("access_token"), tokens.get("refresh_token", refresh_token)
 
 
-def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id):
+def _qbo_api_url(realm_id, path, environment="prod"):
+    """Construct a QuickBooks API URL for the given environment."""
+    base = (
+        "https://sandbox-quickbooks.api.intuit.com"
+        if environment == "sandbox"
+        else "https://quickbooks.api.intuit.com"
+    )
+    return f"{base}/v3/company/{realm_id}/{path}"
+
+
+def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environment="prod"):
     """Return a DataFrame of QBO transactions via API."""
     access_token, new_refresh = _refresh_qbo_access(
         client_id, client_secret, refresh_token
@@ -235,7 +245,7 @@ def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id):
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json",
     }
-    url = f"https://quickbooks.api.intuit.com/v3/company/{realm_id}/reports/TransactionList"
+    url = _qbo_api_url(realm_id, "reports/TransactionList", environment)
     params = {"start_date": "2000-01-01"}
     resp = requests.get(url, headers=headers, params=params, timeout=10)
     resp.raise_for_status()
@@ -2363,11 +2373,13 @@ def settings_page():
         qbo_client_secret = request.form.get('qbo_client_secret', '').strip()
         qbo_refresh_token = request.form.get('qbo_refresh_token', '').strip()
         qbo_realm_id = request.form.get('qbo_realm_id', '').strip()
+        qbo_environment = request.form.get('qbo_environment', 'prod').strip() or 'prod'
         hubspot_token = request.form.get('hubspot_token', '').strip()
         set_setting('qbo_client_id', qbo_client_id)
         set_setting('qbo_client_secret', qbo_client_secret)
         set_setting('qbo_refresh_token', qbo_refresh_token)
         set_setting('qbo_realm_id', qbo_realm_id)
+        set_setting('qbo_environment', qbo_environment)
         set_setting('hubspot_token', hubspot_token)
         default_month = request.form.get('default_month', '')
         set_setting('default_export_month', default_month)
@@ -2437,6 +2449,7 @@ def settings_page():
     qbo_client_secret = get_setting('qbo_client_secret', '')
     qbo_refresh_token = get_setting('qbo_refresh_token', '')
     qbo_realm_id = get_setting('qbo_realm_id', '')
+    qbo_environment = get_setting('qbo_environment', 'prod')
     hubspot_token = get_setting('hubspot_token', '')
     types_default = get_setting('default_detail_types', ','.join(CATEGORIES))
     detail_types = [t for t in types_default.split(',') if t]
@@ -2484,6 +2497,7 @@ def settings_page():
         qbo_client_secret=qbo_client_secret,
         qbo_refresh_token=qbo_refresh_token,
         qbo_realm_id=qbo_realm_id,
+        qbo_environment=qbo_environment,
         hubspot_token=hubspot_token,
         hubspot_last_sync=hubspot_last_sync,
     )
@@ -2614,13 +2628,14 @@ def test_qbo_connection():
     client_secret = request.form.get("client_secret", "").strip()
     refresh_token = request.form.get("refresh_token", "").strip()
     realm_id = request.form.get("realm_id", "").strip()
+    environment = request.form.get("environment", "prod").strip() or "prod"
     if not client_id or not client_secret or not refresh_token or not realm_id:
         return jsonify(success=False), 400
     try:
         access_token, new_refresh = _refresh_qbo_access(
             client_id, client_secret, refresh_token
         )
-        url = f"https://quickbooks.api.intuit.com/v3/company/{realm_id}/companyinfo/{realm_id}"
+        url = _qbo_api_url(realm_id, f"companyinfo/{realm_id}", environment)
         resp = requests.get(
             url,
             headers={"Authorization": f"Bearer {access_token}", "Accept": "application/json"},
@@ -2644,12 +2659,13 @@ def sync_qbo_data():
     client_secret = get_setting("qbo_client_secret", "")
     refresh_token = get_setting("qbo_refresh_token", "")
     realm_id = get_setting("qbo_realm_id", "")
+    environment = get_setting("qbo_environment", "prod")
     action = get_setting("duplicate_action", "review")
     if not client_id or not client_secret or not refresh_token or not realm_id:
         return jsonify(success=False, error="Missing credentials"), 400
     try:
         df, new_refresh = _fetch_qbo_api(
-            client_id, client_secret, refresh_token, realm_id
+            client_id, client_secret, refresh_token, realm_id, environment
         )
     except Exception as exc:
         log_error(f"QBO sync error: {exc}")
