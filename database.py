@@ -157,6 +157,14 @@ def migrate_shopify_orders():
     )
     conn.close()
 
+def migrate_qbo_docs():
+    """Ensure table for raw QBO documents exists."""
+    conn = get_db()
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS qbo_docs (doc_id TEXT PRIMARY KEY, data TEXT)"
+    )
+    conn.close()
+
 def migrate_app_log():
     """Ensure table for application logs exists."""
     conn = get_db()
@@ -260,6 +268,7 @@ migrate_sku_source()
 migrate_sku_changed()
 migrate_duplicate_log()
 migrate_shopify_orders()
+migrate_qbo_docs()
 migrate_app_log()
 migrate_hubspot_traffic()
 migrate_api_responses()
