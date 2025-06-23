@@ -258,7 +258,20 @@ def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environmen
         created_at = cols[0]
         desc = cols[4]
         sku = cols[5]
-        total = float(cols[6] or 0)
+        amount = cols[6]
+        try:
+            cleaned = (
+                str(amount)
+                .replace("$", "")
+                .replace(",", "")
+                .replace("(", "-")
+                .replace(")", "")
+                .strip()
+            )
+            total = float(cleaned or 0)
+        except (TypeError, ValueError):
+            log_error(f"QBO sync invalid total {amount!r}; using 0")
+            total = 0.0
         rows.append({
             "created_at": created_at,
             "sku": sku,
@@ -2848,6 +2861,18 @@ def sync_hubspot_data():
                 params={"start": start_ts, "end": end_ts, "granularity": "monthly"},
                 timeout=15,
             )
+            if resp.status_code == 404:
+                resp = requests.get(
+                    "https://api.hubapi.com/marketing/v3/analytics/reports/sources/summary",
+                    headers={"Authorization": f"Bearer {token}"},
+                    params={"start": start_ts, "end": end_ts, "interval": "MONTHLY"},
+                    timeout=15,
+                )
+            if resp.status_code == 404:
+                msg = "Traffic analytics endpoint not found (404). Check API version."
+                log_error(f"HubSpot sync error: {msg}")
+                conn.close()
+                return jsonify(success=False, error=msg), 500
             resp.raise_for_status()
         except Exception as exc:
             log_error(f"HubSpot sync error: {exc}")
