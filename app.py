@@ -238,6 +238,48 @@ def _qbo_api_url(realm_id, path, environment="prod"):
     return f"{base}/v3/company/{realm_id}/{path}"
 
 
+def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod"):
+    """Return list of line item dictionaries for the given QBO document."""
+    url = _qbo_api_url(realm_id, "query", environment)
+    q = f"select TxnDate, Line from {doc_type}"
+    resp = requests.get(
+        url,
+        headers=headers,
+        params={"query": q, "minorversion": 65},
+        timeout=10,
+    )
+    resp.raise_for_status()
+    data = resp.json().get("QueryResponse", {})
+    txns = data.get(doc_type, [])
+    rows = []
+    for tx in txns:
+        created_at = tx.get("TxnDate")
+        for line in tx.get("Line", []):
+            detail = line.get("SalesItemLineDetail")
+            if not detail:
+                continue
+            ref = detail.get("ItemRef") or {}
+            sku = ref.get("value") or ref.get("name")
+            desc = line.get("Description") or ref.get("name")
+            qty = detail.get("Qty") or 1
+            price = detail.get("UnitPrice") or 0
+            total = line.get("Amount")
+            if total is None:
+                try:
+                    total = float(price) * float(qty)
+                except Exception:
+                    total = 0
+            rows.append({
+                "created_at": created_at,
+                "sku": sku,
+                "description": desc,
+                "quantity": qty,
+                "price": price,
+                "total": total,
+            })
+    return rows
+
+
 def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environment="prod"):
     """Return DataFrames of QBO transactions and items via API."""
     access_token, new_refresh = _refresh_qbo_access(
@@ -249,41 +291,12 @@ def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environmen
     }
 
     # --- Transactions ---
-    url = _qbo_api_url(realm_id, "reports/TransactionList", environment)
-    params = {"start_date": "2000-01-01"}
-    resp = requests.get(url, headers=headers, params=params, timeout=10)
-    resp.raise_for_status()
-    data = resp.json()
     rows = []
-    for row in data.get("Rows", {}).get("Row", []):
-        cols = [c.get("value") for c in row.get("ColData", [])]
-        if len(cols) < 7:
-            continue
-        created_at = cols[0]
-        desc = cols[4]
-        sku = cols[5]
-        amount = cols[6]
+    for doc_type in ("SalesReceipt", "Invoice"):
         try:
-            cleaned = (
-                str(amount)
-                .replace("$", "")
-                .replace(",", "")
-                .replace("(", "-")
-                .replace(")", "")
-                .strip()
-            )
-            total = float(cleaned or 0)
-        except (TypeError, ValueError):
-            log_error(f"QBO sync invalid total {amount!r}; using 0")
-            total = 0.0
-        rows.append({
-            "created_at": created_at,
-            "sku": sku,
-            "description": desc,
-            "quantity": 1,
-            "price": total,
-            "total": total,
-        })
+            rows.extend(_qbo_txn_lines(headers, realm_id, doc_type, environment))
+        except Exception as exc:
+            log_error(f"QBO {doc_type} fetch error: {exc}")
     txn_df = pd.DataFrame(
         rows,
         columns=["created_at", "sku", "description", "quantity", "price", "total"],
