@@ -249,6 +249,46 @@
         <p class="help">Provide an admin API access token for your Shopify store.</p>
       </div>
       <div class="box mb-4">
+        <h3 class="title is-5 mb-3">QuickBooks Online</h3>
+        <div class="field mb-4">
+          <label class="label">Client ID</label>
+          <input class="input" type="text" name="qbo_client_id" value="{{ qbo_client_id }}">
+        </div>
+        <div class="field mb-4">
+          <label class="label">Client secret</label>
+          <input class="input" type="password" name="qbo_client_secret" value="{{ qbo_client_secret }}">
+        </div>
+        <div class="field mb-4">
+          <label class="label">Refresh token</label>
+          <input class="input" type="password" name="qbo_refresh_token" value="{{ qbo_refresh_token }}">
+        </div>
+        <div class="field mb-4">
+          <label class="label">Realm ID</label>
+          <input class="input" type="text" name="qbo_realm_id" value="{{ qbo_realm_id }}">
+        </div>
+        <div class="field mb-4 is-flex is-align-items-center">
+          <label class="label mr-2">Environment</label>
+          <div class="select">
+            <select name="qbo_environment">
+              <option value="prod" {% if qbo_environment != 'sandbox' %}selected{% endif %}>Production</option>
+              <option value="sandbox" {% if qbo_environment == 'sandbox' %}selected{% endif %}>Sandbox</option>
+            </select>
+          </div>
+        </div>
+        <div class="field mb-4">
+          <a class="mdc-button mdc-button--raised" href="{{ url_for('qbo_connect') }}">Connect QuickBooks</a>
+        </div>
+        <div class="field mb-4">
+          <button id="testQboBtn" type="button" class="mdc-button mdc-button--raised mr-2">Test connection</button>
+          <button id="syncQboBtn" type="button" class="mdc-button mdc-button--raised">Sync now</button>
+          <span id="qboConnResult" class="help ml-2"></span>
+        </div>
+        {% if qbo_last_sync %}
+        <p class="help">Last sync: {{ qbo_last_sync|format_dt }}</p>
+        {% endif %}
+        <p class="help">Use the button above to authorize QuickBooks and generate the refresh token and realm ID.</p>
+      </div>
+      <div class="box mb-4">
         <h3 class="title is-5 mb-3">HubSpot</h3>
         <div class="field mb-4">
           <label class="label">Access token</label>
@@ -424,6 +464,48 @@
           syncBtn.textContent = 'Sync failed';
           syncBtn.style.backgroundColor = '#d93025';
           syncBtn.disabled = false;
+      });
+    });
+  }
+  const testQbo = document.getElementById('testQboBtn');
+  const qboSpan = document.getElementById('qboConnResult');
+  if(testQbo && qboSpan){
+    testQbo.addEventListener('click', () => {
+      const cid = document.querySelector('input[name="qbo_client_id"]').value;
+      const secret = document.querySelector('input[name="qbo_client_secret"]').value;
+      const refresh = document.querySelector('input[name="qbo_refresh_token"]').value;
+      const realm = document.querySelector('input[name="qbo_realm_id"]').value;
+      const env = document.querySelector('select[name="qbo_environment"]').value;
+      const body = `client_id=${encodeURIComponent(cid)}&client_secret=${encodeURIComponent(secret)}&refresh_token=${encodeURIComponent(refresh)}&realm_id=${encodeURIComponent(realm)}&environment=${encodeURIComponent(env)}`;
+      fetch('{{ url_for('test_qbo_connection') }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body
+      }).then(r => r.json()).then(res => {
+        qboSpan.textContent = res.success ? 'Connection successful' : 'Connection failed';
+        qboSpan.style.color = res.success ? 'green' : 'red';
+      }).catch(() => {
+        qboSpan.textContent = 'Connection failed';
+        qboSpan.style.color = 'red';
+      });
+    });
+  }
+  const syncQbo = document.getElementById('syncQboBtn');
+  if(syncQbo){
+    syncQbo.addEventListener('click', () => {
+      syncQbo.disabled = true;
+      syncQbo.textContent = 'Syncing...';
+      fetch('{{ url_for('sync_qbo_data') }}', {method: 'POST'})
+        .then(r => r.json())
+        .then(res => {
+          syncQbo.textContent = res.success ? 'Synced' : 'Sync failed';
+          syncQbo.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
+          if(!res.success) syncQbo.disabled = false;
+        })
+        .catch(() => {
+          syncQbo.textContent = 'Sync failed';
+          syncQbo.style.backgroundColor = '#d93025';
+        syncQbo.disabled = false;
       });
     });
   }
