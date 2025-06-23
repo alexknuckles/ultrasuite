@@ -2929,6 +2929,22 @@ def traffic_matrix_api():
     return jsonify(get_traffic_matrix())
 
 
+@app.route('/clear-sync-data', methods=['POST'])
+def clear_sync_data():
+    """Remove all previously synced data from the database."""
+    conn = get_db()
+    for table in ('shopify', 'shopify_orders', 'qbo', 'hubspot_traffic'):
+        conn.execute(f'DELETE FROM {table}')
+    conn.execute('DELETE FROM meta')
+    conn.execute('DELETE FROM duplicate_log')
+    conn.commit()
+    conn.close()
+    set_setting('shopify_last_sync', '')
+    set_setting('qbo_last_sync', '')
+    set_setting('hubspot_last_sync', '')
+    return jsonify(success=True)
+
+
 @app.route("/logs")
 def get_app_logs():
     rows = get_logs(200)

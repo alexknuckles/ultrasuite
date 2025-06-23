@@ -304,6 +304,13 @@
         {% endif %}
         <p class="help">Provide a private app token to access HubSpot data.</p>
       </div>
+      <div class="box mb-4">
+        <h3 class="title is-5 mb-3">Data</h3>
+        <div class="field mb-2">
+          <button id="clearSyncBtn" type="button" class="mdc-button mdc-button--raised">Clear synced data</button>
+        </div>
+        <p class="help">Remove all previously synced transactions and traffic data.</p>
+      </div>
     </div>
     <button id="saveSettingsBtn" type="submit" class="mdc-button mdc-button--raised">Save</button>
     </form>
@@ -517,9 +524,17 @@
         })
         .catch(() => {
           syncHs.textContent = 'Sync failed';
-          syncHs.style.backgroundColor = '#d93025';
+        syncHs.style.backgroundColor = '#d93025';
         syncHs.disabled = false;
       });
+  });
+}
+const clearSync = document.getElementById('clearSyncBtn');
+if(clearSync){
+  clearSync.addEventListener('click', () => {
+    if(!confirm('Delete all synced data?')) return;
+    fetch('{{ url_for('clear_sync_data') }}', {method:'POST'})
+      .then(() => location.reload());
   });
 }
 const logPre = document.getElementById('logOutput');
