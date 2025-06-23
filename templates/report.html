@@ -261,7 +261,7 @@
             {% for row in table.rows %}
             <tr>
               <td>{{ row.source }}</td>
-              {% for val in row.values %}
+              {% for val in row['values'] %}
               <td class="{% if val.diff is not none %}{% if val.diff > 0 %}bg-pos{% elif val.diff < 0 %}bg-neg{% endif %}{% endif %}" style="{{ val.diff|heatmap }}">{{ val.val|round(2) }}</td>
               {% endfor %}
               <td>{{ row.total|round(2) }}</td>
