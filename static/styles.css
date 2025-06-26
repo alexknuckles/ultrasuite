@@ -358,6 +358,7 @@ input.switch:checked::before {
 /* button-style tabs */
 .tab-buttons {
   margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
 }
 
 .tab-buttons .mdc-button {
