@@ -360,6 +360,7 @@ migrate_qbo_docs()
 migrate_qbo_lines()
 migrate_app_log()
 migrate_hubspot_traffic()
+migrate_api_responses()
 
 
 def migrate_sync_tables():
