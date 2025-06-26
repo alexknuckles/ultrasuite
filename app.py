@@ -546,12 +546,23 @@ TRAFFIC_SOURCES = [
 # Map HubSpot API source identifiers to display names
 HUBSPOT_SOURCE_MAP = {
     "EMAIL_MARKETING": "Email Marketing",
+    "EMAIL": "Email Marketing",
     "ORGANIC_SEARCH": "Organic Search",
+    "ORGANIC": "Organic Search",
     "SOCIAL_MEDIA": "Social Media",
+    "PAID_SOCIAL": "Social Media",
+    "SOCIAL_MEDIA_PAID": "Social Media",
+    "SOCIAL_MEDIA_ORGANIC": "Social Media",
+    "ORGANIC_SOCIAL": "Social Media",
     "REFERRALS": "Referrals",
+    "REFERRAL": "Referrals",
     "DIRECT_TRAFFIC": "Direct Traffic",
+    "DIRECT": "Direct Traffic",
     "OTHER_CAMPAIGNS": "Other Campaigns",
+    "OTHER_CAMPAIGN": "Other Campaigns",
+    "OTHER": "Other Campaigns",
     "PAID_SEARCH": "Paid Search",
+    "PAID_SEARCHES": "Paid Search",
 }
 
 
