@@ -52,8 +52,6 @@ from utils.helpers import (
     _try_read_csv,
     _parse_shopify,
     _parse_qbo,
-    _normalize_hubspot_source,
-    fetch_hubspot_traffic_data,
     format_dt,
     trend,
     format_minutes,
@@ -61,6 +59,7 @@ from utils.helpers import (
     inject_globals,
     log_error,
 )
+from utils.hubspot_api import _normalize_hubspot_source, fetch_hubspot_traffic_data
 
 # default theme colors
 DEFAULT_THEME_PRIMARY = "#1976d2"
