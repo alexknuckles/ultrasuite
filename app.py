@@ -568,11 +568,11 @@ HUBSPOT_SOURCE_MAP = {
 
 
 def _normalize_hubspot_source(src):
-    """Return standardized source name from HubSpot API value."""
+    """Return standardized source name or ``None`` if unknown."""
     if not isinstance(src, str):
         return None
     key = src.strip().replace(" ", "_").upper()
-    return HUBSPOT_SOURCE_MAP.get(key, src.title().replace("_", " "))
+    return HUBSPOT_SOURCE_MAP.get(key)
 
 
 def fetch_hubspot_traffic_data(
@@ -613,6 +613,12 @@ def fetch_hubspot_traffic_data(
     cache_dir : str | None, optional
         Directory to persist raw API responses for debugging.
 
+    Notes
+    -----
+    All traffic sources are retrieved and then normalized using
+    ``_normalize_hubspot_source``. Entries with unrecognized sources are
+    discarded.
+
     Returns
     -------
     pandas.DataFrame
@@ -625,8 +631,6 @@ def fetch_hubspot_traffic_data(
         "start": f"{start_year:04d}0101",
         "end": f"{end_year:04d}1231",
         "sort": "sessions",
-        # limit results to known traffic source identifiers
-        "d1": "EMAIL_MARKETING,ORGANIC_SEARCH,SOCIAL_MEDIA,REFERRALS,DIRECT_TRAFFIC,OTHER_CAMPAIGNS,PAID_SEARCH",
     }
 
     offset = None
