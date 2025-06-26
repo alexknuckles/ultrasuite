@@ -3498,12 +3498,13 @@ def sync_hubspot_data():
     except ValueError:
         return jsonify(success=False, error="Invalid year"), 400
 
-    start = f"{year}0101"
-    end = f"{year}1231"
+    # Use ISO date format to request daily data for the full year
+    start = f"{year}-01-01"
+    end = f"{year}-12-31"
     conn = get_db()
     try:
         resp = requests.get(
-            "https://api.hubspot.com/analytics/v2/reports/sources/monthly",
+            "https://api.hubspot.com/analytics/v2/reports/sources/daily",
             headers={"Authorization": f"Bearer {token}"},
             params={"start": start, "end": end},
             timeout=15,
