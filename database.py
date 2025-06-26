@@ -259,11 +259,29 @@ def get_setting(key, default=""):
     return row["value"] if row else default
 
 
-def set_setting(key, value):
-    conn = get_db()
+def set_setting(key, value, conn=None):
+    """Persist a single application setting.
+
+    Parameters
+    ----------
+    key : str
+        Setting name.
+    value : str
+        Setting value.
+    conn : sqlite3.Connection | None, optional
+        Existing database connection to use. When ``None``, a new connection
+        is created for the operation. Providing a connection avoids opening a
+        separate transaction and helps prevent ``database is locked`` errors
+        during long-running updates.
+    """
+
+    own_conn = conn is None
+    if own_conn:
+        conn = get_db()
     conn.execute("REPLACE INTO settings(key, value) VALUES (?, ?)", (key, value))
-    conn.commit()
-    conn.close()
+    if own_conn:
+        conn.commit()
+        conn.close()
 
 
 def set_settings(pairs):
