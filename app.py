@@ -594,7 +594,8 @@ def fetch_hubspot_traffic_data(token, start_year=2021, end_year=None):
     """
     end_year = end_year or datetime.now().year
     # Use the standard HubSpot API domain
-    url = "https://api.hubapi.com/analytics/v2/reports/sources/daily"
+    # Use monthly aggregates instead of daily details
+    url = "https://api.hubapi.com/analytics/v2/reports/sources/monthly"
     headers = {"Authorization": f"Bearer {token}"}
     params = {"start": f"{start_year}-01-01", "end": f"{end_year}-12-31"}
     offset = None
