@@ -3306,6 +3306,9 @@ def sync_qbo_data():
             fetch_lists=fetch_lists,
         )
         QBO_STATE["item_map"] = item_map
+        if new_refresh and new_refresh != refresh_token:
+            refresh_token = new_refresh
+            set_setting("qbo_refresh_token", new_refresh)
     except Exception as exc:
         log_error(f"QBO sync error: {exc}")
         return jsonify(success=False, error=str(exc)), 500
@@ -3358,7 +3361,9 @@ def sync_qbo_data():
         _update_sku_map(conn, sku_series, "qbo")
         if action in {"shopify", "qbo", "both"}:
             _resolve_duplicates(conn, action)
-        row = conn.execute("SELECT MIN(created_at), MAX(created_at) FROM qbo").fetchone()
+        row = conn.execute(
+            "SELECT MIN(created_at), MAX(created_at) FROM qbo"
+        ).fetchone()
         now = datetime.now(timezone.utc).isoformat()
         conn.execute(
             "REPLACE INTO meta (source, last_updated, last_transaction, first_transaction, last_synced) VALUES (?, ?, ?, ?, ?)",
