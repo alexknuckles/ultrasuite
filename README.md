@@ -16,6 +16,8 @@ Ultrasuite is a Flask application for aggregating sales data. Upload transaction
 - **Report Options** – Choose the default tab and how many recent years to display.
 - **Shopify Sync** – Connect to the Shopify API to download transactions.
 - **Raw Orders** – Full Shopify order data is stored for future use.
+- **Master Field Columns** – Synced API data includes `master_*` columns for
+  common fields such as price, quantity and description.
 
 Data is stored locally and charts are generated with Matplotlib.
 

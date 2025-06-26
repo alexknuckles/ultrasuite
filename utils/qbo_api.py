@@ -7,6 +7,8 @@ from dataclasses import dataclass
 import pandas as pd
 import requests
 
+from .master_fields import apply_master_fields
+
 
 @dataclass
 class QBOClient:
@@ -21,7 +23,10 @@ class QBOClient:
     def refresh_access(self) -> tuple[str | None, str | None]:
         """Return a new access token and refresh token."""
         auth = requests.auth.HTTPBasicAuth(self.client_id, self.client_secret)
-        data = {"grant_type": "refresh_token", "refresh_token": self.refresh_token}
+        data = {
+            "grant_type": "refresh_token",
+            "refresh_token": self.refresh_token,
+        }
         resp = requests.post(
             "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
             auth=auth,
@@ -57,9 +62,17 @@ class QBOClient:
             "Accept": "application/json",
             "Content-Type": "application/json",
         }
-        query = f"select * from {doc_type} startposition {start_pos} maxresults 1000"
+        query = "select * from {} startposition {} maxresults 1000".format(
+            doc_type,
+            start_pos,
+        )
         url = self.api_url("query")
-        resp = requests.post(url, headers=headers, json={"query": query}, timeout=15)
+        resp = requests.post(
+            url,
+            headers=headers,
+            json={"query": query},
+            timeout=15,
+        )
         resp.raise_for_status()
         payload = resp.json()
         docs = payload.get("QueryResponse", {}).get(doc_type, [])
@@ -84,6 +97,7 @@ class QBOClient:
                 lines.append({"doc_id": doc_id, "line_num": idx, "data": line})
 
         df = pd.DataFrame(rows)
+        df = apply_master_fields(df, "qbo")
         next_pos = start_pos + 1000 if len(docs) == 1000 else None
         item_map = item_map or {}
         return (
