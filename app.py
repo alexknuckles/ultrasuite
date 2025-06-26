@@ -2092,9 +2092,12 @@ def transactions_page():
     shopify = process(shopify)
     qbo = process(qbo)
 
-    if sku:
+    if sku and sku != 'all':
         shopify = shopify[shopify['canonical'] == sku]
         qbo = qbo[qbo['canonical'] == sku]
+    elif sku == 'all':
+        # No filtering to include all transactions
+        pass
     else:
         mapped = set(sku_options)
         shopify = shopify[shopify['canonical'].isin(mapped)]
@@ -2126,13 +2129,14 @@ def transactions_page():
     else:
         df_all = pd.DataFrame(columns=shopify.columns.tolist() + ['source_title', 'doc_type'])
 
-    dup_all = _find_duplicates(conn, sku=sku or None, start=start_dt, end=end_dt)
+    dup_sku = None if not sku or sku == 'all' else sku
+    dup_all = _find_duplicates(conn, sku=dup_sku, start=start_dt, end=end_dt)
     duplicates = [d for d in dup_all if not d.get('ignored')]
     ignored_dups = [d for d in dup_all if d.get('ignored')]
 
     params = []
     clauses = []
-    if sku:
+    if sku and sku != 'all':
         clauses.append('sku=?')
         params.append(sku)
     if start_dt is not None:
