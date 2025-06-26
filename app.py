@@ -593,13 +593,14 @@ def fetch_hubspot_traffic_data(token, start_year=2021, end_year=None):
         bounce_rate and avg_time_min.
     """
     end_year = end_year or datetime.now().year
-    url = "https://api.hubapi.com/analytics/v2/reports/sources/summary/monthly"
+    # Use the standard HubSpot API domain
+    url = "https://api.hubapi.com/analytics/v2/reports/sources/daily"
     headers = {"Authorization": f"Bearer {token}"}
     params = {"start": f"{start_year}-01-01", "end": f"{end_year}-12-31"}
     offset = None
     rows = []
     while True:
-        if offset:
+        if offset is not None:
             params["offset"] = offset
         resp = requests.get(url, headers=headers, params=params, timeout=15)
         resp.raise_for_status()
@@ -658,7 +659,7 @@ def fetch_hubspot_traffic_data(token, start_year=2021, end_year=None):
         if not payload.get("hasMore") and not payload.get("has_more"):
             break
         offset = payload.get("offset")
-        if not offset:
+        if offset is None:
             break
     return pd.DataFrame(
         rows,
