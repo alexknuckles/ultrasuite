@@ -6,6 +6,7 @@ import base64
 from calendar import monthrange
 import requests
 import json
+import time
 
 import pandas as pd
 import math
@@ -574,39 +575,93 @@ def _normalize_hubspot_source(src):
     return HUBSPOT_SOURCE_MAP.get(key, src.title().replace("_", " "))
 
 
-def fetch_hubspot_traffic_data(token, start_year=2021, end_year=None):
-    """Return HubSpot traffic metrics for a range of years.
+def fetch_hubspot_traffic_data(
+    token,
+    start_year: int = 2021,
+    end_year: int = 2025,
+    *,
+    retries: int = 3,
+    cache_dir: str | None = None,
+):
+    """Return monthly HubSpot traffic analytics for a date range.
+
+    This helper downloads aggregated metrics for each traffic source from the
+    HubSpot Analytics API between ``start_year`` and ``end_year`` inclusive.
+    Returned rows contain ``sessions``, ``bounce_rate`` and ``avg_time_min``
+    converted from seconds. The result can be consumed as a ``pandas.DataFrame``
+    or iterated over as a list of dictionaries, e.g.::
+
+        {
+            "year": 2024,
+            "month": "Jan",
+            "source": "Organic Search",
+            "sessions": 61,
+            "bounce_rate": 0.48,
+            "avg_time_min": 2.5,
+        }
 
     Parameters
     ----------
     token : str
         Private app token for HubSpot.
     start_year : int, optional
-        First year to retrieve (default 2021).
+        First year to retrieve (default ``2021``).
     end_year : int, optional
-        Last year to retrieve (defaults to current year).
+        Last year to retrieve (default ``2025``).
+    retries : int, optional
+        Maximum number of request attempts when rate limited.
+    cache_dir : str | None, optional
+        Directory to persist raw API responses for debugging.
 
     Returns
     -------
     pandas.DataFrame
-        Traffic metrics with columns: year, month, source, sessions,
-        bounce_rate and avg_time_min.
+        Traffic metrics grouped by month and source.
     """
-    end_year = end_year or datetime.now().year
-    # Use the standard HubSpot API domain
-    # Use monthly aggregates instead of daily details
+
     url = "https://api.hubapi.com/analytics/v2/reports/sources/monthly"
     headers = {"Authorization": f"Bearer {token}"}
-    params = {"start": f"{start_year}-01-01", "end": f"{end_year}-12-31"}
+    params = {
+        "start": f"{start_year:04d}0101",
+        "end": f"{end_year:04d}1231",
+        "sort": "sessions",
+        # limit results to known traffic source identifiers
+        "d1": "EMAIL_MARKETING,ORGANIC_SEARCH,SOCIAL_MEDIA,REFERRALS,DIRECT_TRAFFIC,OTHER_CAMPAIGNS,PAID_SEARCH",
+    }
+
     offset = None
     rows = []
+    page = 0
     while True:
         if offset is not None:
             params["offset"] = offset
-        resp = requests.get(url, headers=headers, params=params, timeout=15)
-        resp.raise_for_status()
-        add_api_response("fetch_hubspot", resp.status_code, resp.text[:2000])
+        attempt = 0
+        while True:
+            try:
+                resp = requests.get(url, headers=headers, params=params, timeout=15)
+                add_api_response("fetch_hubspot", resp.status_code, resp.text[:2000])
+                if resp.status_code == 429 and attempt < retries - 1:
+                    time.sleep(2**attempt)
+                    attempt += 1
+                    continue
+                resp.raise_for_status()
+            except Exception:
+                if attempt >= retries - 1:
+                    raise
+                time.sleep(2**attempt)
+                attempt += 1
+                continue
+            break
+
         payload = resp.json()
+        if cache_dir:
+            try:
+                os.makedirs(cache_dir, exist_ok=True)
+                with open(os.path.join(cache_dir, f"hubspot_{page}.json"), "w", encoding="utf-8") as fh:
+                    json.dump(payload, fh)
+            except Exception:
+                pass
+        page += 1
         data = payload.get("results") or payload.get("data")
         if data is None and "reports" in payload:
             rep = payload.get("reports")
