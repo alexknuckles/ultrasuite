@@ -266,6 +266,17 @@ def set_setting(key, value):
     conn.close()
 
 
+def set_settings(pairs):
+    """Update multiple settings in a single transaction."""
+    conn = get_db()
+    conn.executemany(
+        "REPLACE INTO settings(key, value) VALUES (?, ?)",
+        pairs,
+    )
+    conn.commit()
+    conn.close()
+
+
 def get_qbo_environment(default="prod"):
     """Return the configured QBO environment."""
     env = get_setting("qbo_environment", default)
