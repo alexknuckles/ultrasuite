@@ -14,7 +14,6 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from xhtml2pdf import pisa
 from flask import (
     Flask,
     render_template,
@@ -43,6 +42,9 @@ from database import (
 )
 
 from utils.sync import upsert_record
+from utils.shopify_api import fetch_shopify_api, fetch_shopify_list
+from utils.qbo_api import fetch_qbo_api, qbo_api_url, refresh_qbo_access
+from utils.pdf_utils import create_pdf
 from utils.helpers import (
     _hex_to_rgb,
     _is_dark_color,
@@ -57,7 +59,6 @@ from utils.helpers import (
     format_minutes,
     heatmap_bg,
     inject_globals,
-    fetch_resources,
     log_error,
 )
 
@@ -1736,9 +1737,7 @@ def export_report():
             }
         )
         html = render_template("report_pdf.html", **data, datetime=datetime)
-        output = BytesIO()
-        pisa.CreatePDF(html, dest=output, link_callback=fetch_resources)
-        output.seek(0)
+        output = create_pdf(html)
         return send_file(output, download_name="report.pdf", mimetype="application/pdf")
 
     abort(404)
@@ -2665,16 +2664,16 @@ def sync_shopify_data():
     page = int(payload.get("page", 1))
     first_batch = cursor is None
     try:
-        df, orders, line_items, next_cursor = _fetch_shopify_api(
+        df, orders, line_items, next_cursor = fetch_shopify_api(
             domain, token, since=since, next_url=cursor
         )
         customers = []
         products = []
         if first_batch:
-            customers, c_next = _fetch_shopify_list(
+            customers, c_next = fetch_shopify_list(
                 domain, token, "customers", "customers", since=since
             )
-            products, p_next = _fetch_shopify_list(
+            products, p_next = fetch_shopify_list(
                 domain, token, "products", "products", since=since
             )
     except Exception as exc:
@@ -2800,10 +2799,10 @@ def test_qbo_connection():
     if not client_id or not client_secret or not refresh_token or not realm_id:
         return jsonify(success=False), 400
     try:
-        access_token, new_refresh = _refresh_qbo_access(
+        access_token, new_refresh = refresh_qbo_access(
             client_id, client_secret, refresh_token
         )
-        url = _qbo_api_url(realm_id, f"companyinfo/{realm_id}", environment)
+        url = qbo_api_url(realm_id, f"companyinfo/{realm_id}", environment)
         resp = requests.get(
             url,
             headers={
@@ -2859,7 +2858,7 @@ def sync_qbo_data():
             payments,
             products,
             invoices,
-        ) = _fetch_qbo_api(
+        ) = fetch_qbo_api(
             client_id,
             client_secret,
             refresh_token,
