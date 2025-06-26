@@ -239,10 +239,11 @@
           <input class="input" type="password" name="shopify_token" value="{{ shopify_token }}">
         </div>
           <div class="field mb-4">
-            <button id="testConnectionBtn" type="button" class="mdc-button mdc-button--raised mr-2">Test connection</button>
-            <button id="syncShopifyBtn" type="button" class="mdc-button mdc-button--raised">Sync now</button>
-            <span id="connResult" class="help ml-2"></span>
-          </div>
+          <button id="testConnectionBtn" type="button" class="mdc-button mdc-button--raised mr-2">Test connection</button>
+          <button id="syncShopifyBtn" type="button" class="mdc-button mdc-button--raised">Sync now</button>
+          <span id="connResult" class="help ml-2"></span>
+          <p id="shopifyProgress" class="help mt-1"></p>
+        </div>
         {% if shopify_last_sync %}
         <p class="help">Last sync: {{ shopify_last_sync|format_dt }}</p>
         {% endif %}
@@ -282,6 +283,7 @@
           <button id="testQboBtn" type="button" class="mdc-button mdc-button--raised mr-2">Test connection</button>
           <button id="syncQboBtn" type="button" class="mdc-button mdc-button--raised">Sync now</button>
           <span id="qboConnResult" class="help ml-2"></span>
+          <p id="qboProgress" class="help mt-1"></p>
         </div>
         {% if qbo_last_sync %}
         <p class="help">Last sync: {{ qbo_last_sync|format_dt }}</p>
@@ -461,25 +463,39 @@
       });
     });
   }
+  const progressShopify = document.getElementById('shopifyProgress');
   const syncBtn = document.getElementById('syncShopifyBtn');
   if(syncBtn){
+    const runShopify = (cursor, page) => {
+      fetch('{{ url_for('sync_shopify_data') }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({cursor: cursor, page: page})
+      }).then(r => r.json()).then(res => {
+        if(res.success){
+          progressShopify.textContent = `Batch ${page}`;
+          if(!res.done){
+            runShopify(res.next, page + 1);
+          }else{
+            syncBtn.textContent = 'Synced';
+            syncBtn.style.backgroundColor = '#4caf50';
+          }
+        }else{
+          syncBtn.textContent = 'Sync failed';
+          syncBtn.style.backgroundColor = '#d93025';
+          syncBtn.disabled = false;
+        }
+      }).catch(() => {
+        syncBtn.textContent = 'Sync failed';
+        syncBtn.style.backgroundColor = '#d93025';
+        syncBtn.disabled = false;
+      });
+    };
     syncBtn.addEventListener('click', () => {
       syncBtn.disabled = true;
       syncBtn.textContent = 'Syncing...';
-      saveSettings().then(() => {
-        fetch('{{ url_for('sync_shopify_data') }}', {method: 'POST'})
-          .then(r => r.json())
-          .then(res => {
-            syncBtn.textContent = res.success ? 'Synced' : 'Sync failed';
-            syncBtn.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
-            if(!res.success) syncBtn.disabled = false;
-          })
-          .catch(() => {
-            syncBtn.textContent = 'Sync failed';
-            syncBtn.style.backgroundColor = '#d93025';
-            syncBtn.disabled = false;
-        });
-      });
+      progressShopify.textContent = '';
+      saveSettings().then(() => { runShopify(null, 1); });
     });
   }
   const testQbo = document.getElementById('testQboBtn');
@@ -507,25 +523,39 @@
       });
     });
   }
+  const qboProgress = document.getElementById('qboProgress');
   const syncQbo = document.getElementById('syncQboBtn');
   if(syncQbo){
+    const runQbo = (doc, pos) => {
+      fetch('{{ url_for('sync_qbo_data') }}', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({doc_type: doc, pos: pos})
+      }).then(r => r.json()).then(res => {
+        if(res.success){
+          qboProgress.textContent = `Batch ${pos} (${doc})`;
+          if(!res.done){
+            runQbo(res.doc_type, res.next);
+          }else{
+            syncQbo.textContent = 'Synced';
+            syncQbo.style.backgroundColor = '#4caf50';
+          }
+        }else{
+          syncQbo.textContent = 'Sync failed';
+          syncQbo.style.backgroundColor = '#d93025';
+          syncQbo.disabled = false;
+        }
+      }).catch(() => {
+        syncQbo.textContent = 'Sync failed';
+        syncQbo.style.backgroundColor = '#d93025';
+        syncQbo.disabled = false;
+      });
+    };
     syncQbo.addEventListener('click', () => {
       syncQbo.disabled = true;
       syncQbo.textContent = 'Syncing...';
-      saveSettings().then(() => {
-        fetch('{{ url_for('sync_qbo_data') }}', {method: 'POST'})
-          .then(r => r.json())
-          .then(res => {
-            syncQbo.textContent = res.success ? 'Synced' : 'Sync failed';
-            syncQbo.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
-            if(!res.success) syncQbo.disabled = false;
-          })
-          .catch(() => {
-            syncQbo.textContent = 'Sync failed';
-            syncQbo.style.backgroundColor = '#d93025';
-            syncQbo.disabled = false;
-        });
-      });
+      qboProgress.textContent = '';
+      saveSettings().then(() => { runQbo('SalesReceipt', 1); });
     });
   }
   const qboConnect = document.getElementById('qboConnectBtn');
