@@ -13,6 +13,7 @@ import pandas as pd
 import requests
 
 from database import add_api_response
+from .master_fields import apply_master_fields
 
 
 def _normalize_hubspot_source(src):
@@ -119,7 +120,9 @@ class HubSpotClient:
             page += 1
             if not offset:
                 break
-        return pd.DataFrame(rows)
+        df = pd.DataFrame(rows)
+        df = apply_master_fields(df, "hubspot")
+        return df
 
 
 def fetch_hubspot_traffic_data(
