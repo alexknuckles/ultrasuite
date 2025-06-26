@@ -37,6 +37,7 @@ from database import (
     get_logs,
     add_api_response,
     get_api_responses,
+    set_setting,
 )
 
 from utils.sync import upsert_record
