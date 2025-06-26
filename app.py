@@ -3356,7 +3356,7 @@ def sync_qbo_data():
 
     if done and doc_type == "Invoice":
         sku_df = pd.read_sql_query("SELECT sku FROM qbo", conn)
-        prod_df = pd.read_sql_query("SELECT sku FROM qbo_products", conn)
+        prod_df = pd.read_sql_query('SELECT "Sku" as sku FROM qbo_products', conn)
         sku_series = pd.concat([sku_df["sku"], prod_df["sku"]], ignore_index=True)
         _update_sku_map(conn, sku_series, "qbo")
         if action in {"shopify", "qbo", "both"}:
