@@ -185,11 +185,17 @@ def _parse_qbo(file_storage):
     return cleaned
 
 
-def _fetch_shopify_api(domain, token):
-    """Return Shopify orders, line item rows and raw JSON data."""
+def _fetch_shopify_api(domain, token, since=None):
+    """Return Shopify orders, line item rows and raw JSON data.
+
+    If ``since`` is provided, only orders updated at or after that ISO timestamp
+    are fetched.
+    """
     headers = {"X-Shopify-Access-Token": token}
     url = f"https://{domain}/admin/api/2023-07/orders.json"
     params = {"status": "any", "limit": 250}
+    if since:
+        params["updated_at_min"] = since
     orders = []
     line_items = []
     while url:
@@ -231,11 +237,17 @@ def _fetch_shopify_api(domain, token):
     return df, orders, line_items
 
 
-def _fetch_shopify_list(domain, token, endpoint, key):
-    """Return a list of Shopify objects for the given endpoint."""
+def _fetch_shopify_list(domain, token, endpoint, key, since=None):
+    """Return a list of Shopify objects for the given endpoint.
+
+    If ``since`` is provided, only objects updated after that ISO timestamp are
+    retrieved.
+    """
     headers = {"X-Shopify-Access-Token": token}
     url = f"https://{domain}/admin/api/2023-07/{endpoint}.json"
     params = {"limit": 250}
+    if since:
+        params["updated_at_min"] = since
     items = []
     while url:
         resp = requests.get(url, headers=headers, params=params, timeout=10)
@@ -3049,14 +3061,19 @@ def sync_shopify_data():
     """Fetch Shopify orders via API and update the database."""
     domain = get_setting("shopify_domain", "")
     token = get_setting("shopify_token", "")
+    since = get_setting("shopify_last_sync", "") or None
     # Retrieve duplicate handling preference before any write operations
     action = get_setting("duplicate_action", "review")
     if not domain or not token:
         return jsonify(success=False, error="Missing credentials"), 400
     try:
-        df, orders, line_items = _fetch_shopify_api(domain, token)
-        customers = _fetch_shopify_list(domain, token, "customers", "customers")
-        products = _fetch_shopify_list(domain, token, "products", "products")
+        df, orders, line_items = _fetch_shopify_api(domain, token, since=since)
+        customers = _fetch_shopify_list(
+            domain, token, "customers", "customers", since=since
+        )
+        products = _fetch_shopify_list(
+            domain, token, "products", "products", since=since
+        )
     except Exception as exc:
         log_error(f"Shopify sync error: {exc}")
         return jsonify(success=False, error=str(exc)), 500
