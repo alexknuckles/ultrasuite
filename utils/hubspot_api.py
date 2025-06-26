@@ -108,6 +108,7 @@ class HubSpotClient:
                     {
                         "year": year,
                         "month": datetime(year, month, 1).strftime("%b"),
+                        "month_num": month,
                         "source": source,
                         "sessions": int(row.get("sessions")),
                         "bounce_rate": float(row.get("bounce_rate")),
