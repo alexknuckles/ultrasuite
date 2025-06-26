@@ -574,6 +574,106 @@ def _normalize_hubspot_source(src):
     return HUBSPOT_SOURCE_MAP.get(key, src.title().replace("_", " "))
 
 
+def fetch_hubspot_traffic_data(token, start_year=2021, end_year=None):
+    """Return HubSpot traffic metrics for a range of years.
+
+    Parameters
+    ----------
+    token : str
+        Private app token for HubSpot.
+    start_year : int, optional
+        First year to retrieve (default 2021).
+    end_year : int, optional
+        Last year to retrieve (defaults to current year).
+
+    Returns
+    -------
+    pandas.DataFrame
+        Traffic metrics with columns: year, month, source, sessions,
+        bounce_rate and avg_time_min.
+    """
+    end_year = end_year or datetime.now().year
+    url = "https://api.hubapi.com/analytics/v2/reports/sources/summary/monthly"
+    headers = {"Authorization": f"Bearer {token}"}
+    params = {"start": f"{start_year}-01-01", "end": f"{end_year}-12-31"}
+    offset = None
+    rows = []
+    while True:
+        if offset:
+            params["offset"] = offset
+        resp = requests.get(url, headers=headers, params=params, timeout=15)
+        resp.raise_for_status()
+        add_api_response("fetch_hubspot", resp.status_code, resp.text[:2000])
+        payload = resp.json()
+        data = payload.get("results") or payload.get("data")
+        if data is None and "reports" in payload:
+            rep = payload.get("reports")
+            if isinstance(rep, list) and rep and isinstance(rep[0], dict):
+                data = rep[0].get("data", rep[0])
+        if not isinstance(data, dict):
+            data = {}
+        for period, details in data.items():
+            try:
+                dt = datetime.strptime(period, "%Y-%m")
+            except ValueError:
+                try:
+                    dt = datetime.strptime(period, "%Y-%m-%d")
+                except ValueError:
+                    continue
+            for entry in details:
+                raw = (
+                    entry.get("breakdown")
+                    or entry.get("source")
+                    or entry.get("sourceType")
+                )
+                src = _normalize_hubspot_source(raw)
+                if not src:
+                    continue
+                try:
+                    sessions = float(entry.get("sessions") or entry.get("visits") or 0)
+                except Exception:
+                    sessions = 0.0
+                try:
+                    bounce = float(entry.get("bounceRate"))
+                except Exception:
+                    bounce = 0.0
+                sec = entry.get("avgSessionLengthSeconds") or entry.get(
+                    "avgSessionLength"
+                )
+                try:
+                    avg = float(sec) / 60 if sec is not None else 0.0
+                except Exception:
+                    avg = 0.0
+                rows.append(
+                    {
+                        "year": dt.year,
+                        "month": MONTHS_ORDER[dt.month - 1],
+                        "month_num": dt.month,
+                        "source": src,
+                        "sessions": sessions,
+                        "bounce_rate": bounce,
+                        "avg_time_min": avg,
+                    }
+                )
+        if not payload.get("hasMore") and not payload.get("has_more"):
+            break
+        offset = payload.get("offset")
+        if not offset:
+            break
+    return pd.DataFrame(
+        rows,
+        columns=[
+            "year",
+            "month",
+            "month_num",
+            "source",
+            "sessions",
+            "bounce_rate",
+            "avg_time_min",
+        ],
+    )
+
+
 TRAFFIC_METRIC_LABELS = {
     "sessions": "Sessions",
     "avg_time": "Avg Time (min)",
@@ -3498,69 +3598,28 @@ def sync_hubspot_data():
     except ValueError:
         return jsonify(success=False, error="Invalid year"), 400
 
-    # Use ISO date format to request daily data for the full year
-    start = f"{year}-01-01"
-    end = f"{year}-12-31"
     conn = get_db()
     try:
-        resp = requests.get(
-            "https://api.hubspot.com/analytics/v2/reports/sources/daily",
-            headers={"Authorization": f"Bearer {token}"},
-            params={"start": start, "end": end},
-            timeout=15,
-        )
-        if resp.status_code == 404:
-            msg = "Traffic analytics endpoint not found (404). Check API version."
-            log_error(f"HubSpot sync error: {msg}")
-            conn.close()
-            return jsonify(success=False, error=msg), 500
-        resp.raise_for_status()
-        add_api_response("sync_hubspot", resp.status_code, resp.text[:2000])
+        df = fetch_hubspot_traffic_data(token, year, year)
     except Exception as exc:
         log_error(f"HubSpot sync error: {exc}")
         conn.close()
         return jsonify(success=False, error=str(exc)), 500
-    data = resp.json()
-    if "results" in data:
-        data = data["results"]
-    elif "data" in data:
-        data = data["data"]
-    elif "reports" in data:
-        rep = data.get("reports")
-        if isinstance(rep, list) and rep and isinstance(rep[0], dict):
-            data = rep[0].get("data", rep[0])
-
-    if not isinstance(data, dict):
-        log_error("HubSpot sync error: unexpected JSON format")
-        conn.close()
-        return jsonify(success=False, error="Unexpected response"), 500
-
-    for key, details in data.items():
+    for _, r in df.iterrows():
         try:
-            dt = datetime.strptime(key, "%Y-%m")
-        except ValueError:
-            try:
-                dt = datetime.strptime(key, "%Y-%m-%d")
-            except ValueError:
-                continue
-        month = dt.month
-        for d in details:
-            src_raw = d.get("breakdown") or d.get("source") or d.get("sourceType")
-            src = _normalize_hubspot_source(src_raw)
-            if not src:
-                continue
-            sessions = d.get("visits") or d.get("sessions") or 0
-            avg_sec = d.get("avgSessionLengthSeconds") or d.get("avgSessionLength")
-            avg_min = (avg_sec / 60.0) if isinstance(avg_sec, (int, float)) else None
-            bounce = d.get("bounceRate")
-            try:
-                conn.execute(
-                    "REPLACE INTO hubspot_traffic(year, month, source, sessions, avg_time, bounce_rate) "
-                    "VALUES (?, ?, ?, ?, ?, ?)",
-                    (year, month, src, sessions, avg_min, bounce),
-                )
-            except Exception as exc:
-                log_error(f"HubSpot sync error: {exc}")
+            conn.execute(
+                "REPLACE INTO hubspot_traffic(year, month, source, sessions, avg_time, bounce_rate) VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    int(r["year"]),
+                    int(r["month_num"]),
+                    r["source"],
+                    float(r["sessions"]),
+                    float(r["avg_time_min"]),
+                    float(r["bounce_rate"]),
+                ),
+            )
+        except Exception as exc:
+            log_error(f"HubSpot sync error: {exc}")
     conn.commit()
     conn.close()
 
