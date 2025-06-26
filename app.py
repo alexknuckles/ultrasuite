@@ -3409,8 +3409,8 @@ def sync_qbo_data():
             ),
         )
         if new_refresh and new_refresh != refresh_token:
-            set_setting("qbo_refresh_token", new_refresh)
-        set_setting("qbo_last_sync", now)
+            set_setting("qbo_refresh_token", new_refresh, conn)
+        set_setting("qbo_last_sync", now, conn)
     conn.commit()
     conn.close()
     return jsonify(success=True, next=next_pos, doc_type=next_doc, done=done)
