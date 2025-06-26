@@ -630,7 +630,6 @@ def fetch_hubspot_traffic_data(
     params = {
         "start": f"{start_year:04d}0101",
         "end": f"{end_year:04d}1231",
-        "sort": "sessions",
     }
 
     offset = None
@@ -661,7 +660,11 @@ def fetch_hubspot_traffic_data(
         if cache_dir:
             try:
                 os.makedirs(cache_dir, exist_ok=True)
-                with open(os.path.join(cache_dir, f"hubspot_{page}.json"), "w", encoding="utf-8") as fh:
+                with open(
+                    os.path.join(cache_dir, f"hubspot_{page}.json"),
+                    "w",
+                    encoding="utf-8",
+                ) as fh:
                     json.dump(payload, fh)
             except Exception:
                 pass
