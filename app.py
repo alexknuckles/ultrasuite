@@ -543,6 +543,26 @@ TRAFFIC_SOURCES = [
     "Paid Search",
 ]
 
+# Map HubSpot API source identifiers to display names
+HUBSPOT_SOURCE_MAP = {
+    "EMAIL_MARKETING": "Email Marketing",
+    "ORGANIC_SEARCH": "Organic Search",
+    "SOCIAL_MEDIA": "Social Media",
+    "REFERRALS": "Referrals",
+    "DIRECT_TRAFFIC": "Direct Traffic",
+    "OTHER_CAMPAIGNS": "Other Campaigns",
+    "PAID_SEARCH": "Paid Search",
+}
+
+
+def _normalize_hubspot_source(src):
+    """Return standardized source name from HubSpot API value."""
+    if not isinstance(src, str):
+        return None
+    key = src.strip().replace(" ", "_").upper()
+    return HUBSPOT_SOURCE_MAP.get(key, src.title().replace("_", " "))
+
+
 TRAFFIC_METRIC_LABELS = {
     "sessions": "Sessions",
     "avg_time": "Avg Time (min)",
@@ -1895,6 +1915,9 @@ def get_traffic_matrix():
         params=(years[-1],),
     )
     conn.close()
+
+    # Normalize source names to match TRAFFIC_SOURCES list
+    df["source"] = df["source"].apply(_normalize_hubspot_source)
 
     metrics = {}
     for metric in ["sessions", "avg_time", "bounce_rate"]:
@@ -3510,7 +3533,8 @@ def sync_hubspot_data():
                 continue
         month = dt.month
         for d in details:
-            src = d.get("breakdown") or d.get("source") or d.get("sourceType")
+            src_raw = d.get("breakdown") or d.get("source") or d.get("sourceType")
+            src = _normalize_hubspot_source(src_raw)
             if not src:
                 continue
             sessions = d.get("visits") or d.get("sessions") or 0
