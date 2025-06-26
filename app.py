@@ -38,6 +38,7 @@ from database import (
     add_api_response,
     get_api_responses,
     set_setting,
+    set_settings,
 )
 
 from utils.sync import upsert_record
@@ -2872,21 +2873,31 @@ def settings_page():
         theme_highlight = request.form.get("theme_highlight", "").strip()
         theme_background = request.form.get("theme_background", "").strip()
         theme_text = request.form.get("theme_text", "").strip()
-        set_setting("theme_primary", theme_primary)
-        set_setting("theme_highlight", theme_highlight)
-        set_setting("theme_background", theme_background)
-        set_setting("theme_text", theme_text)
+        pairs = [
+            ("theme_primary", theme_primary),
+            ("theme_highlight", theme_highlight),
+            ("theme_background", theme_background),
+            ("theme_text", theme_text),
+        ]
 
         primary_color = request.form.get("primary_color", "").strip()
         highlight_color = request.form.get("highlight_color", "").strip()
-        set_setting("branding_primary", primary_color)
-        set_setting("branding_highlight", highlight_color)
+        pairs.extend(
+            [
+                ("branding_primary", primary_color),
+                ("branding_highlight", highlight_color),
+            ]
+        )
         app_title = request.form.get("app_title", "").strip()
         report_title = request.form.get("report_title", "").strip()
         branding = request.form.get("branding", "").strip()
-        set_setting("app_title", app_title)
-        set_setting("report_title", report_title)
-        set_setting("branding", branding)
+        pairs.extend(
+            [
+                ("app_title", app_title),
+                ("report_title", report_title),
+                ("branding", branding),
+            ]
+        )
         include_month_summary = "include_month_summary" in request.form
         include_month_details = "include_month_details" in request.form
         include_year_overall = "include_year_overall" in request.form
@@ -2904,44 +2915,66 @@ def settings_page():
         tx_source_default = request.form.get("tx_source_default", "both")
         tx_period_default = request.form.get("tx_period_default", "last30")
         detail_types = request.form.getlist("detail_types")
-        set_setting("default_detail_types", ",".join(detail_types))
-        set_setting(
-            "default_include_month_summary", "1" if include_month_summary else "0"
+        pairs.extend(
+            [
+                ("default_detail_types", ",".join(detail_types)),
+                (
+                    "default_include_month_summary",
+                    "1" if include_month_summary else "0",
+                ),
+                (
+                    "default_include_month_details",
+                    "1" if include_month_details else "0",
+                ),
+                (
+                    "default_include_year_overall",
+                    "1" if include_year_overall else "0",
+                ),
+                (
+                    "default_include_year_summary",
+                    "1" if include_year_summary else "0",
+                ),
+                ("default_include_shopify", "1" if include_shopify else "0"),
+                ("default_include_marketing", "1" if include_marketing else "0"),
+                ("reports_start_tab", reports_start_tab),
+                ("reports_year_limit", str(max(1, year_limit))),
+            ]
         )
-        set_setting(
-            "default_include_month_details", "1" if include_month_details else "0"
-        )
-        set_setting(
-            "default_include_year_overall", "1" if include_year_overall else "0"
-        )
-        set_setting(
-            "default_include_year_summary", "1" if include_year_summary else "0"
-        )
-        set_setting("default_include_shopify", "1" if include_shopify else "0")
-        set_setting("default_include_marketing", "1" if include_marketing else "0")
-        set_setting("reports_start_tab", reports_start_tab)
-        set_setting("reports_year_limit", str(max(1, year_limit)))
         shopify_domain = request.form.get("shopify_domain", "").strip()
         shopify_token = request.form.get("shopify_token", "").strip()
-        set_setting("shopify_domain", shopify_domain)
-        set_setting("shopify_token", shopify_token)
+        pairs.extend(
+            [
+                ("shopify_domain", shopify_domain),
+                ("shopify_token", shopify_token),
+            ]
+        )
         qbo_client_id = request.form.get("qbo_client_id", "").strip()
         qbo_client_secret = request.form.get("qbo_client_secret", "").strip()
         qbo_refresh_token = request.form.get("qbo_refresh_token", "").strip()
         qbo_realm_id = request.form.get("qbo_realm_id", "").strip()
         qbo_environment = request.form.get("qbo_environment", "prod").strip() or "prod"
         hubspot_token = request.form.get("hubspot_token", "").strip()
-        set_setting("qbo_client_id", qbo_client_id)
-        set_setting("qbo_client_secret", qbo_client_secret)
-        set_setting("qbo_refresh_token", qbo_refresh_token)
-        set_setting("qbo_realm_id", qbo_realm_id)
-        set_setting("qbo_environment", qbo_environment)
-        set_setting("hubspot_token", hubspot_token)
+        pairs.extend(
+            [
+                ("qbo_client_id", qbo_client_id),
+                ("qbo_client_secret", qbo_client_secret),
+                ("qbo_refresh_token", qbo_refresh_token),
+                ("qbo_realm_id", qbo_realm_id),
+                ("qbo_environment", qbo_environment),
+                ("hubspot_token", hubspot_token),
+            ]
+        )
         default_month = request.form.get("default_month", "")
-        set_setting("default_export_month", default_month)
-        set_setting("duplicate_action", dup_action)
-        set_setting("transactions_default_source", tx_source_default)
-        set_setting("transactions_default_period", tx_period_default)
+        pairs.extend(
+            [
+                ("default_export_month", default_month),
+                ("duplicate_action", dup_action),
+                ("transactions_default_source", tx_source_default),
+                ("transactions_default_period", tx_period_default),
+            ]
+        )
+
+        set_settings(pairs)
         if dup_action in {"shopify", "qbo", "both"} and dup_action != prev_dup_action:
             conn = get_db()
             _resolve_duplicates(conn, dup_action)
