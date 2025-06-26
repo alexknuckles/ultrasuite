@@ -51,6 +51,17 @@ company data or **Sandbox** when testing against Intuit's sandbox API.
 - `templates/` – Jinja2 templates for all pages.
 - `build-scripts/` – PowerShell and Inno Setup scripts for Windows builds.
 
+## API Connectors
+
+Utility modules in `utils/` provide lightweight clients for external services:
+
+- `ShopifyClient` – e-commerce order and catalog sync
+- `QBOClient` – QuickBooks Online transactions
+- `HubSpotClient` – website traffic analytics
+
+Each client exposes a `fetch_*` method and simple wrappers so new providers can
+follow the same pattern.
+
 ## Programmatic Reports
 
 Helper functions in `app.py` expose the underlying report data for integration into other Python code:
