@@ -243,7 +243,9 @@ def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod"):
     url = _qbo_api_url(realm_id, "query", environment)
     q = f"select TxnDate, Line from {doc_type}"
     if doc_type == "Invoice":
-        q += " where Balance = 0"
+        # QuickBooks query language sometimes requires numeric values
+        # to be quoted as strings for equality comparisons
+        q += " where Balance = '0'"
     q += " startposition 1 maxresults 1000"
     resp = requests.get(
         url,
