@@ -3466,6 +3466,20 @@ def sync_hubspot_data():
             conn.close()
             return jsonify(success=False, error=str(exc)), 500
         data = resp.json()
+        if "results" in data:
+            data = data["results"]
+        elif "data" in data:
+            data = data["data"]
+        elif "reports" in data:
+            rep = data.get("reports")
+            if isinstance(rep, list) and rep and isinstance(rep[0], dict):
+                data = rep[0].get("data", rep[0])
+
+        if not isinstance(data, dict):
+            log_error("HubSpot sync error: unexpected JSON format")
+            conn.close()
+            return jsonify(success=False, error="Unexpected response"), 500
+
         for key, details in data.items():
             try:
                 dt = datetime.strptime(key, "%Y-%m")
@@ -3485,11 +3499,14 @@ def sync_hubspot_data():
                     (avg_sec / 60.0) if isinstance(avg_sec, (int, float)) else None
                 )
                 bounce = d.get("bounceRate")
-                conn.execute(
-                    "REPLACE INTO hubspot_traffic(year, month, source, sessions, avg_time, bounce_rate) "
-                    "VALUES (?, ?, ?, ?, ?, ?)",
-                    (year, month, src, sessions, avg_min, bounce),
-                )
+                try:
+                    conn.execute(
+                        "REPLACE INTO hubspot_traffic(year, month, source, sessions, avg_time, bounce_rate) "
+                        "VALUES (?, ?, ?, ?, ?, ?)",
+                        (year, month, src, sessions, avg_min, bounce),
+                    )
+                except Exception as exc:
+                    log_error(f"HubSpot sync error: {exc}")
     conn.commit()
     conn.close()
     now = datetime.now(timezone.utc).isoformat()
