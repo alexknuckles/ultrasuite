@@ -1655,6 +1655,89 @@ def get_traffic_matrix():
     return {'years': years, 'metrics': metrics}
 
 
+@app.route('/test-qbo-connection', methods=['POST'])
+def test_qbo_connection():
+    """Test the connection to the QBO API."""
+    client_id = request.form.get('client_id')
+    client_secret = request.form.get('client_secret')
+    refresh_token = request.form.get('refresh_token')
+    realm_id = request.form.get('realm_id')
+    environment = request.form.get('environment')
+    try:
+        _refresh_qbo_access(client_id, client_secret, refresh_token)
+        return jsonify({'success': True})
+    except Exception:
+        return jsonify({'success': False})
+
+
+@app.route('/qbo-connect')
+def qbo_connect():
+    """Redirect to QuickBooks for authorization."""
+    client_id = get_setting('qbo_client_id')
+    if not client_id:
+        flash('Please provide a QuickBooks Client ID.')
+        return redirect(url_for('settings_page'))
+    params = {
+        'client_id': client_id,
+        'scope': 'com.intuit.quickbooks.accounting',
+        'redirect_uri': url_for('qbo_callback', _external=True),
+        'response_type': 'code',
+        'state': 'ultrasuite'
+    }
+    auth_url = 'https://appcenter.intuit.com/connect/oauth2'
+    return redirect(f"{auth_url}?{'&'.join([f'{k}={v}' for k, v in params.items()])}")
+
+
+@app.route('/sync-qbo', methods=['POST'])
+def sync_qbo_data():
+    """Fetch QBO data and update the database."""
+    client_id = get_setting('qbo_client_id')
+    client_secret = get_setting('qbo_client_secret')
+    refresh_token = get_setting('qbo_refresh_token')
+    realm_id = get_setting('qbo_realm_id')
+    environment = get_setting('qbo_environment')
+    if not all([client_id, client_secret, refresh_token, realm_id]):
+        return jsonify({'success': False, 'message': 'Missing QBO credentials'})
+    try:
+        txn_df, items_df, docs, new_refresh = _fetch_qbo_api(
+            client_id, client_secret, refresh_token, realm_id, environment
+        )
+        conn = get_db()
+        txn_df.to_sql('qbo', conn, if_exists='replace', index=False)
+        _update_sku_map(conn, items_df['sku'], 'qbo')
+        conn.execute('DELETE FROM qbo_docs')
+        for doc in docs:
+            conn.execute(
+                'INSERT INTO qbo_docs (doc_id, data) VALUES (?, ?)',
+                (doc.get('Id'), json.dumps(doc))
+            )
+        set_setting('qbo_refresh_token', new_refresh)
+        conn.execute(
+            'REPLACE INTO meta (source, last_synced) VALUES (?, ?)',
+            ('qbo', datetime.now(timezone.utc).isoformat())
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        log_error(f'QBO sync failed: {e}')
+        return jsonify({'success': False, 'message': str(e)})
+
+
+@app.route('/qbo-callback')
+def qbo_callback():
+    """Handle QBO OAuth2 callback."""
+    auth_code = request.args.get('code')
+    realm_id = request.args.get('realmId')
+    if not auth_code:
+        flash('QuickBooks authorization failed.')
+        return redirect(url_for('settings_page'))
+    set_setting('qbo_auth_code', auth_code)
+    set_setting('qbo_realm_id', realm_id)
+    flash('QuickBooks connected. Please save your settings.')
+    return redirect(url_for('settings_page'))
+
+
 def generate_year_chart_base64(year, *, light=False):
     """Return base64 PNG for the year-over-year monthly sales chart.
 

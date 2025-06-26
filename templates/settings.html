@@ -509,6 +509,25 @@
       });
     });
   }
+  const syncQbo = document.getElementById('syncQboBtn');
+  if(syncQbo){
+    syncQbo.addEventListener('click', () => {
+      syncQbo.disabled = true;
+      syncQbo.textContent = 'Syncing...';
+      fetch('{{ url_for('sync_qbo_data') }}', {method: 'POST'})
+        .then(r => r.json())
+        .then(res => {
+          syncQbo.textContent = res.success ? 'Synced' : 'Sync failed';
+          syncQbo.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
+          if(!res.success) syncQbo.disabled = false;
+        })
+        .catch(() => {
+          syncQbo.textContent = 'Sync failed';
+          syncQbo.style.backgroundColor = '#d93025';
+        syncQbo.disabled = false;
+      });
+    });
+  }
   const testHs = document.getElementById('testHubspotBtn');
   const hsSpan = document.getElementById('hubspotConnResult');
   if(testHs && hsSpan){
