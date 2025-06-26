@@ -185,34 +185,35 @@ def _parse_qbo(file_storage):
     return cleaned
 
 
-def _fetch_shopify_api(domain, token, since=None):
+def _fetch_shopify_api(domain, token, since=None, next_url=None):
     """Return Shopify orders, line item rows and raw JSON data.
 
     If ``since`` is provided, only orders updated at or after that ISO timestamp
-    are fetched.
+    are fetched. ``next_url`` can be used to fetch a single page for batching.
     """
     headers = {"X-Shopify-Access-Token": token}
-    url = f"https://{domain}/admin/api/2023-07/orders.json"
-    params = {"status": "any", "limit": 250}
-    if since:
-        params["updated_at_min"] = since
-    orders = []
-    line_items = []
-    while url:
-        resp = requests.get(url, headers=headers, params=params, timeout=10)
-        resp.raise_for_status()
-        data = resp.json().get("orders", [])
-        orders.extend(data)
-        link = resp.headers.get("Link", "")
-        next_url = None
-        for part in link.split(","):
-            if 'rel="next"' in part:
-                start = part.find("<") + 1
-                end = part.find(">")
-                next_url = part[start:end]
-                break
+    if next_url:
         url = next_url
         params = None
+    else:
+        url = f"https://{domain}/admin/api/2023-07/orders.json"
+        params = {"status": "any", "limit": 250}
+        if since:
+            params["updated_at_min"] = since
+    orders = []
+    line_items = []
+    resp = requests.get(url, headers=headers, params=params, timeout=10)
+    resp.raise_for_status()
+    data = resp.json().get("orders", [])
+    orders.extend(data)
+    link = resp.headers.get("Link", "")
+    next_link = None
+    for part in link.split(","):
+        if 'rel="next"' in part:
+            start = part.find("<") + 1
+            end = part.find(">")
+            next_link = part[start:end]
+            break
     rows = []
     for order in orders:
         created = order.get("created_at")
@@ -234,37 +235,36 @@ def _fetch_shopify_api(domain, token, since=None):
     df = pd.DataFrame(
         rows, columns=["created_at", "sku", "description", "quantity", "price", "total"]
     )
-    return df, orders, line_items
+    return df, orders, line_items, next_link
 
 
-def _fetch_shopify_list(domain, token, endpoint, key, since=None):
+def _fetch_shopify_list(domain, token, endpoint, key, since=None, next_url=None):
     """Return a list of Shopify objects for the given endpoint.
 
     If ``since`` is provided, only objects updated after that ISO timestamp are
-    retrieved.
+    retrieved. ``next_url`` allows fetching a single page for batching.
     """
     headers = {"X-Shopify-Access-Token": token}
-    url = f"https://{domain}/admin/api/2023-07/{endpoint}.json"
-    params = {"limit": 250}
-    if since:
-        params["updated_at_min"] = since
-    items = []
-    while url:
-        resp = requests.get(url, headers=headers, params=params, timeout=10)
-        resp.raise_for_status()
-        data = resp.json().get(key, [])
-        items.extend(data)
-        link = resp.headers.get("Link", "")
-        next_url = None
-        for part in link.split(","):
-            if 'rel="next"' in part:
-                start = part.find("<") + 1
-                end = part.find(">")
-                next_url = part[start:end]
-                break
+    if next_url:
         url = next_url
         params = None
-    return items
+    else:
+        url = f"https://{domain}/admin/api/2023-07/{endpoint}.json"
+        params = {"limit": 250}
+        if since:
+            params["updated_at_min"] = since
+    resp = requests.get(url, headers=headers, params=params, timeout=10)
+    resp.raise_for_status()
+    data = resp.json().get(key, [])
+    link = resp.headers.get("Link", "")
+    next_link = None
+    for part in link.split(","):
+        if 'rel="next"' in part:
+            start = part.find("<") + 1
+            end = part.find(">")
+            next_link = part[start:end]
+            break
+    return data, next_link
 
 
 def _refresh_qbo_access(client_id, client_secret, refresh_token):
@@ -292,7 +292,9 @@ def _qbo_api_url(realm_id, path, environment="prod"):
     return f"{base}/v3/company/{realm_id}/{path}"
 
 
-def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod", item_map=None):
+def _qbo_txn_lines(
+    headers, realm_id, doc_type, environment="prod", item_map=None, start_pos=1
+):
     """Return line item dicts and raw documents for the given QBO document.
 
     Parameters
@@ -314,7 +316,7 @@ def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod", item_map=Non
         # QuickBooks query language sometimes requires numeric values
         # to be quoted as strings for equality comparisons
         q += " where Balance = '0'"
-    q += " startposition 1 maxresults 1000"
+    q += f" startposition {start_pos} maxresults 1000"
     resp = requests.get(
         url,
         headers=headers,
@@ -324,6 +326,7 @@ def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod", item_map=Non
     resp.raise_for_status()
     data = resp.json().get("QueryResponse", {})
     txns = data.get(doc_type, [])
+    next_pos = start_pos + 1000 if len(txns) >= 1000 else None
     rows = []
     docs = []
     line_items = []
@@ -362,7 +365,32 @@ def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod", item_map=Non
                 }
             )
             line_items.append({"doc_id": doc_id, "line_num": idx, "data": line})
-    return rows, docs, line_items
+    return rows, docs, line_items, next_pos
+
+
+def _fetch_qbo_items(headers, realm_id, environment="prod"):
+    """Return DataFrame of QBO items and an item ID to SKU map."""
+    url = _qbo_api_url(realm_id, "query", environment)
+    q = "select Id, Name, Sku from Item"
+    resp = requests.get(
+        url,
+        headers=headers,
+        params={"query": q, "minorversion": 65},
+        timeout=10,
+    )
+    resp.raise_for_status()
+    data = resp.json().get("QueryResponse", {})
+    item_rows = []
+    item_map = {}
+    for item in data.get("Item", []):
+        sku = item.get("Sku") or item.get("Name")
+        item_id = str(item.get("Id") or "")
+        if sku:
+            item_rows.append({"sku": sku})
+            if item_id:
+                item_map[item_id] = sku
+    items_df = pd.DataFrame(item_rows, columns=["sku"])
+    return items_df, item_map
 
 
 def _fetch_qbo_list(headers, realm_id, entity, environment="prod"):
@@ -381,9 +409,18 @@ def _fetch_qbo_list(headers, realm_id, entity, environment="prod"):
 
 
 def _fetch_qbo_api(
-    client_id, client_secret, refresh_token, realm_id, environment="prod"
+    client_id,
+    client_secret,
+    refresh_token,
+    realm_id,
+    environment="prod",
+    doc_type="SalesReceipt",
+    start_pos=1,
+    item_map=None,
+    fetch_lists=False,
 ):
-    """Return QBO transactions, items, raw docs, line items and new refresh token."""
+    """Return a single page of QBO transactions and related data."""
+
     access_token, new_refresh = _refresh_qbo_access(
         client_id, client_secret, refresh_token
     )
@@ -392,44 +429,15 @@ def _fetch_qbo_api(
         "Accept": "application/json",
     }
 
-    # --- Items ---
-    items_url = _qbo_api_url(realm_id, "query", environment)
-    q = "select Id, Name, Sku from Item"
-    resp = requests.get(
-        items_url,
-        headers=headers,
-        params={"query": q, "minorversion": 65},
-        timeout=10,
-    )
-    resp.raise_for_status()
-    items_data = resp.json().get("QueryResponse", {})
-    item_rows = []
-    item_map = {}
-    for item in items_data.get("Item", []):
-        sku = item.get("Sku") or item.get("Name")
-        item_id = str(item.get("Id") or "")
-        if sku:
-            item_rows.append({"sku": sku})
-            if item_id:
-                item_map[item_id] = sku
-    items_df = pd.DataFrame(item_rows, columns=["sku"])
+    items_df = pd.DataFrame()
+    if item_map is None or fetch_lists:
+        items_df, item_map = _fetch_qbo_items(headers, realm_id, environment)
 
-    # --- Transactions ---
-    rows = []
-    docs = []
-    line_items = []
-    for doc_type in ("SalesReceipt", "Invoice"):
-        try:
-            line_rows, raw_docs, raw_lines = _qbo_txn_lines(
-                headers, realm_id, doc_type, environment, item_map
-            )
-            rows.extend(line_rows)
-            docs.extend(raw_docs)
-            line_items.extend(raw_lines)
-        except Exception as exc:
-            log_error(f"QBO {doc_type} fetch error: {exc}")
+    line_rows, raw_docs, raw_lines, next_pos = _qbo_txn_lines(
+        headers, realm_id, doc_type, environment, item_map, start_pos=start_pos
+    )
     txn_df = pd.DataFrame(
-        rows,
+        line_rows,
         columns=[
             "created_at",
             "sku",
@@ -441,7 +449,27 @@ def _fetch_qbo_api(
         ],
     )
 
-    return txn_df, items_df, docs, line_items, new_refresh, headers
+    customers = payments = products = invoices = []
+    if fetch_lists:
+        customers = _fetch_qbo_list(headers, realm_id, "Customer", environment)
+        payments = _fetch_qbo_list(headers, realm_id, "Payment", environment)
+        products = _fetch_qbo_list(headers, realm_id, "Item", environment)
+        invoices = _fetch_qbo_list(headers, realm_id, "Invoice", environment)
+
+    return (
+        txn_df,
+        items_df,
+        raw_docs,
+        raw_lines,
+        new_refresh,
+        headers,
+        item_map,
+        next_pos,
+        customers,
+        payments,
+        products,
+        invoices,
+    )
 
 
 app = Flask(__name__)
@@ -3066,59 +3094,77 @@ def sync_shopify_data():
     action = get_setting("duplicate_action", "review")
     if not domain or not token:
         return jsonify(success=False, error="Missing credentials"), 400
+
+    payload = request.get_json(silent=True) or {}
+    cursor = payload.get("cursor")
+    page = int(payload.get("page", 1))
+    first_batch = cursor is None
     try:
-        df, orders, line_items = _fetch_shopify_api(domain, token, since=since)
-        customers = _fetch_shopify_list(
-            domain, token, "customers", "customers", since=since
+        df, orders, line_items, next_cursor = _fetch_shopify_api(
+            domain, token, since=since, next_url=cursor
         )
-        products = _fetch_shopify_list(
-            domain, token, "products", "products", since=since
-        )
+        customers = []
+        products = []
+        if first_batch:
+            customers, c_next = _fetch_shopify_list(
+                domain, token, "customers", "customers", since=since
+            )
+            products, p_next = _fetch_shopify_list(
+                domain, token, "products", "products", since=since
+            )
     except Exception as exc:
         log_error(f"Shopify sync error: {exc}")
         return jsonify(success=False, error=str(exc)), 500
-    if df.empty:
+
+    if df.empty and next_cursor is None and first_batch:
         return jsonify(success=False, error="No data returned"), 400
+
     conn = get_db()
-    df.to_sql("shopify", conn, if_exists="replace", index=False)
+    mode = "replace" if first_batch else "append"
+    df.to_sql("shopify", conn, if_exists=mode, index=False)
     for o in orders:
         o["shopify_id"] = o.get("id")
         upsert_record(conn, "shopify_orders", o, "shopify_id")
-    for c in customers:
-        c["shopify_id"] = c.get("id")
-        upsert_record(conn, "shopify_customers", c, "shopify_id")
-    for p in products:
-        p["shopify_id"] = p.get("id")
-        upsert_record(conn, "shopify_products", p, "shopify_id")
-    conn.execute("DELETE FROM shopify_lines")
+    if first_batch:
+        for c in customers:
+            c["shopify_id"] = c.get("id")
+            upsert_record(conn, "shopify_customers", c, "shopify_id")
+        for p in products:
+            p["shopify_id"] = p.get("id")
+            upsert_record(conn, "shopify_products", p, "shopify_id")
+        conn.execute("DELETE FROM shopify_lines")
     for item in line_items:
         conn.execute(
             "INSERT INTO shopify_lines(order_id, line_num, data) VALUES (?, ?, ?)",
             (item["order_id"], item["line_num"], json.dumps(item["data"])),
         )
-    _update_sku_map(conn, df["sku"], "shopify")
-    if action in {"shopify", "qbo", "both"}:
-        _resolve_duplicates(conn, action)
-    created = pd.to_datetime(
-        df["created_at"].astype(str), errors="coerce", format="mixed", utc=True
-    ).dt.tz_localize(None)
-    last_txn = created.max()
-    first_txn = created.min()
-    now = datetime.now(timezone.utc).isoformat()
-    conn.execute(
-        "REPLACE INTO meta (source, last_updated, last_transaction, first_transaction, last_synced) VALUES (?, ?, ?, ?, ?)",
-        (
-            "shopify",
-            now,
-            last_txn.isoformat() if pd.notna(last_txn) else None,
-            first_txn.isoformat() if pd.notna(first_txn) else None,
-            now,
-        ),
-    )
     conn.commit()
+
+    if next_cursor is None:
+        sku_df = pd.read_sql_query("SELECT sku FROM shopify", conn)
+        _update_sku_map(conn, sku_df["sku"], "shopify")
+        if action in {"shopify", "qbo", "both"}:
+            _resolve_duplicates(conn, action)
+        row = conn.execute(
+            "SELECT MIN(created_at), MAX(created_at) FROM shopify"
+        ).fetchone()
+        now = datetime.now(timezone.utc).isoformat()
+        conn.execute(
+            "REPLACE INTO meta (source, last_updated, last_transaction, first_transaction, last_synced) VALUES (?, ?, ?, ?, ?)",
+            (
+                "shopify",
+                now,
+                row[1],
+                row[0],
+                now,
+            ),
+        )
+        conn.commit()
+        conn.close()
+        set_setting("shopify_last_sync", now)
+        return jsonify(success=True, next=None, done=True)
     conn.close()
-    set_setting("shopify_last_sync", now)
-    return jsonify(success=True)
+    return jsonify(success=True, next=next_cursor, page=page + 1, done=False)
 
 
 @app.route("/qbo/connect")
@@ -3225,6 +3271,15 @@ def sync_qbo_data():
     action = get_setting("duplicate_action", "review")
     if not client_id or not client_secret or not refresh_token or not realm_id:
         return jsonify(success=False, error="Missing credentials"), 400
+
+    payload = request.get_json(silent=True) or {}
+    doc_type = payload.get("doc_type", "SalesReceipt")
+    pos = int(payload.get("pos", 1))
+    first_batch = doc_type == "SalesReceipt" and pos == 1
+    fetch_lists = first_batch
+    global QBO_STATE
+    if "QBO_STATE" not in globals():
+        QBO_STATE = {"item_map": None}
     try:
         (
             df,
@@ -3232,75 +3287,95 @@ def sync_qbo_data():
             docs,
             lines,
             new_refresh,
-            headers,
+            _headers,
+            item_map,
+            next_pos,
+            customers,
+            payments,
+            products,
+            invoices,
         ) = _fetch_qbo_api(
             client_id,
             client_secret,
             refresh_token,
             realm_id,
             environment,
+            doc_type=doc_type,
+            start_pos=pos,
+            item_map=QBO_STATE.get("item_map"),
+            fetch_lists=fetch_lists,
         )
-        customers = _fetch_qbo_list(headers, realm_id, "Customer", environment)
-        payments = _fetch_qbo_list(headers, realm_id, "Payment", environment)
-        products = _fetch_qbo_list(headers, realm_id, "Item", environment)
-        invoices = _fetch_qbo_list(headers, realm_id, "Invoice", environment)
+        QBO_STATE["item_map"] = item_map
     except Exception as exc:
         log_error(f"QBO sync error: {exc}")
         return jsonify(success=False, error=str(exc)), 500
-    if df.empty:
+
+    if df.empty and next_pos is None and first_batch:
         return jsonify(success=False, error="No data returned"), 400
+
     conn = get_db()
-    df.to_sql("qbo", conn, if_exists="replace", index=False)
-    conn.execute("DELETE FROM qbo_docs")
+    mode = "replace" if first_batch else "append"
+    df.to_sql("qbo", conn, if_exists=mode, index=False)
+    if first_batch:
+        conn.execute("DELETE FROM qbo_docs")
+        conn.execute("DELETE FROM qbo_lines")
     for d in docs:
         conn.execute(
             "INSERT INTO qbo_docs(doc_id, data) VALUES (?, ?)",
             (str(d.get("Id") or d.get("DocNumber") or ""), json.dumps(d)),
         )
-    conn.execute("DELETE FROM qbo_lines")
     for item in lines:
         conn.execute(
             "INSERT INTO qbo_lines(doc_id, line_num, data) VALUES (?, ?, ?)",
             (item["doc_id"], item["line_num"], json.dumps(item["data"])),
         )
-    for customer in customers:
-        customer["qbo_id"] = str(customer.get("Id") or "")
-        upsert_record(conn, "qbo_customers", customer, "qbo_id")
-    for payment in payments:
-        payment["qbo_id"] = str(payment.get("Id") or "")
-        upsert_record(conn, "qbo_payments", payment, "qbo_id")
-    for prod in products:
-        prod["qbo_id"] = str(prod.get("Id") or "")
-        upsert_record(conn, "qbo_products", prod, "qbo_id")
-    for inv in invoices:
-        inv["qbo_id"] = str(inv.get("Id") or "")
-        upsert_record(conn, "qbo_invoices", inv, "qbo_id")
-    sku_series = pd.concat([df["sku"], items["sku"]], ignore_index=True)
-    _update_sku_map(conn, sku_series, "qbo")
-    if action in {"shopify", "qbo", "both"}:
-        _resolve_duplicates(conn, action)
-    created = pd.to_datetime(
-        df["created_at"].astype(str), errors="coerce", format="mixed", utc=True
-    ).dt.tz_localize(None)
-    last_txn = created.max()
-    first_txn = created.min()
-    now = datetime.now(timezone.utc).isoformat()
-    conn.execute(
-        "REPLACE INTO meta (source, last_updated, last_transaction, first_transaction, last_synced) VALUES (?, ?, ?, ?, ?)",
-        (
-            "qbo",
-            now,
-            last_txn.isoformat() if pd.notna(last_txn) else None,
-            first_txn.isoformat() if pd.notna(first_txn) else None,
-            now,
-        ),
-    )
+    if fetch_lists:
+        for customer in customers:
+            customer["qbo_id"] = str(customer.get("Id") or "")
+            upsert_record(conn, "qbo_customers", customer, "qbo_id")
+        for payment in payments:
+            payment["qbo_id"] = str(payment.get("Id") or "")
+            upsert_record(conn, "qbo_payments", payment, "qbo_id")
+        for prod in products:
+            prod["qbo_id"] = str(prod.get("Id") or "")
+            upsert_record(conn, "qbo_products", prod, "qbo_id")
+        for inv in invoices:
+            inv["qbo_id"] = str(inv.get("Id") or "")
+            upsert_record(conn, "qbo_invoices", inv, "qbo_id")
+    conn.commit()
+
+    done = next_pos is None
+    next_doc = doc_type
+    if done and doc_type == "SalesReceipt":
+        next_doc = "Invoice"
+        done = False
+        next_pos = 1
+
+    if done and doc_type == "Invoice":
+        sku_df = pd.read_sql_query("SELECT sku FROM qbo", conn)
+        prod_df = pd.read_sql_query("SELECT sku FROM qbo_products", conn)
+        sku_series = pd.concat([sku_df["sku"], prod_df["sku"]], ignore_index=True)
+        _update_sku_map(conn, sku_series, "qbo")
+        if action in {"shopify", "qbo", "both"}:
+            _resolve_duplicates(conn, action)
+        row = conn.execute("SELECT MIN(created_at), MAX(created_at) FROM qbo").fetchone()
+        now = datetime.now(timezone.utc).isoformat()
+        conn.execute(
+            "REPLACE INTO meta (source, last_updated, last_transaction, first_transaction, last_synced) VALUES (?, ?, ?, ?, ?)",
+            (
+                "qbo",
+                now,
+                row[1],
+                row[0],
+                now,
+            ),
+        )
+        if new_refresh and new_refresh != refresh_token:
+            set_setting("qbo_refresh_token", new_refresh)
+        set_setting("qbo_last_sync", now)
     conn.commit()
     conn.close()
-    if new_refresh and new_refresh != refresh_token:
-        set_setting("qbo_refresh_token", new_refresh)
-    set_setting("qbo_last_sync", now)
-    return jsonify(success=True)
+    return jsonify(success=True, next=next_pos, doc_type=next_doc, done=done)
 
 
 @app.route("/test-hubspot", methods=["POST"])
