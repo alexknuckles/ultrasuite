@@ -15,9 +15,15 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 DB_PATH = os.path.join(base_dir, "finance.db")
 
 
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
+def get_db(timeout=30.0):
+    """Return a SQLite connection with a longer timeout.
+
+    A 30 second timeout reduces ``database is locked`` errors when multiple
+    writes occur concurrently. WAL mode is enabled to improve concurrency.
+    """
+    conn = sqlite3.connect(DB_PATH, timeout=timeout)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
     return conn
 
 
