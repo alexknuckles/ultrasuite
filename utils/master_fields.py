@@ -24,6 +24,15 @@ FIELD_MAPS: Dict[str, Mapping[str, str]] = {
         "created_at": "created",
         "sku": "sku",
     },
+    "hubspot": {
+        "year": "year",
+        "month": "month",
+        "month_num": "month_num",
+        "source": "source",
+        "sessions": "sessions",
+        "bounce_rate": "bounce_rate",
+        "avg_time_min": "avg_time_min",
+    },
 }
 
 

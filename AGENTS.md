@@ -36,6 +36,14 @@ Optional: run python -m unittest discover if unit tests are added
 
 Block commits if compile or tests fail
 
+🗂️ MasterFieldAgent
+
+Goal:Ensure synced API data maps to master columns:
+
+- Each connector must define field mappings in ``utils/master_fields.py``.
+- HubSpot and new APIs should return DataFrames with ``master_*`` columns.
+- Shared properties are accessed via these master fields for consistency.
+
 🎨 UIStylist
 
 Goal:Allow modernizing UI while keeping branding consistent:
