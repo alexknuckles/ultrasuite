@@ -157,11 +157,37 @@ def migrate_shopify_orders():
     )
     conn.close()
 
+def migrate_shopify_lines():
+    """Ensure table for raw Shopify line items exists."""
+    conn = get_db()
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS shopify_lines ("
+        "order_id INTEGER, "
+        "line_num INTEGER, "
+        "data TEXT, "
+        "PRIMARY KEY (order_id, line_num)"
+        ")"
+    )
+    conn.close()
+
 def migrate_qbo_docs():
     """Ensure table for raw QBO documents exists."""
     conn = get_db()
     conn.execute(
         "CREATE TABLE IF NOT EXISTS qbo_docs (doc_id TEXT PRIMARY KEY, data TEXT)"
+    )
+    conn.close()
+
+def migrate_qbo_lines():
+    """Ensure table for raw QBO line items exists."""
+    conn = get_db()
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS qbo_lines ("
+        "doc_id TEXT, "
+        "line_num INTEGER, "
+        "data TEXT, "
+        "PRIMARY KEY (doc_id, line_num)"
+        ")"
     )
     conn.close()
 
@@ -268,7 +294,9 @@ migrate_sku_source()
 migrate_sku_changed()
 migrate_duplicate_log()
 migrate_shopify_orders()
+migrate_shopify_lines()
 migrate_qbo_docs()
+migrate_qbo_lines()
 migrate_app_log()
 migrate_hubspot_traffic()
 migrate_api_responses()

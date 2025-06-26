@@ -177,11 +177,12 @@ def _parse_qbo(file_storage):
 
 
 def _fetch_shopify_api(domain, token):
-    """Return a DataFrame of Shopify orders via API and raw JSON data."""
+    """Return Shopify orders, line item rows and raw JSON data."""
     headers = {"X-Shopify-Access-Token": token}
     url = f"https://{domain}/admin/api/2023-07/orders.json"
     params = {"status": "any", "limit": 250}
     orders = []
+    line_items = []
     while url:
         resp = requests.get(url, headers=headers, params=params, timeout=10)
         resp.raise_for_status()
@@ -200,7 +201,8 @@ def _fetch_shopify_api(domain, token):
     rows = []
     for order in orders:
         created = order.get("created_at")
-        for line in order.get("line_items", []):
+        order_id = order.get("id")
+        for idx, line in enumerate(order.get("line_items", [])):
             rows.append({
                 "created_at": created,
                 "sku": line.get("sku"),
@@ -209,8 +211,9 @@ def _fetch_shopify_api(domain, token):
                 "price": line.get("price"),
                 "total": (float(line.get("price", 0)) * float(line.get("quantity", 0))),
             })
+            line_items.append({"order_id": order_id, "line_num": idx, "data": line})
     df = pd.DataFrame(rows, columns=["created_at", "sku", "description", "quantity", "price", "total"])
-    return df, orders
+    return df, orders, line_items
 
 
 def _refresh_qbo_access(client_id, client_secret, refresh_token):
@@ -255,7 +258,7 @@ def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod", item_map=Non
         Mapping of QuickBooks item IDs to their ``Item.Sku`` values.
     """
     url = _qbo_api_url(realm_id, "query", environment)
-    q = f"select TxnDate, Line from {doc_type}"
+    q = f"select Id, DocNumber, TxnDate, Line from {doc_type}"
     if doc_type == "Invoice":
         # QuickBooks query language sometimes requires numeric values
         # to be quoted as strings for equality comparisons
@@ -272,10 +275,12 @@ def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod", item_map=Non
     txns = data.get(doc_type, [])
     rows = []
     docs = []
+    line_items = []
     for tx in txns:
         docs.append(tx)
         created_at = tx.get("TxnDate")
-        for line in tx.get("Line", []):
+        doc_id = str(tx.get("Id") or tx.get("DocNumber") or "")
+        for idx, line in enumerate(tx.get("Line", [])):
             detail = line.get("SalesItemLineDetail")
             if not detail:
                 continue
@@ -303,11 +308,12 @@ def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod", item_map=Non
                 "total": total,
                 "doc_type": doc_type,
             })
-    return rows, docs
+            line_items.append({"doc_id": doc_id, "line_num": idx, "data": line})
+    return rows, docs, line_items
 
 
 def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environment="prod"):
-    """Return DataFrames of QBO transactions and items via API."""
+    """Return QBO transactions, items, raw docs, line items and new refresh token."""
     access_token, new_refresh = _refresh_qbo_access(
         client_id, client_secret, refresh_token
     )
@@ -341,13 +347,15 @@ def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environmen
     # --- Transactions ---
     rows = []
     docs = []
+    line_items = []
     for doc_type in ("SalesReceipt", "Invoice"):
         try:
-            line_rows, raw_docs = _qbo_txn_lines(
+            line_rows, raw_docs, raw_lines = _qbo_txn_lines(
                 headers, realm_id, doc_type, environment, item_map
             )
             rows.extend(line_rows)
             docs.extend(raw_docs)
+            line_items.extend(raw_lines)
         except Exception as exc:
             log_error(f"QBO {doc_type} fetch error: {exc}")
     txn_df = pd.DataFrame(
@@ -355,7 +363,7 @@ def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environmen
         columns=["created_at", "sku", "description", "quantity", "price", "total", "doc_type"],
     )
 
-    return txn_df, items_df, docs, new_refresh
+    return txn_df, items_df, docs, line_items, new_refresh
 
 app = Flask(__name__)
 app.secret_key = 'secret'
@@ -2759,7 +2767,7 @@ def sync_shopify_data():
     if not domain or not token:
         return jsonify(success=False, error="Missing credentials"), 400
     try:
-        df, orders = _fetch_shopify_api(domain, token)
+        df, orders, line_items = _fetch_shopify_api(domain, token)
     except Exception as exc:
         log_error(f"Shopify sync error: {exc}")
         return jsonify(success=False, error=str(exc)), 500
@@ -2772,6 +2780,12 @@ def sync_shopify_data():
         conn.execute(
             "INSERT INTO shopify_orders(order_id, data) VALUES (?, ?)",
             (o.get("id"), json.dumps(o)),
+        )
+    conn.execute("DELETE FROM shopify_lines")
+    for item in line_items:
+        conn.execute(
+            "INSERT INTO shopify_lines(order_id, line_num, data) VALUES (?, ?, ?)",
+            (item["order_id"], item["line_num"], json.dumps(item["data"])),
         )
     _update_sku_map(conn, df["sku"], "shopify")
     if action in {"shopify", "qbo", "both"}:
@@ -2896,7 +2910,7 @@ def sync_qbo_data():
     if not client_id or not client_secret or not refresh_token or not realm_id:
         return jsonify(success=False, error="Missing credentials"), 400
     try:
-        df, items, docs, new_refresh = _fetch_qbo_api(
+        df, items, docs, lines, new_refresh = _fetch_qbo_api(
             client_id, client_secret, refresh_token, realm_id, environment
         )
     except Exception as exc:
@@ -2911,6 +2925,12 @@ def sync_qbo_data():
         conn.execute(
             "INSERT INTO qbo_docs(doc_id, data) VALUES (?, ?)",
             (str(d.get('Id') or d.get('DocNumber') or ''), json.dumps(d)),
+        )
+    conn.execute("DELETE FROM qbo_lines")
+    for item in lines:
+        conn.execute(
+            "INSERT INTO qbo_lines(doc_id, line_num, data) VALUES (?, ?, ?)",
+            (item["doc_id"], item["line_num"], json.dumps(item["data"])),
         )
     sku_series = pd.concat([df["sku"], items["sku"]], ignore_index=True)
     _update_sku_map(conn, sku_series, "qbo")
