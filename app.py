@@ -238,8 +238,22 @@ def _qbo_api_url(realm_id, path, environment="prod"):
     return f"{base}/v3/company/{realm_id}/{path}"
 
 
-def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod"):
-    """Return line item dicts and raw documents for the given QBO document."""
+def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod", item_map=None):
+    """Return line item dicts and raw documents for the given QBO document.
+
+    Parameters
+    ----------
+    headers : dict
+        HTTP headers with authorization for the API.
+    realm_id : str
+        QuickBooks realm/company ID.
+    doc_type : str
+        Document type, e.g. ``SalesReceipt`` or ``Invoice``.
+    environment : str, optional
+        API environment. Defaults to ``"prod"``.
+    item_map : dict, optional
+        Mapping of QuickBooks item IDs to their ``Item.Sku`` values.
+    """
     url = _qbo_api_url(realm_id, "query", environment)
     q = f"select TxnDate, Line from {doc_type}"
     if doc_type == "Invoice":
@@ -266,7 +280,11 @@ def _qbo_txn_lines(headers, realm_id, doc_type, environment="prod"):
             if not detail:
                 continue
             ref = detail.get("ItemRef") or {}
-            sku = ref.get("value") or ref.get("name")
+            item_id = str(ref.get("value") or "")
+            sku = item_map.get(item_id) if item_map else None
+            if not sku:
+                # Skip lines that don't map to a known Item.Sku
+                continue
             desc = line.get("Description") or ref.get("name")
             qty = detail.get("Qty") or 1
             price = detail.get("UnitPrice") or 0
@@ -298,24 +316,9 @@ def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environmen
         "Accept": "application/json",
     }
 
-    # --- Transactions ---
-    rows = []
-    docs = []
-    for doc_type in ("SalesReceipt", "Invoice"):
-        try:
-            line_rows, raw_docs = _qbo_txn_lines(headers, realm_id, doc_type, environment)
-            rows.extend(line_rows)
-            docs.extend(raw_docs)
-        except Exception as exc:
-            log_error(f"QBO {doc_type} fetch error: {exc}")
-    txn_df = pd.DataFrame(
-        rows,
-        columns=["created_at", "sku", "description", "quantity", "price", "total", "doc_type"],
-    )
-
     # --- Items ---
     items_url = _qbo_api_url(realm_id, "query", environment)
-    q = "select Name, Sku from Item"
+    q = "select Id, Name, Sku from Item"
     resp = requests.get(
         items_url,
         headers=headers,
@@ -325,11 +328,32 @@ def _fetch_qbo_api(client_id, client_secret, refresh_token, realm_id, environmen
     resp.raise_for_status()
     items_data = resp.json().get("QueryResponse", {})
     item_rows = []
+    item_map = {}
     for item in items_data.get("Item", []):
         sku = item.get("Sku") or item.get("Name")
+        item_id = str(item.get("Id") or "")
         if sku:
             item_rows.append({"sku": sku})
+            if item_id:
+                item_map[item_id] = sku
     items_df = pd.DataFrame(item_rows, columns=["sku"])
+
+    # --- Transactions ---
+    rows = []
+    docs = []
+    for doc_type in ("SalesReceipt", "Invoice"):
+        try:
+            line_rows, raw_docs = _qbo_txn_lines(
+                headers, realm_id, doc_type, environment, item_map
+            )
+            rows.extend(line_rows)
+            docs.extend(raw_docs)
+        except Exception as exc:
+            log_error(f"QBO {doc_type} fetch error: {exc}")
+    txn_df = pd.DataFrame(
+        rows,
+        columns=["created_at", "sku", "description", "quantity", "price", "total", "doc_type"],
+    )
 
     return txn_df, items_df, docs, new_refresh
 
