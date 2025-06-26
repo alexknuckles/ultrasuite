@@ -156,6 +156,13 @@ TRAFFIC_SOURCES = [
     "Paid Search",
 ]
 
+# Labels used to render HubSpot traffic metrics tables
+TRAFFIC_METRIC_LABELS = {
+    "sessions": "Sessions",
+    "avg_time": "Avg Time (min)",
+    "bounce_rate": "Bounce Rate %",
+}
+
 # Map HubSpot API source identifiers to display names
 HUBSPOT_SOURCE_MAP = {
     "EMAIL_MARKETING": "Email Marketing",
