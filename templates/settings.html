@@ -317,7 +317,7 @@
     <div id="skuSettings" class="tab-pane is-hidden">
       <div class="box mb-4">
         <h3 class="title is-5 mb-3">SKU Map File</h3>
-        <div class="is-flex is-align-items-center">
+          <div class="buttons is-align-items-center">
           <a class="mdc-button mdc-button--raised mr-2" href="{{ url_for('export_sku_map') }}">Export</a>
           <form id="importSkuForm" method="post" enctype="multipart/form-data" action="{{ url_for('import_sku_map') }}" class="is-inline-block">
             <input id="skuFileInput" class="is-hidden" type="file" name="sku_file" accept=".csv,.xls,.xlsx" required hidden>
@@ -355,21 +355,25 @@
     const fd = new FormData(settingsForm);
     return fetch('{{ url_for('settings_page') }}', {method:'POST', body: fd});
   }
+  function setActiveTab(target){
+    document.querySelectorAll('#settingsTabs button').forEach(b => b.classList.remove('is-active'));
+    const btn = document.querySelector(`#settingsTabs button[data-target="${target}"]`);
+    if(btn) btn.classList.add('is-active');
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
+    const pane = document.getElementById(target);
+    if(pane) pane.classList.remove('is-hidden');
+    if(saveBtn){
+      const hide = ['skuSettings', 'logsSettings', 'syncSettings'].includes(target);
+      saveBtn.style.display = hide ? 'none' : '';
+    }
+    localStorage.setItem('settingsActiveTab', target);
+  }
   if(saveBtn){
     const active = document.querySelector('#settingsTabs .is-active');
-    if(active && (active.dataset.target === 'skuSettings' || active.dataset.target === 'logsSettings')) saveBtn.style.display = 'none';
+    if(active && ['skuSettings','logsSettings','syncSettings'].includes(active.dataset.target)) saveBtn.style.display = 'none';
   }
   document.querySelectorAll('#settingsTabs button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#settingsTabs button').forEach(b => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
-      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
-      document.getElementById(btn.dataset.target).classList.remove('is-hidden');
-      if(saveBtn){
-        const hide = btn.dataset.target === 'skuSettings' || btn.dataset.target === 'logsSettings';
-        saveBtn.style.display = hide ? 'none' : '';
-      }
-    });
+    btn.addEventListener('click', () => setActiveTab(btn.dataset.target));
   });
   const importBtn = document.getElementById('importSkuBtn');
   const importInput = document.getElementById('skuFileInput');
@@ -616,6 +620,11 @@ if(clearResp){
       .then(() => loadResponses());
   });
 }
-document.addEventListener('DOMContentLoaded', () => { loadLogs(); loadResponses(); });
+document.addEventListener('DOMContentLoaded', () => {
+  const stored = localStorage.getItem('settingsActiveTab');
+  if(stored) setActiveTab(stored);
+  loadLogs();
+  loadResponses();
+});
 </script>
 {% endblock %}
