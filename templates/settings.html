@@ -480,32 +480,13 @@
       fetch('{{ url_for('test_qbo_connection') }}', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body
+        body: body
       }).then(r => r.json()).then(res => {
         qboSpan.textContent = res.success ? 'Connection successful' : 'Connection failed';
         qboSpan.style.color = res.success ? 'green' : 'red';
       }).catch(() => {
         qboSpan.textContent = 'Connection failed';
         qboSpan.style.color = 'red';
-      });
-    });
-  }
-  const syncQbo = document.getElementById('syncQboBtn');
-  if(syncQbo){
-    syncQbo.addEventListener('click', () => {
-      syncQbo.disabled = true;
-      syncQbo.textContent = 'Syncing...';
-      fetch('{{ url_for('sync_qbo_data') }}', {method: 'POST'})
-        .then(r => r.json())
-        .then(res => {
-          syncQbo.textContent = res.success ? 'Synced' : 'Sync failed';
-          syncQbo.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
-          if(!res.success) syncQbo.disabled = false;
-        })
-        .catch(() => {
-          syncQbo.textContent = 'Sync failed';
-          syncQbo.style.backgroundColor = '#d93025';
-        syncQbo.disabled = false;
       });
     });
   }
