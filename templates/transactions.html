@@ -11,6 +11,7 @@
         <div class="select">
           <select name="sku" onchange="this.form.submit()">
             <option value="">All mapped</option>
+            <option value="all" {% if sku == 'all' %}selected{% endif %}>All</option>
             {% for opt in sku_options %}
             <option value="{{ opt }}" {% if opt == sku %}selected{% endif %}>{{ opt }}</option>
             {% endfor %}
