@@ -62,6 +62,8 @@ Helper functions in `app.py` expose the underlying report data for integration i
 - `get_shopify_monthly()` – Shopify income by month across recent years.
 - `get_shopify_quarterly()` – Shopify income by quarter across recent years.
 - `get_traffic_matrix()` – HubSpot website traffic metrics with each selected year shown side by side.
+  Source names from HubSpot are normalized so variations like `PAID_SOCIAL` or
+  `ORGANIC_SOCIAL` map to the standard categories.
 
 ### Programmatic PDF Export
 
