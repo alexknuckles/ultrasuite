@@ -7,6 +7,8 @@ from dataclasses import dataclass
 import pandas as pd
 import requests
 
+from .master_fields import apply_master_fields
+
 
 @dataclass
 class ShopifyClient:
@@ -55,9 +57,16 @@ class ShopifyClient:
                         * float(item.get("quantity", 0)),
                     }
                 )
-                line_items.append({"order_id": order_id, "line_num": idx, "data": item})
+                line_items.append(
+                    {
+                        "order_id": order_id,
+                        "line_num": idx,
+                        "data": item,
+                    }
+                )
 
         df = pd.DataFrame(rows)
+        df = apply_master_fields(df, "shopify")
         next_cursor = resp.links.get("next", {}).get("url")
         return df, orders, line_items, next_cursor
 
@@ -81,7 +90,11 @@ class ShopifyClient:
 
 
 def fetch_shopify_api(
-    domain: str, token: str, *, since: str | None = None, next_url: str | None = None
+    domain: str,
+    token: str,
+    *,
+    since: str | None = None,
+    next_url: str | None = None,
 ):
     """Compatibility wrapper for fetching Shopify orders."""
     client = ShopifyClient(domain, token)
@@ -89,7 +102,12 @@ def fetch_shopify_api(
 
 
 def fetch_shopify_list(
-    domain: str, token: str, endpoint: str, key: str, *, since: str | None = None
+    domain: str,
+    token: str,
+    endpoint: str,
+    key: str,
+    *,
+    since: str | None = None,
 ):
     """Compatibility wrapper for fetching Shopify lists."""
     client = ShopifyClient(domain, token)
