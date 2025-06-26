@@ -300,6 +300,7 @@
           <button id="testHubspotBtn" type="button" class="mdc-button mdc-button--raised mr-2">Test connection</button>
           <button id="syncHubspotBtn" type="button" class="mdc-button mdc-button--raised">Sync now</button>
           <span id="hubspotConnResult" class="help ml-2"></span>
+          <p id="hubspotProgress" class="help mt-1"></p>
         </div>
         {% if hubspot_last_sync %}
         <p class="help">Last sync: {{ hubspot_last_sync|format_dt }}</p>
@@ -587,24 +588,39 @@
   }
   const syncHs = document.getElementById('syncHubspotBtn');
   if(syncHs){
+    const progressHs = document.getElementById('hubspotProgress');
+    const runHs = (year) => {
+      fetch('{{ url_for('sync_hubspot_data') }}', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({year: year})
+      }).then(r => r.json()).then(res => {
+        if(res.success){
+          progressHs.textContent = `Year ${res.year}`;
+          if(!res.done){
+            runHs(res.next);
+          }else{
+            syncHs.textContent = 'Synced';
+            syncHs.style.backgroundColor = '#4caf50';
+          }
+        }else{
+          syncHs.textContent = 'Sync failed';
+          syncHs.style.backgroundColor = '#d93025';
+          syncHs.disabled = false;
+        }
+      }).catch(() => {
+        syncHs.textContent = 'Sync failed';
+        syncHs.style.backgroundColor = '#d93025';
+        syncHs.disabled = false;
+      });
+    };
     syncHs.addEventListener('click', () => {
       syncHs.disabled = true;
       syncHs.textContent = 'Syncing...';
-      saveSettings().then(() => {
-        fetch('{{ url_for('sync_hubspot_data') }}', {method: 'POST'})
-          .then(r => r.json())
-          .then(res => {
-            syncHs.textContent = res.success ? 'Synced' : 'Sync failed';
-            syncHs.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
-            if(!res.success) syncHs.disabled = false;
-          })
-          .catch(() => {
-            syncHs.textContent = 'Sync failed';
-            syncHs.style.backgroundColor = '#d93025';
-            syncHs.disabled = false;
-        });
-      });
-  });
+      progressHs.textContent = '';
+      saveSettings().then(() => { runHs(null); });
+    });
+  }
 }
 const clearSync = document.getElementById('clearSyncBtn');
 if(clearSync){

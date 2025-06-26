@@ -3437,81 +3437,95 @@ def test_hubspot_connection():
 
 @app.route("/sync-hubspot", methods=["POST"])
 def sync_hubspot_data():
+    """Fetch HubSpot traffic data in yearly batches."""
     token = get_setting("hubspot_token", "")
     if not token:
         return jsonify(success=False, error="Missing credentials"), 400
+
     year_limit = int(get_setting("reports_year_limit", "5") or 5)
     end_year = datetime.now().year
     years = list(range(end_year - year_limit + 1, end_year + 1))
+
+    payload = request.get_json(silent=True) or {}
+    year = payload.get("year") or years[0]
+    if year not in years:
+        return jsonify(success=False, error="Invalid year"), 400
+    try:
+        idx = years.index(year)
+        next_year = years[idx + 1] if idx + 1 < len(years) else None
+    except ValueError:
+        return jsonify(success=False, error="Invalid year"), 400
+
+    start = f"{year}0101"
+    end = f"{year}1231"
     conn = get_db()
-    for year in years:
-        start = f"{year}0101"
-        end = f"{year}1231"
+    try:
+        resp = requests.get(
+            "https://api.hubspot.com/analytics/v2/reports/sources/monthly",
+            headers={"Authorization": f"Bearer {token}"},
+            params={"start": start, "end": end},
+            timeout=15,
+        )
+        if resp.status_code == 404:
+            msg = "Traffic analytics endpoint not found (404). Check API version."
+            log_error(f"HubSpot sync error: {msg}")
+            conn.close()
+            return jsonify(success=False, error=msg), 500
+        resp.raise_for_status()
+        add_api_response("sync_hubspot", resp.status_code, resp.text[:2000])
+    except Exception as exc:
+        log_error(f"HubSpot sync error: {exc}")
+        conn.close()
+        return jsonify(success=False, error=str(exc)), 500
+    data = resp.json()
+    if "results" in data:
+        data = data["results"]
+    elif "data" in data:
+        data = data["data"]
+    elif "reports" in data:
+        rep = data.get("reports")
+        if isinstance(rep, list) and rep and isinstance(rep[0], dict):
+            data = rep[0].get("data", rep[0])
+
+    if not isinstance(data, dict):
+        log_error("HubSpot sync error: unexpected JSON format")
+        conn.close()
+        return jsonify(success=False, error="Unexpected response"), 500
+
+    for key, details in data.items():
         try:
-            resp = requests.get(
-                "https://api.hubspot.com/analytics/v2/reports/sources/monthly",
-                headers={"Authorization": f"Bearer {token}"},
-                params={"start": start, "end": end},
-                timeout=15,
-            )
-            if resp.status_code == 404:
-                msg = "Traffic analytics endpoint not found (404). Check API version."
-                log_error(f"HubSpot sync error: {msg}")
-                conn.close()
-                return jsonify(success=False, error=msg), 500
-            resp.raise_for_status()
-            add_api_response("sync_hubspot", resp.status_code, resp.text[:2000])
-        except Exception as exc:
-            log_error(f"HubSpot sync error: {exc}")
-            conn.close()
-            return jsonify(success=False, error=str(exc)), 500
-        data = resp.json()
-        if "results" in data:
-            data = data["results"]
-        elif "data" in data:
-            data = data["data"]
-        elif "reports" in data:
-            rep = data.get("reports")
-            if isinstance(rep, list) and rep and isinstance(rep[0], dict):
-                data = rep[0].get("data", rep[0])
-
-        if not isinstance(data, dict):
-            log_error("HubSpot sync error: unexpected JSON format")
-            conn.close()
-            return jsonify(success=False, error="Unexpected response"), 500
-
-        for key, details in data.items():
+            dt = datetime.strptime(key, "%Y-%m")
+        except ValueError:
             try:
-                dt = datetime.strptime(key, "%Y-%m")
+                dt = datetime.strptime(key, "%Y-%m-%d")
             except ValueError:
-                try:
-                    dt = datetime.strptime(key, "%Y-%m-%d")
-                except ValueError:
-                    continue
-            month = dt.month
-            for d in details:
-                src = d.get("breakdown") or d.get("source") or d.get("sourceType")
-                if not src:
-                    continue
-                sessions = d.get("visits") or d.get("sessions") or 0
-                avg_sec = d.get("avgSessionLengthSeconds") or d.get("avgSessionLength")
-                avg_min = (
-                    (avg_sec / 60.0) if isinstance(avg_sec, (int, float)) else None
+                continue
+        month = dt.month
+        for d in details:
+            src = d.get("breakdown") or d.get("source") or d.get("sourceType")
+            if not src:
+                continue
+            sessions = d.get("visits") or d.get("sessions") or 0
+            avg_sec = d.get("avgSessionLengthSeconds") or d.get("avgSessionLength")
+            avg_min = (avg_sec / 60.0) if isinstance(avg_sec, (int, float)) else None
+            bounce = d.get("bounceRate")
+            try:
+                conn.execute(
+                    "REPLACE INTO hubspot_traffic(year, month, source, sessions, avg_time, bounce_rate) "
+                    "VALUES (?, ?, ?, ?, ?, ?)",
+                    (year, month, src, sessions, avg_min, bounce),
                 )
-                bounce = d.get("bounceRate")
-                try:
-                    conn.execute(
-                        "REPLACE INTO hubspot_traffic(year, month, source, sessions, avg_time, bounce_rate) "
-                        "VALUES (?, ?, ?, ?, ?, ?)",
-                        (year, month, src, sessions, avg_min, bounce),
-                    )
-                except Exception as exc:
-                    log_error(f"HubSpot sync error: {exc}")
+            except Exception as exc:
+                log_error(f"HubSpot sync error: {exc}")
     conn.commit()
     conn.close()
-    now = datetime.now(timezone.utc).isoformat()
-    set_setting("hubspot_last_sync", now)
-    return jsonify(success=True)
+
+    done = next_year is None
+    if done:
+        now = datetime.now(timezone.utc).isoformat()
+        set_setting("hubspot_last_sync", now)
+
+    return jsonify(success=True, next=next_year, year=year, done=done)
 
 
 @app.route("/traffic-matrix")
