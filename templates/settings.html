@@ -13,7 +13,7 @@
       <button type="button" class="mdc-button mdc-button--raised" data-target="reportSettings">Reports</button>
       <button type="button" class="mdc-button mdc-button--raised" data-target="logsSettings">Logs</button>
     </nav>
-    <form method="post" enctype="multipart/form-data">
+    <form id="settingsForm" method="post" enctype="multipart/form-data">
     <div id="generalSettings" class="tab-pane">
       <div class="box mb-4">
         <h3 class="title is-6 mb-3">Application</h3>
@@ -276,7 +276,7 @@
           </div>
         </div>
         <div class="field mb-4">
-          <a class="mdc-button mdc-button--raised" href="{{ url_for('qbo_connect') }}">Connect QuickBooks</a>
+          <a id="qboConnectBtn" class="mdc-button mdc-button--raised" href="{{ url_for('qbo_connect') }}">Connect QuickBooks</a>
         </div>
         <div class="field mb-4">
           <button id="testQboBtn" type="button" class="mdc-button mdc-button--raised mr-2">Test connection</button>
@@ -323,7 +323,7 @@
             <input id="skuFileInput" class="is-hidden" type="file" name="sku_file" accept=".csv,.xls,.xlsx" required hidden>
             <button id="importSkuBtn" type="button" class="mdc-button mdc-button--raised">Import</button>
           </form>
-          <button id="clearSkusBtn" type="button" class="mdc-button mdc-button--raised ml-2">Clear</button>
+          <button id="clearSkusBtn" type="button" class="mdc-button mdc-button--raised">Clear</button>
         </div>
       </div>
     </div>
@@ -348,10 +348,16 @@
   </div>
 </div>
 <script>
+  const settingsForm = document.getElementById('settingsForm');
   const saveBtn = document.getElementById('saveSettingsBtn');
+  function saveSettings(){
+    if(!settingsForm) return Promise.resolve();
+    const fd = new FormData(settingsForm);
+    return fetch('{{ url_for('settings_page') }}', {method:'POST', body: fd});
+  }
   if(saveBtn){
     const active = document.querySelector('#settingsTabs .is-active');
-    if(active && active.dataset.target === 'skuSettings') saveBtn.style.display = 'none';
+    if(active && (active.dataset.target === 'skuSettings' || active.dataset.target === 'logsSettings')) saveBtn.style.display = 'none';
   }
   document.querySelectorAll('#settingsTabs button').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -360,7 +366,8 @@
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('is-hidden'));
       document.getElementById(btn.dataset.target).classList.remove('is-hidden');
       if(saveBtn){
-        saveBtn.style.display = btn.dataset.target === 'skuSettings' ? 'none' : '';
+        const hide = btn.dataset.target === 'skuSettings' || btn.dataset.target === 'logsSettings';
+        saveBtn.style.display = hide ? 'none' : '';
       }
     });
   });
@@ -435,16 +442,18 @@
     testBtn.addEventListener('click', () => {
       const domain = document.querySelector('input[name="shopify_domain"]').value;
       const token = document.querySelector('input[name="shopify_token"]').value;
-      fetch('{{ url_for('test_shopify_connection') }}', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `domain=${encodeURIComponent(domain)}&token=${encodeURIComponent(token)}`
-      }).then(r => r.json()).then(res => {
-        connSpan.textContent = res.success ? 'Connection successful' : 'Connection failed';
-        connSpan.style.color = res.success ? 'green' : 'red';
-      }).catch(() => {
-        connSpan.textContent = 'Connection failed';
-        connSpan.style.color = 'red';
+      saveSettings().then(() => {
+        fetch('{{ url_for('test_shopify_connection') }}', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: `domain=${encodeURIComponent(domain)}&token=${encodeURIComponent(token)}`
+        }).then(r => r.json()).then(res => {
+          connSpan.textContent = res.success ? 'Connection successful' : 'Connection failed';
+          connSpan.style.color = res.success ? 'green' : 'red';
+        }).catch(() => {
+          connSpan.textContent = 'Connection failed';
+          connSpan.style.color = 'red';
+        });
       });
     });
   }
@@ -453,17 +462,19 @@
     syncBtn.addEventListener('click', () => {
       syncBtn.disabled = true;
       syncBtn.textContent = 'Syncing...';
-      fetch('{{ url_for('sync_shopify_data') }}', {method: 'POST'})
-        .then(r => r.json())
-        .then(res => {
-          syncBtn.textContent = res.success ? 'Synced' : 'Sync failed';
-          syncBtn.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
-          if(!res.success) syncBtn.disabled = false;
-        })
-        .catch(() => {
-          syncBtn.textContent = 'Sync failed';
-          syncBtn.style.backgroundColor = '#d93025';
-          syncBtn.disabled = false;
+      saveSettings().then(() => {
+        fetch('{{ url_for('sync_shopify_data') }}', {method: 'POST'})
+          .then(r => r.json())
+          .then(res => {
+            syncBtn.textContent = res.success ? 'Synced' : 'Sync failed';
+            syncBtn.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
+            if(!res.success) syncBtn.disabled = false;
+          })
+          .catch(() => {
+            syncBtn.textContent = 'Sync failed';
+            syncBtn.style.backgroundColor = '#d93025';
+            syncBtn.disabled = false;
+        });
       });
     });
   }
@@ -477,16 +488,18 @@
       const realm = document.querySelector('input[name="qbo_realm_id"]').value;
       const env = document.querySelector('select[name="qbo_environment"]').value;
       const body = `client_id=${encodeURIComponent(cid)}&client_secret=${encodeURIComponent(secret)}&refresh_token=${encodeURIComponent(refresh)}&realm_id=${encodeURIComponent(realm)}&environment=${encodeURIComponent(env)}`;
-      fetch('{{ url_for('test_qbo_connection') }}', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: body
-      }).then(r => r.json()).then(res => {
-        qboSpan.textContent = res.success ? 'Connection successful' : 'Connection failed';
-        qboSpan.style.color = res.success ? 'green' : 'red';
-      }).catch(() => {
-        qboSpan.textContent = 'Connection failed';
-        qboSpan.style.color = 'red';
+      saveSettings().then(() => {
+        fetch('{{ url_for('test_qbo_connection') }}', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: body
+        }).then(r => r.json()).then(res => {
+          qboSpan.textContent = res.success ? 'Connection successful' : 'Connection failed';
+          qboSpan.style.color = res.success ? 'green' : 'red';
+        }).catch(() => {
+          qboSpan.textContent = 'Connection failed';
+          qboSpan.style.color = 'red';
+        });
       });
     });
   }
@@ -495,18 +508,27 @@
     syncQbo.addEventListener('click', () => {
       syncQbo.disabled = true;
       syncQbo.textContent = 'Syncing...';
-      fetch('{{ url_for('sync_qbo_data') }}', {method: 'POST'})
-        .then(r => r.json())
-        .then(res => {
-          syncQbo.textContent = res.success ? 'Synced' : 'Sync failed';
-          syncQbo.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
-          if(!res.success) syncQbo.disabled = false;
-        })
-        .catch(() => {
-          syncQbo.textContent = 'Sync failed';
-          syncQbo.style.backgroundColor = '#d93025';
-        syncQbo.disabled = false;
+      saveSettings().then(() => {
+        fetch('{{ url_for('sync_qbo_data') }}', {method: 'POST'})
+          .then(r => r.json())
+          .then(res => {
+            syncQbo.textContent = res.success ? 'Synced' : 'Sync failed';
+            syncQbo.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
+            if(!res.success) syncQbo.disabled = false;
+          })
+          .catch(() => {
+            syncQbo.textContent = 'Sync failed';
+            syncQbo.style.backgroundColor = '#d93025';
+            syncQbo.disabled = false;
+        });
       });
+    });
+  }
+  const qboConnect = document.getElementById('qboConnectBtn');
+  if(qboConnect){
+    qboConnect.addEventListener('click', evt => {
+      evt.preventDefault();
+      saveSettings().then(() => { window.location.href = qboConnect.href; });
     });
   }
   const testHs = document.getElementById('testHubspotBtn');
@@ -514,16 +536,18 @@
   if(testHs && hsSpan){
     testHs.addEventListener('click', () => {
       const token = document.querySelector('input[name="hubspot_token"]').value;
-      fetch('{{ url_for('test_hubspot_connection') }}', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `token=${encodeURIComponent(token)}`
-      }).then(r => r.json()).then(res => {
-        hsSpan.textContent = res.success ? 'Connection successful' : 'Connection failed';
-        hsSpan.style.color = res.success ? 'green' : 'red';
-      }).catch(() => {
-        hsSpan.textContent = 'Connection failed';
-        hsSpan.style.color = 'red';
+      saveSettings().then(() => {
+        fetch('{{ url_for('test_hubspot_connection') }}', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: `token=${encodeURIComponent(token)}`
+        }).then(r => r.json()).then(res => {
+          hsSpan.textContent = res.success ? 'Connection successful' : 'Connection failed';
+          hsSpan.style.color = res.success ? 'green' : 'red';
+        }).catch(() => {
+          hsSpan.textContent = 'Connection failed';
+          hsSpan.style.color = 'red';
+        });
       });
     });
   }
@@ -532,17 +556,19 @@
     syncHs.addEventListener('click', () => {
       syncHs.disabled = true;
       syncHs.textContent = 'Syncing...';
-      fetch('{{ url_for('sync_hubspot_data') }}', {method: 'POST'})
-        .then(r => r.json())
-        .then(res => {
-          syncHs.textContent = res.success ? 'Synced' : 'Sync failed';
-          syncHs.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
-          if(!res.success) syncHs.disabled = false;
-        })
-        .catch(() => {
-          syncHs.textContent = 'Sync failed';
-        syncHs.style.backgroundColor = '#d93025';
-        syncHs.disabled = false;
+      saveSettings().then(() => {
+        fetch('{{ url_for('sync_hubspot_data') }}', {method: 'POST'})
+          .then(r => r.json())
+          .then(res => {
+            syncHs.textContent = res.success ? 'Synced' : 'Sync failed';
+            syncHs.style.backgroundColor = res.success ? '#4caf50' : '#d93025';
+            if(!res.success) syncHs.disabled = false;
+          })
+          .catch(() => {
+            syncHs.textContent = 'Sync failed';
+            syncHs.style.backgroundColor = '#d93025';
+            syncHs.disabled = false;
+        });
       });
   });
 }
