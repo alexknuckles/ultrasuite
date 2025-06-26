@@ -3027,10 +3027,17 @@ def test_shopify_connection():
     token = request.form.get("token", "").strip()
     if not domain or not token:
         return jsonify(success=False), 400
-    url = f"https://{domain}/admin/api/2023-07/shop.json"
+    base = f"https://{domain}/admin/api/2023-07"
     try:
-        resp = requests.get(url, headers={"X-Shopify-Access-Token": token}, timeout=5)
-        ok = resp.status_code == 200
+        headers = {"X-Shopify-Access-Token": token}
+        shop_resp = requests.get(f"{base}/shop.json", headers=headers, timeout=5)
+        order_resp = requests.get(
+            f"{base}/orders.json",
+            headers=headers,
+            params={"limit": 1},
+            timeout=5,
+        )
+        ok = shop_resp.status_code == 200 and order_resp.status_code == 200
     except Exception as exc:
         log_error(f"Test Shopify connection error: {exc}")
         ok = False
