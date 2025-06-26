@@ -172,10 +172,18 @@ def _parse_qbo(file_storage):
         except ValueError as exc:
             raise ValueError("Invalid QuickBooks data") from exc
     df = df[df.get("transaction_date").notna()]
+    sku_col = next(
+        (c for c in df.columns if c.lower().replace(" ", "_") == "sku"),
+        None,
+    )
+    if sku_col:
+        df["sku"] = df[sku_col]
+    else:
+        df["sku"] = pd.NA
     cleaned = df[
         [
             "transaction_date",
-            "product_service",
+            "sku",
             "line_description",
             "quantity",
             "sales_price",

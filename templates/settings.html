@@ -375,8 +375,14 @@
     const active = document.querySelector('#settingsTabs .is-active');
     if(active && ['skuSettings','logsSettings','syncSettings'].includes(active.dataset.target)) saveBtn.style.display = 'none';
   }
-  document.querySelectorAll('#settingsTabs button').forEach(btn => {
-    btn.addEventListener('click', () => setActiveTab(btn.dataset.target));
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabWrap = document.getElementById('settingsTabs');
+    if(tabWrap){
+      tabWrap.addEventListener('click', evt => {
+        const btn = evt.target.closest('button[data-target]');
+        if(btn) setActiveTab(btn.dataset.target);
+      });
+    }
   });
   const importBtn = document.getElementById('importSkuBtn');
   const importInput = document.getElementById('skuFileInput');
